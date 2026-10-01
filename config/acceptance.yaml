@@ -48,7 +48,7 @@ criteria:
     event: "collision"
     where: "tor_issued AND driver_category = 'foreseeable_misuse' AND preventable"
     op: "<="
-    threshold: 0.05  # TODO(data): illustrative (TASKS3:T34 derives it)
+    threshold: 0.05  # TODO(data): illustrative (to be derived from a residual-risk argument)
     min_n: 100  # TODO(data): placeholder; derive from the validation target
   - id: AC-04
     name: Longitudinal comfort
@@ -75,7 +75,7 @@ criteria:
 retired_criteria:
   - id: AC-05
     name: Hand-back robustness under visual occlusion
-    retired_by: "TASKS2:T15"
+    retired_by: "driver model reduced to two states (v0.1)"
     reason: The restricted-vision driver state was removed; the visual-occlusion category no longer exists.
 # A single run counts as a "failure" (used to compare search efficiency) if this SQL predicate is true.
 # min_ttc is NULL when the vehicles never close, hence the coalesce.

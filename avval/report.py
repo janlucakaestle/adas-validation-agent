@@ -170,7 +170,7 @@ def _norm_sql(sql: str) -> str:
 
 
 def _predicate_test_lines(tests: list[dict], triggering_conditions: list[dict]) -> list[str]:
-    """How the agent tested its candidate conditions (TASKS4:T38)."""
+    """How the agent tested its candidate conditions."""
     if not tests:
         return ["## Hypothesis tests", "", "_No conditions were tested with `test_predicate`._",
                 ""]

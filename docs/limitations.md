@@ -31,8 +31,10 @@
 
 ## Statistical
 
-- **Three agent seeds:** 3/3 has a 95% interval of 0.29–1.00, overlapping both baselines.
-  Per-seed budgets differ because the agent chooses when to stop.
+- **Ten agent seeds, one budget, one model.** 10/10 has a 95% interval of 0.69–1.00. The
+  pre-specified test treats the baselines' detection shares, each from 100 campaigns, as
+  known. Per-seed budgets differ because the agent chooses when to stop; each seed is
+  compared at its own budget.
 - **FAIL uses the point estimate at any n.** Deliberately conservative. At 100,000 runs it
   decides nothing for AC-01 and AC-03, whose whole intervals miss. AC-04's FAIL is narrow
   and depends on the jerk definition.
@@ -40,10 +42,14 @@
 
 ## Engineering
 
-- **The agent has run for real three times**, at one budget, on one model.
+- **The agent has been compared only with random and grid search**, at one budget, on one
+  model. Adaptive baselines are on the roadmap.
 - **The agent reports were re-rendered** to attach the release verdict, because the agent
-  ran under earlier agent and reporting code (`docs/agent.md`). Re-running the re-render
+  ran before this release's estimation existed (`docs/agent.md`). Re-running the re-render
   needs the results database, which is a local output.
+- **Four submitted conditions can't be evaluated on held-out data:** they name exact ODD
+  corners that the exposure model never samples. The post-hoc table labels them "disjoint";
+  for these four it means empty (`docs/agent.md`).
 - **The SQL sandbox isn't a security boundary.**
 - **Provenance gaps:** sensitivity overrides (`sim_kwargs`) aren't recorded (acceptable only
   because those runs live in throw-away stores); the git commit isn't compared; rows

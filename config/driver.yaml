@@ -1,13 +1,13 @@
 # Driver model: time from the event that prompts a response to the driver's first input, and the
 # braking response after it. Two states only (SAE L2: an attentive, supervising driver, and a
-# distracted driver as reasonably foreseeable misuse). Sources and caveats: README "Driver model".
+# distracted driver as reasonably foreseeable misuse). Sources and caveats: docs/system.md, "Driver model".
 #
 # Times are drawn from a log-normal matched to each state's mean and SD. Draws below the state's
 # floor are REDRAWN, not clipped, so no probability mass piles up at the floor.
-# Assumption (B2): times are independent of speed across the ODD (15-36 m/s); the distracted
+# Assumption: times are independent of speed across the ODD (15-36 m/s); the distracted
 # source was measured at a constant 70 mph.
-# Currently every state starts reacting at the takeover request (TOR); see README "System
-# definition" for why this is pessimistic for the attentive driver.
+# Currently every state starts reacting at the takeover request (TOR); see docs/system.md,
+# "Driver model", for why this is pessimistic for the attentive driver.
 
 # Time from the first input to effective braking. During this delay the driver has control
 # but holds the brake level inherited from the ACC; brake build-up starts after it.

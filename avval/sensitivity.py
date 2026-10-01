@@ -22,7 +22,7 @@ from .evaluation import clopper_pearson, evaluate_acceptance, overall_verdict
 from .policy import ACCEL_MIN
 from .sim import TOR_REQ_DECEL
 
-# The ranges come from the review (docs/design_review/TASKS.md, T12). Each assumption is evaluated at three
+# The ranges were fixed in the project's design review. Each assumption is evaluated at three
 # points spanning its range; the nominal value is the shared baseline run.
 ASSUMPTIONS = {
     "attentive_takeover_mean_s": {"label": "Attentive mean takeover time (s)",

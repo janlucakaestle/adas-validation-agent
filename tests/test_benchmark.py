@@ -2,8 +2,8 @@
 import pytest
 
 from avval.baselines import random_search
-from avval.benchmark import (REGIONS, campaign_stats, matched_budget, seed_campaigns,
-                             strategy_summary, summary_table, write_benchmark)
+from avval.benchmark import (REGIONS, at_least, campaign_stats, matched_per_seed,
+                             seed_campaigns, strategy_summary, summary_table, write_benchmark)
 from avval.campaign import Campaign
 from avval.config import driver_attributes
 
@@ -60,18 +60,32 @@ def test_benchmark_writes_table_and_figure(store, policy, tmp_path):
     assert table.loc[0, "seeds"] == 3
 
 
-def test_matched_budget_cuts_other_strategies(store, policy, tmp_path):
-    """An early-stopping strategy is compared with the others' first N runs, N its mean."""
-    for k in range(2):
+def test_matched_budget_per_seed(store, policy, tmp_path):
+    """Each agent seed is compared with the baselines cut to that seed's own run count."""
+    import avval.benchmark as bm
+    for k in range(3):
         random_search(Campaign(f"random_s{k}", store, policy, 25, seed=k, method="random"))
     random_search(Campaign("agent_s0", store, policy, 9, seed=5, method="agent"))
-    random_search(Campaign("agent_s1", store, policy, 11, seed=6, method="agent"))
-    assert matched_budget(store) == 10
-    cut = campaign_stats(store, "random_s0", max_runs=10)
-    assert cut["runs"] == 10
-    full = strategy_summary(store, "random")
-    lo, hi = full["P(attentive_preventable_collision)_ci"]
-    assert 0 <= lo <= full["P(attentive_preventable_collision)"] <= hi <= 1
+    random_search(Campaign("agent_s1", store, policy, 14, seed=6, method="agent"))
+    m = matched_per_seed(store, "agent", ["random"], region="comfort_exceedance")
+    df = m["per_seed"]
+    assert list(df["runs"]) == [9, 14] and m["seeds"] == 2
+    for r in df.to_dict("records"):           # the baseline share is recomputed at each budget
+        cut = [campaign_stats(store, f"random_s{k}", r["runs"])["comfort_exceedance"]
+               for k in range(3)]
+        assert r["random_p"] == sum(cut) / 3
+        lo, hi = r["random_ci"]
+        assert lo <= r["random_p"] <= hi
+    b = m["baselines"]["random"]
+    assert b["expected"] == df["random_p"].sum()
+    assert b["p_at_least"] == at_least(df["random_p"].tolist(), m["detected"])
     path, _ = write_benchmark(store, ["random", "agent"])
     text = open(path, encoding="utf-8").read()
-    assert "## Matched budget: first 10 runs" in text and "[" in text
+    assert "## Matched budget, per seed" in text and "agent_s1" in text
+
+
+def test_at_least_matches_exact_cases():
+    assert at_least([0.5, 0.5], 2) == 0.25
+    assert at_least([0.5, 0.5], 1) == 0.75
+    assert at_least([0.3, 0.6, 0.9], 0) == 1.0
+    assert abs(at_least([0.3, 0.6, 0.9], 3) - 0.3 * 0.6 * 0.9) < 1e-12

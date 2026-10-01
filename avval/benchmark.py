@@ -8,10 +8,15 @@ triggering-condition region: the share of seeds whose campaign contains at least
 in that region. Detection probabilities carry a 95% Clopper-Pearson interval over seeds.
 
 Strategies that stop early (the agent submits before its budget is spent) are also compared
-at a matched budget: each other strategy's campaigns cut to their first N runs, N being the
-mean number of runs the reference strategy used.
+at a matched budget, per seed: for each reference campaign that used n runs, every baseline
+campaign is cut to its first n runs. Across the reference seeds, the baselines' detection
+probabilities at those budgets give the number of detections a baseline would be expected
+to make, and the probability that it would make at least as many as the reference did
+(Poisson-binomial, treating the baseline probabilities as known).
 """
 from __future__ import annotations
+
+import json
 
 import numpy as np
 import pandas as pd
@@ -92,10 +97,101 @@ def _p_ci(summary: dict, name: str) -> str:
     return f"{summary[f'P({name})']:.2f} [{lo:.2f}, {hi:.2f}]"
 
 
-def matched_budget(store, reference: str = "agent") -> int | None:
-    """Mean number of runs the reference strategy's campaigns used (None if it has none)."""
-    names = seed_campaigns(store, reference)
-    return round(float(np.mean([store.n_runs(n) for n in names]))) if names else None
+def campaign_profile(store, campaign: str) -> dict:
+    """Failure curve and, per region, the index of the first run in it (inf if none), so any
+    prefix of the campaign can be scored without re-querying."""
+    first = store.query("SELECT " + ", ".join(
+        f"min(run_idx) FILTER (WHERE {pred}) AS {name}" for name, pred in REGIONS.items())
+        + " FROM runs", campaign).iloc[0]
+    return {"curve": failure_curve(store, campaign),
+            "first_idx": {name: float(first[name]) if pd.notna(first[name]) else np.inf
+                          for name in REGIONS}}
+
+
+def _cells_at(profile: dict, n: int) -> int:
+    curve = profile["curve"]
+    return int(curve["distinct_failing_cells"].iloc[min(n, len(curve)) - 1]) if len(curve) else 0
+
+
+def at_least(probs: list[float], k: int) -> float:
+    """P(at least k successes) for independent Bernoulli trials with these probabilities."""
+    dist = np.zeros(len(probs) + 1)
+    dist[0] = 1.0
+    for p in probs:
+        dist[1:] = dist[1:] * (1 - p) + dist[:-1] * p
+        dist[0] *= 1 - p
+    return float(dist[k:].sum())
+
+
+def _usage(campaign: str) -> dict:
+    path = RESULTS_DIR / f"usage_{campaign}.json"
+    return json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+
+
+def matched_per_seed(store, reference: str = "agent", baselines=("random", "grid"),
+                     region: str = "attentive_preventable_collision") -> dict | None:
+    """Per reference seed: its runs used, turns, cost and outcome, and each baseline's
+    detection probability and failing cells at that seed's own number of runs."""
+    ref = seed_campaigns(store, reference)
+    base = {b: [campaign_profile(store, c) for c in seed_campaigns(store, b)] for b in baselines}
+    base = {b: profs for b, profs in base.items() if profs}
+    if not ref or not base:
+        return None
+    rows = []
+    for name in ref:
+        prof, n = campaign_profile(store, name), store.n_runs(name)
+        use = _usage(name)
+        row = {"campaign": name, "runs": n, "turns": use.get("api_calls"),
+               "cost_usd": use.get("est_cost_usd"),
+               "detected": bool(np.isfinite(prof["first_idx"][region])),
+               "cells": _cells_at(prof, n)}
+        for b, profs in base.items():
+            k = sum(p["first_idx"][region] < n for p in profs)
+            row[f"{b}_p"] = k / len(profs)
+            row[f"{b}_ci"] = clopper_pearson(k, len(profs))
+            row[f"{b}_cells"] = float(np.mean([_cells_at(p, n) for p in profs]))
+        rows.append(row)
+    df = pd.DataFrame(rows)
+    hits = int(df["detected"].sum())
+    return {"per_seed": df, "region": region, "detected": hits, "seeds": len(df),
+            "ci": clopper_pearson(hits, len(df)),
+            "baselines": {b: {"seeds": len(base[b]), "expected": float(df[f"{b}_p"].sum()),
+                              "p_at_least": at_least(df[f"{b}_p"].tolist(), hits)}
+                          for b in base}}
+
+
+def _prob(p: float) -> str:
+    return f"{p:.3f}" if p >= 0.001 else f"{p:.1e}"
+
+
+def matched_lines(m: dict) -> list[str]:
+    from .report import _md_table
+    df, bases = m["per_seed"], list(m["baselines"])
+    rows = [{"seed": r["campaign"], "runs used": r["runs"],
+             "turns": "-" if pd.isna(r["turns"]) else int(r["turns"]),
+             "cost": "-" if pd.isna(r["cost_usd"]) else f"${r['cost_usd']:.2f}",
+             "found": "yes" if r["detected"] else "no",
+             **{f"{b}: P(found) at same runs": f"{r[f'{b}_p']:.2f} [{r[f'{b}_ci'][0]:.2f}, "
+                                               f"{r[f'{b}_ci'][1]:.2f}]" for b in bases},
+             "failing cells": r["cells"],
+             **{f"{b}: cells": f"{r[f'{b}_cells']:.1f}" for b in bases}}
+            for r in df.to_dict("records")]
+    lo, hi = m["ci"]
+    lines = ["## Matched budget, per seed", "",
+             f"Region: `{m['region']}`. Each agent seed is compared with every baseline campaign "
+             "cut to the same number of runs the seed used. Baseline probabilities are shares "
+             "of their campaigns, with 95% Clopper-Pearson intervals.", "",
+             _md_table(pd.DataFrame(rows), max_rows=len(rows)), "",
+             f"**Agent:** found the region in {m['detected']} of {m['seeds']} seeds "
+             f"({m['detected'] / m['seeds']:.2f} [{lo:.2f}, {hi:.2f}]).",
+             "Mean distinct failing cells at each seed's own budget: agent "
+             f"{df['cells'].mean():.1f}, "
+             + ", ".join(f"{b} {df[f'{b}_cells'].mean():.1f}" for b in bases) + ".", ""]
+    for b, st in m["baselines"].items():
+        lines.append(f"- **{b}** ({st['seeds']} campaigns) at the same per-seed budgets: "
+                     f"{st['expected']:.2f} detections expected out of {m['seeds']}; probability "
+                     f"of at least {m['detected']}: {_prob(st['p_at_least'])}.")
+    return lines + [""]
 
 
 def summary_table(summaries: list[dict]) -> pd.DataFrame:
@@ -124,21 +220,15 @@ def write_benchmark(store, strategies: list[str], reference: str = "agent"
 
     summaries = [s for s in (strategy_summary(store, st) for st in strategies) if s]
     full = transposed(summaries)
-    n_match = matched_budget(store, reference) if reference in strategies else None
     matched = []
-    if n_match is not None:
-        cut = [s for s in (strategy_summary(store, st, n_match) for st in strategies
-                           if st != reference) if s]
-        matched = ["", f"## Matched budget: first {n_match} runs", "",
-                   f"`{reference}` campaigns stop early; they used {n_match} runs on average. "
-                   f"Here every other strategy's campaigns are cut to their first {n_match} runs "
-                   f"and compared with the `{reference}` campaigns as they ran.", "",
-                   _md_table(transposed(cut + [s for s in summaries
-                                                if s["strategy"] == reference]),
-                             max_rows=len(full))]
+    if reference in strategies:
+        m = matched_per_seed(store, reference, [st for st in strategies if st != reference])
+        if m is not None:
+            matched = ["", *matched_lines(m)]
     lines = [
         "# Search-strategy benchmark", "",
-        "Each strategy is run once per seed with the same budget. Detection probability is the "
+        "Each strategy is run once per seed with the same budget (the agent may stop "
+        "early). Detection probability is the "
         "share of seeds whose campaign contains at least one run in the region "
         "(`avval/benchmark.py::REGIONS`). Runs to first failure is averaged over the seeds "
         "that found a failure.", "",

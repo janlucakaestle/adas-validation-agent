@@ -19,6 +19,7 @@ Each validation concept, and where it is defined and implemented.
 | Held-out check of agent predicates; numbers behind the findings | `avval/posthoc.py`, `avval/findings.py` |
 | Sensitivity to modelling assumptions | `avval/sensitivity.py` |
 | Traceability: policy, config and code hashes | `avval/provenance.py`, `campaigns` table |
+| Agent evaluation protocol, fixed before seeds 3–9 ran | `docs/agent_protocol.md` |
 | Re-rendering agent reports; AC-01 cluster analysis | `scripts/rerender_agent_reports.py`, `scripts/ac01_clusters.py` |
 | Every number in the docs, with its source | `docs/readme_claims.md` |
 | Tests, including the agent loop with a scripted fake LLM | `tests/` |

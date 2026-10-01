@@ -1,7 +1,7 @@
 # Operational Design Domain (ODD) and test-parameter space for the ACC-with-hand-back function.
 # Every scenario the validation campaign runs must sit inside these ranges.
 # SAE Level 2 (reference framework: UNECE R171, DCAS). The driver supervises at all times and
-# is the fallback; see "System definition" in README.md.
+# is the fallback; see "System definition" in docs/system.md.
 function_under_test: "Adaptive Cruise Control (learned policy) with driver-intervention request, SAE L2"
 parameters:
   scenario:
@@ -14,7 +14,7 @@ parameters:
     unit: m/s
     description: Ego speed at scenario start (also the ACC set speed).
   headway:
-    # Per-scenario ranges (TASKS2:T17). PLACEHOLDERS: TODO(data).
+    # Per-scenario ranges. PLACEHOLDERS: TODO(data).
     ranges:
       lead_brake: [0.8, 3.0]  # typical ACC following settings plus some slack
       cut_in: [0.3, 2.0]      # cut-ins at under a second are common
@@ -36,7 +36,7 @@ parameters:
     scenario: cut_in
     description: Closing speed at the moment of cut-in (ego speed minus cut-in vehicle speed).
   friction:
-    range: [0.5, 1.0]  # lower bound by decision (TASKS2:T18); TODO(data): placeholder
+    range: [0.5, 1.0]  # lower bound: a wet road; TODO(data): placeholder
     unit: "-"
     description: >-
       Tyre-road friction coefficient: 1.0 dry, about 0.5 wet (the lower ODD bound).

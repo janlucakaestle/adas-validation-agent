@@ -62,12 +62,17 @@ def main(campaigns: list[str]) -> None:
             triggering_conditions=submission["triggering_conditions"],
             author=f"agent ({model})", estimation=estimation, include_verdict=True,
             predicate_tests=tests)
+        if recorded == current:
+            why = ("The agent ran under this release's code, before its estimation campaign "
+                   "was made (`docs/agent_protocol.md`).")
+        else:
+            why = (f"The agent ran under source hash `{recorded[:12]}`; this release's is "
+                   f"`{current[:12]}`. The policy and the parsed configuration are identical "
+                   f"and no simulation module changed (`docs/agent.md`).")
         note = (f"> **Re-rendered on {date.today()}** by `scripts/rerender_agent_reports.py`, to "
-                f"attach the release verdict. The agent ran under source hash `{recorded[:12]}`; "
-                f"this release's is `{current[:12]}`. The policy and the parsed configuration "
-                f"are identical and no simulation module changed (`docs/agent.md`). The "
-                f"summary, triggering conditions and hypothesis tests are the agent's own, from "
-                f"its logged submission; everything else is recomputed from the stored runs.")
+                f"attach the release verdict. {why} The summary, triggering conditions and "
+                f"hypothesis tests are the agent's own, from its logged submission; everything "
+                f"else is recomputed from the stored runs.")
         text = path.read_text(encoding="utf-8")
         text = text.replace("\n## Summary\n", f"\n{note}\n\n## Summary\n", 1)
         path.write_text(text, encoding="utf-8")

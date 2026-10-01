@@ -3,7 +3,7 @@
 The agent tests its predicates only on its own few hundred runs. Here every predicate it
 submitted (read from `results/report_<campaign>.md`) is re-evaluated on the exposure-weighted
 estimation campaign, which the agent never saw, and compared with a reference condition: the
-box around the AC-01 collisions found in the 100k-run estimation (see `docs/progress.md`).
+box around the AC-01 collisions found in the 100k-run estimation (`results/ac01_clusters.md`).
 """
 from __future__ import annotations
 
@@ -20,8 +20,12 @@ _TC = re.compile(r"^### (TC-\d+).*?^Predicate: `([^`]+)`", re.M | re.S)
 
 
 def submitted_predicates(campaign: str) -> list[tuple[str, str]]:
-    """(condition id, predicate) pairs from a search report, in report order."""
-    text = (RESULTS_DIR / f"report_{campaign}.md").read_text(encoding="utf-8")
+    """(condition id, predicate) pairs from a search report, in report order; none if the
+    campaign ended without a report (for example, stopped by its cost cap)."""
+    path = RESULTS_DIR / f"report_{campaign}.md"
+    if not path.exists():
+        return []
+    text = path.read_text(encoding="utf-8")
     return [(tc, pred.strip()) for tc, pred in _TC.findall(text)]
 
 
@@ -102,6 +106,10 @@ def write_posthoc(store, campaigns: list[str], holdout: str = "estimate") -> str
             f"| {ci} | {_pct(r['target_rate_outside'], 2)} | {lift} "
             f"| {_pct(r['share_of_failures_inside'])} "
             f"| {r['ac01_events_inside']} / {r['ac01_events_total']} |")
+    silent = [c for c in campaigns if not submitted_predicates(c)]
+    if silent:
+        lines += ["", "Campaigns with no submitted predicate: "
+                  + ", ".join(f"`{c}`" for c in silent) + "."]
     lines += ["", "## Comparison with the reference", "",
               "Overlap counts runs in both. Precision is the failure rate inside (above).", "",
               "| source | TC | overlap runs | share of predicate inside reference "

@@ -50,7 +50,7 @@ def test_agent_runs_tools_and_writes_report(store, policy, tmp_path, monkeypatch
     drop_reply = client.received[4]["content"][0]["content"]
     assert "error" in drop_reply                       # destructive SQL refused
     acc_reply = client.received[5]["content"][0]["content"]
-    assert "Unknown tool" in acc_reply                 # the acceptance tool is gone (T37)
+    assert "Unknown tool" in acc_reply                 # the acceptance tool is gone
     text = open(result.report_path, encoding="utf-8").read()
     assert "No estimation campaign matches" in text and "TC-01" in text
 
@@ -105,7 +105,7 @@ def test_system_spec_defines_driver_states(store, policy):
     assert all(v["definition"] for v in ds.values())
 
 
-# ---- What the agent knows (TASKS4:T37) ---------------------------------------------------
+# ---- What the agent knows ---------------------------------------------------------------
 BANNED = ["training", "trained", "fault", "ground truth", "weak", "behaviour-cloned",
           "behavior-cloned", "intelligent driver model", "idm", "out-of-distribution",
           "estimation", "evaluate_acceptance", "threshold", "takeover_mean", "floor_s",

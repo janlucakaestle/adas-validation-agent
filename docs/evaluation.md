@@ -125,7 +125,7 @@ Numbers behind these: `results/findings.md` and `results/ac01_clusters.md`.
 | Triggering conditions | Agent must evidence each claim with SQL (`submit_report`). Search reports list failing cells. `avval/benchmark.py::REGIONS` names four regions and measures detection probability per strategy. |
 | Reasonably foreseeable misuse | The `distracted` state, covered by AC-03. |
 | Acceptance criteria | Written before testing; rate or quantile with 95% interval and `min_n`; measured only on the estimation campaign. Thresholds, `min_n` and exposure are placeholders. |
-| Four scenario areas | The attentive pocket sat in area 3 (unknown unsafe) when a single campaign missed it. The estimation measured it and all three agent seeds described it, moving it to area 2 (known unsafe). AC-06 keeps unpreventable collisions out of area 2. |
+| Four scenario areas | The attentive pocket sat in area 3 (unknown unsafe) when a single campaign missed it. The estimation measured it, and all ten agent seeds found it and eight stated it as a condition that holds on held-out runs, moving it to area 2 (known unsafe). AC-06 keeps unpreventable collisions out of area 2. |
 | Modify and re-validate | Provenance blocks stale validation statuses until `estimate` re-runs. `benchmark` and `compare` aren't blocked; re-running them is up to the engineer. The *modification* half isn't implemented: candidate fixes (rate limiter, acceleration-aware monitor, AEB, urgent-takeover data) are untested. |
 
 ## Commands
@@ -151,5 +151,5 @@ pytest -q
 Each campaign writes `results/report_<campaign>.md`. Agent campaigns also write
 `results/usage_agent_s<k>.json` (tokens, cache hit rate, cost) and
 `results/transcript_agent_s<k>.json`, a log of every tool call with its input and output.
-The transcripts of the three agent seeds are in the repository. The results database is a
+The transcripts of the ten agent seeds are in the repository. The results database is a
 local output and is not.

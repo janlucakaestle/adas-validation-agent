@@ -45,7 +45,7 @@ Ordered by how much each item changes the current conclusions, from most to leas
 
 ## 5. Evidence that agent-assisted discovery earns its place
 
-- **More seeds at several budgets,** under a spend cap.
+- **Several budgets and models,** under a spend cap. Ten seeds at one budget are done.
 - **Adaptive baselines:** the cross-entropy method and decision-tree rule extraction, so
   the agent is compared with adaptive search, not just random and grid.
 - **Recall against ground truth:** score every strategy on recall of known failure regions,

@@ -225,7 +225,7 @@ class ValidationAgent:
 
     # ---------------- tools ----------------
     def _spec(self, _):
-        """What the agent may know (README "What the agent knows", decision C13): what each
+        """What the agent may know (docs/agent.md, "What the agent is not told"): what each
         parameter means and its range, the failure predicate it searches for, the coverage
         definition and its budget. No acceptance thresholds, driver-model numbers,
         preventability reference, training details or results from other campaigns."""
@@ -273,7 +273,7 @@ class ValidationAgent:
 
     def _submit(self, args):
         # The release verdict is attached here, in code, after the agent has finished: the
-        # agent never sees the estimation campaign (TASKS4:T37).
+        # agent never sees the estimation campaign.
         self.report_path = str(write_search_report(
             self.campaign.store, self.campaign.name, summary=args["summary"],
             triggering_conditions=args["triggering_conditions"],

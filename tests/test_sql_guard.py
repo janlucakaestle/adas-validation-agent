@@ -7,7 +7,7 @@ import avval.store as store_mod
 from avval.campaign import Campaign, random_case
 
 WRITE_ATTEMPTS = [
-    # Direct writes to the real tables: before T13 (guard bypassed) the first of these deleted
+    # Direct writes to the real tables: before the sandbox (guard bypassed) the first of these deleted
     # every stored run, since queries ran on the results database connection itself.
     "DELETE FROM all_runs",
     "UPDATE all_runs SET collision = true",

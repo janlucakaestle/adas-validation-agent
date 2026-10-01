@@ -42,3 +42,13 @@ def test_findings_are_written_from_stored_campaigns(store, policy, tmp_path, mon
     text = open(findings.write_findings(store), encoding="utf-8").read()
     assert "Across 2 benchmark campaigns (40 runs" in text
     assert "| `random` | 20 |" in text and "95th percentile of raw" in text
+
+
+def test_posthoc_lists_campaigns_without_a_report(store, policy, tmp_path, monkeypatch):
+    """A seed stopped before submitting (e.g. by its cost cap) is listed, not skipped silently."""
+    monkeypatch.setattr(posthoc, "RESULTS_DIR", tmp_path)
+    random_search(Campaign("holdout", store, policy, 30, seed=3, method="random"))
+    assert posthoc.submitted_predicates("agent_s9") == []
+    text = open(posthoc.write_posthoc(store, ["agent_s9"], holdout="holdout"),
+                encoding="utf-8").read()
+    assert "Campaigns with no submitted predicate: `agent_s9`." in text

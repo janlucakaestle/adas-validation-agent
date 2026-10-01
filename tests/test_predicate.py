@@ -1,4 +1,4 @@
-"""The agent's test_predicate tool (TASKS4:T38): check a candidate condition on its own runs."""
+"""The agent's test_predicate tool: check a candidate condition on its own runs."""
 import json
 
 import pytest

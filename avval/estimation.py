@@ -96,7 +96,7 @@ MISSING_HELP = ("No estimation campaign matches the current policy, config and c
 def release_verdict(store, policy) -> dict:
     """The release verdict for the current release, from its estimation campaign.
 
-    Used by code and reports only; the search agent never sees it (TASKS4:T37).
+    Used by code and reports only; the search agent never sees it.
     """
     est = find_estimation(store, policy)
     if est is None:

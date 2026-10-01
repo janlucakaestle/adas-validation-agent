@@ -17,6 +17,4 @@ results/*
 !results/findings.md
 !results/ac01_clusters.md
 !results/usage_*.json
-!results/transcript_agent_s0.json
-!results/transcript_agent_s1.json
-!results/transcript_agent_s2.json
+!results/transcript_agent_s[0-9].json

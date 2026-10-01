@@ -49,7 +49,7 @@ def main(argv=None):
                    help="Stop a campaign once its estimated API cost reaches this (USD).")
     h = sub.add_parser("posthoc", help="Re-evaluate the agent's submitted predicates on the "
                                           "held-out estimation campaign.")
-    h.add_argument("campaigns", nargs="*", default=["agent_s0", "agent_s1", "agent_s2"])
+    h.add_argument("campaigns", nargs="*", help="Agent campaigns (default: every agent_s<k>).")
     h.add_argument("--holdout", default="estimate")
     sub.add_parser("findings", help="Recompute the README findings' numbers -> findings.md.")
     c = sub.add_parser("compare", help="Multi-seed benchmark table + discovery-curve figure.")
@@ -120,8 +120,11 @@ def main(argv=None):
         for path in write_sensitivity(df, args.n, args.seed):
             print(path)
     elif args.cmd == "posthoc":
+        from .benchmark import seed_campaigns
         from .posthoc import write_posthoc
-        print(write_posthoc(Store(), args.campaigns, args.holdout))
+        store = Store()
+        print(write_posthoc(store, args.campaigns or seed_campaigns(store, "agent"),
+                            args.holdout))
     elif args.cmd == "findings":
         from .findings import write_findings
         print(write_findings(Store()))

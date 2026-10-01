@@ -4,16 +4,16 @@
 
 ## Provenance
 
-Recorded when the campaign was created (2026-10-01 02:29:01); method `estimate`, budget 100000, seed 0.
+Recorded when the campaign was created (2026-10-01 20:20:26); method `estimate`, budget 100000, seed 0.
 
 - Policy (`results/policy.json`) SHA-256: `5e14254aff132c1b2d674702e85ad3cc3d2c326c6c2440d9f3e43861ceb1a214`
-- Source code (`avval/*.py`) SHA-256: `330d6d3bcb9a0e3323d41a5ae68bd1042fa00ecfcbe74c4c8bc0c74a893a2c9c`
-- Git commit: `7a91541b28e9b17eaadb7dc9d441a8b8ee3f77df`
+- Source code (`avval/*.py`) SHA-256: `2a9c9124724bb30edd1c01aff9498f42332183f30f410802b72c0d61ca9d89e7`
+- Git commit: `55dd706c2c3ae082c56ec6a209326f070409a8b1`
 - Python 3.11.9; duckdb 1.5.5, numpy 2.4.6, scikit-learn 1.9.1
-- Config `acceptance.yaml` SHA-256: `f294c520054a85c4f5df8b99563e1e390982061a5a225acafd66a5aeb1e0f5fe`
-- Config `driver.yaml` SHA-256: `b9dfc342b59084813b0e7d0125e655fae1996b254fce1bfc08f577cac84953b8`
-- Config `exposure.yaml` SHA-256: `2b95ea73f490f4dfa3626f4cccbf31d5279d936a469e45a7da5eb1945750d3fe`
-- Config `odd.yaml` SHA-256: `c2f1afb3bbd345c00eae9a27a8c90d2dcde82b46a93116475d699b2b2fe88d52`
+- Config `acceptance.yaml` SHA-256: `5f3cedb44d86b64ad1bec906fd11ed06274c09ece5f21b100d12c261497e809f`
+- Config `driver.yaml` SHA-256: `8f765277ffa14ccffeb486169c404a7dc3ac3073f19af9c187c871212ee6a2ca`
+- Config `exposure.yaml` SHA-256: `7cae79c67676007b5c2164e57f2f40795e13d83646552875cb3d354e8443aa8c`
+- Config `odd.yaml` SHA-256: `fb646eb5952b5af8971d63eb4dfe1ba0caa9d6b447be429f2ea08a3d3b080707`
 - Config `reference.yaml` SHA-256: `43ab88cffbef2c0d8c0897fd6a0c75a205171dc5cae8cec0bc906f6cf0f6a709`
 
 ## Verdict: NO-GO

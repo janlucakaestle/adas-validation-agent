@@ -76,8 +76,8 @@ def test_impossible_floor_raises_after_the_redraw_cap():
 
 @pytest.mark.parametrize("removed", ["occluded", "phone_user", "asleep"])
 def test_other_driver_states_are_rejected_with_a_reason(removed):
-    # Only attentive and distracted exist; any other state, including those removed by
-    # TASKS2:T15, is rejected like an unknown one.
+    # Only attentive and distracted exist; any other state, including those removed from
+    # the driver model, is rejected like an unknown one.
     case = dict(scenario="lead_brake", ego_speed=30.0, headway=1.2, lead_decel=2.0, friction=1.0,
                 driver_state=removed)
     with pytest.raises(ValueError, match="not in ODD values"):

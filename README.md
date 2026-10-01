@@ -91,7 +91,7 @@ nothing about how often the function fails in any of them.
    sees the thresholds, the validation status, other campaigns, the driver-model parameters
    or how the policy was trained. A test checks its prompt for leaked terms.
    - Every claim it makes cites a SQL query over runs it chose itself.
-   - Every tool call is logged, and the three agent transcripts are published
+   - Every tool call is logged, and the ten agent transcripts are published
      (`results/transcript_agent_s*.json`).
 
 Details: [`docs/evaluation.md`](docs/evaluation.md) and [`docs/system.md`](docs/system.md).
@@ -112,32 +112,44 @@ analysis is in [`docs/evaluation.md#sensitivity`](docs/evaluation.md#sensitivity
 ## Agent-driven discovery
 
 The question is whether an LLM agent finds the failure modes that matter more reliably than
-coverage-based search with the same number of runs. I compared three agent seeds (Claude
-Sonnet 5) with 100 seeds each of random and grid search. Each agent run chose to stop after
-188 runs on average, so the baselines are shown at their first 188 runs.
+coverage-based search with the same number of runs. I compared ten agent seeds (Claude
+Sonnet 5, 300-run budget) with 100 seeds each of random and grid search. How the seeds
+would be reported, and the one test of "more reliably", were fixed and committed before
+seeds 3–9 ran ([`docs/agent_protocol.md`](docs/agent_protocol.md)). Each seed chose to stop
+early, after 155–219 runs (mean 177), so each is compared with the baselines cut to that
+seed's own number of runs.
 
-| | Agent (3 seeds) | Random (100) | Grid (100) |
+| | Agent (10 seeds) | Random (100) | Grid (100) |
 | --- | --- | --- | --- |
-| Finds the rare attentive-driver collision mode | 3/3 [0.29, 1.00] | 0.51 [0.41, 0.61] | 0.43 [0.33, 0.53] |
-| Distinct failing cells | 13.7 ± 4.0 | 15.2 ± 2.7 | 16.1 ± 2.9 |
-| Runs to first failure | 23.0 ± 29.4 | 8.8 ± 8.9 | 9.1 ± 8.9 |
-| Cost per campaign (prompt-cached) | $0.53–0.63 | — | — |
+| Finds the rare attentive-driver collision mode | 10/10 [0.69, 1.00] | 4.9 of 10 expected | 4.1 of 10 expected |
+| Probability of finding it in all 10 at the same budgets | — | 7.4 × 10⁻⁴ | 1.3 × 10⁻⁴ |
+| Distinct failing cells at the same budgets | 16.1 | 14.4 | 15.4 |
+| Runs to first failure | 12.0 ± 16.1 | 8.8 ± 8.9 | 9.1 ± 8.9 |
+| Cost per campaign (prompt-cached) | $0.53–0.72 | — | — |
 
-**Result.** Every agent seed found the rare collision mode and stated it as a triggering
-condition, written as a SQL predicate. Re-tested on 100,000 runs the agent never saw,
-failures were 35–62 times more frequent inside its conditions than outside them. The
-conditions are precise, with a precision–coverage trade-off across seeds. The cost is
-breadth and speed: the agent found slightly fewer distinct failing cells and reached its
-first failure later, because each seed covers all 108 cells before it starts probing.
+**Result.** Every agent seed's campaign contains the rare collision mode. Random or grid
+search at the same per-seed budgets would be expected to find it in 4 or 5 of the 10, and
+in all 10 with a probability below 0.001. At matched budgets the agent also finds slightly
+more distinct failing cells. It reaches its first failure later, because each seed covers
+all 108 cells before it starts probing.
 
-**Confidence.** The evidence is indicative, not conclusive. An agent no better than random
-search would still go 3 for 3 about 13% of the time. Its interval also overlaps both
-baselines'.
+**What it submitted.** Re-tested on the 100,000 runs the agent never saw, 8 of the 10 seeds
+stated the collision mode as a condition that holds AC-01 collisions there. They show a
+precision–coverage trade-off across seeds: 34–100% of the runs inside fail, and they hold
+18 to 63 of the 67 collisions. The other two seeds named exact corners of the ODD (for
+example a headway of exactly 0.3 s, its lower bound), which the exposure model never
+samples. Apart from one condition too broad to be useful, failures were 23–73 times more
+frequent inside the conditions than outside them.
+
+**Confidence.** This is a pre-specified test on 10 seeds, at one budget and on one model,
+treating the baselines' detection shares as known. Here, it shows the agent reaches this
+rare mode more reliably than random or grid search. Whether it beats adaptive search is
+open.
 
 **Recommendation.** Run agent-driven search alongside coverage-based search, not instead of
-it. Cost is not the constraint. What would decide the question is a comparison at several
-budgets against adaptive baselines: the cross-entropy method and decision-tree rule
-extraction.
+it. Cost is not the constraint: the ten campaigns cost $6.20 together. The next comparison
+is against adaptive baselines at several budgets: the cross-entropy method and decision-tree
+rule extraction.
 
 Details: [`docs/agent.md`](docs/agent.md).
 
@@ -175,8 +187,9 @@ Full list: [`docs/limitations.md`](docs/limitations.md).
    hazard appears rather than at the takeover request, and add a careful and competent human
    driver as a benchmark. This decides whether finding 5 calls for a design change or a
    different reference.
-2. **Settle whether agent-assisted discovery earns its place.** Run more seeds at several
-   budgets against adaptive baselines.
+2. **Test agent-assisted discovery against adaptive search.** It beats random and grid
+   search on the rare collision mode; the open question is the cross-entropy method and
+   decision-tree rule extraction, at several budgets.
 3. **Bring perception into scope.** Make detection range a triggering-condition parameter,
    and derive a range requirement from the preventability reference.
 
@@ -214,10 +227,12 @@ pytest -q
 | [`docs/system.md`](docs/system.md) | System definition, scenarios, metrics, preventability, driver model, simulator verification |
 | [`docs/evaluation.md`](docs/evaluation.md) | Status rules, provenance, sensitivity, findings, SOTIF mapping, all commands |
 | [`docs/agent.md`](docs/agent.md) | Agent tools and information boundary, SQL sandbox, full results, held-out check, cost |
+| [`docs/agent_protocol.md`](docs/agent_protocol.md) | How the ten agent seeds would be run and reported, fixed before seeds 3–9 ran |
 | [`docs/limitations.md`](docs/limitations.md) | Limitations in full |
 | [`docs/roadmap.md`](docs/roadmap.md) | Specified, unbuilt work |
 | [`docs/traceability.md`](docs/traceability.md) | Validation traceability map: each concept to its implementation |
 | [`docs/readme_claims.md`](docs/readme_claims.md) | Every number in the README and docs, with the results file it comes from |
+| [`CHANGELOG.md`](CHANGELOG.md) | What changed between releases |
 
 ---
 

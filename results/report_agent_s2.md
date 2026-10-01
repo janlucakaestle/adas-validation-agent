@@ -16,7 +16,7 @@ Recorded when the campaign was created (2026-09-30 22:28:18); method `agent`, bu
 - Config `odd.yaml` SHA-256: `6551f07c7bb57a5a19f98a4fba07fc6951fc1980e38caf3aff22faadaf06147e`
 - Config `reference.yaml` SHA-256: `5d96ab3655542260859e4c3f03c777413f20c97adc59f47deff4f3e8e0fefc06`
 
-> **Re-rendered on 2026-10-01** by `scripts/rerender_agent_reports.py`, to attach the release verdict. The agent ran under source hash `3be861a1d234`; this release's is `330d6d3bcb9a`. The policy and the parsed configuration are identical and no simulation module changed (`docs/agent.md`). The summary, triggering conditions and hypothesis tests are the agent's own, from its logged submission; everything else is recomputed from the stored runs.
+> **Re-rendered on 2026-10-01** by `scripts/rerender_agent_reports.py`, to attach the release verdict. The agent ran under source hash `3be861a1d234`; this release's is `2a9c9124724b`. The policy and the parsed configuration are identical and no simulation module changed (`docs/agent.md`). The summary, triggering conditions and hypothesis tests are the agent's own, from its logged submission; everything else is recomputed from the stored runs.
 
 ## Summary
 

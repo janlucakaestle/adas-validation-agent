@@ -162,7 +162,7 @@ def failure_predicate() -> str:
     return load_acceptance()["failure_predicate"]
 
 
-TARGETS = ("failure",)  # "nuisance_braking" joins with TASKS3:T36
+TARGETS = ("failure",)  # "nuisance_braking" is planned (docs/roadmap.md)
 
 
 def target_predicate(target: str) -> str:

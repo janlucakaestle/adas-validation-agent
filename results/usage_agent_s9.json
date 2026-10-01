@@ -1,0 +1,11 @@
+{
+  "model": "claude-sonnet-5",
+  "api_calls": 24,
+  "input_tokens_total": 1043185,
+  "cache_read_tokens": 975087,
+  "cache_write_tokens": 68050,
+  "cache_hit_rate": 0.935,
+  "output_tokens": 35581,
+  "est_cost_usd": 0.721,
+  "est_cost_without_cache_usd": 2.442
+}

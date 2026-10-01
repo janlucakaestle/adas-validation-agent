@@ -40,29 +40,44 @@ in depth for a local, trusted tool, not a security boundary.**
 
 ## Results
 
-Three seeds on Claude Sonnet 5, 300-run budget (`results/report_agent_s*.md`). Each seed
-submitted early, after 177, 168 and 219 runs (mean 188), so baselines are also shown cut to
-their first 188 runs. Intervals are 95% Clopper–Pearson over seeds.
+Ten seeds on Claude Sonnet 5 with a 300-run budget (`results/report_agent_s*.md`,
+`results/benchmark.md`). What would be reported, and the one test of "more reliably", were
+fixed in [`agent_protocol.md`](agent_protocol.md) and committed before seeds 3–9 ran; it
+also records the one deviation (the estimation ran after the seeds instead of before). All
+ten seeds submitted a report; none hit its cost cap or the turn limit.
 
-| | agent (3 seeds) | random (100 seeds) | grid (100 seeds) |
-| --- | --- | --- | --- |
-| P(finds a preventable attentive collision), 300 runs | 3/3 = 1.00 [0.29, 1.00] | 0.67 [0.57, 0.76] | 0.64 [0.54, 0.73] |
-| same, first 188 runs | (as above) | 0.51 [0.41, 0.61] | 0.43 [0.33, 0.53] |
-| distinct failing cells, 300 runs | 13.7 ± 4.0 | 20.5 ± 2.5 | 21.1 ± 2.8 |
-| distinct failing cells, first 188 runs | (as above) | 15.2 ± 2.7 | 16.1 ± 2.9 |
-| runs to first failure | 23.0 ± 29.4 | 8.8 ± 8.9 | 9.1 ± 8.9 |
+| seed | runs used | turns | cost | finds the collision mode | random at the same runs | grid at the same runs | failing cells (random, grid) |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| s0 | 177 | 16 | $0.53 | yes | 0.50 [0.40, 0.60] | 0.41 [0.31, 0.51] | 9 (14.4, 15.4) |
+| s1 | 168 | 19 | $0.63 | yes | 0.47 [0.37, 0.57] | 0.40 [0.30, 0.50] | 16 (13.9, 14.8) |
+| s2 | 219 | 13 | $0.57 | yes | 0.59 [0.49, 0.69] | 0.47 [0.37, 0.57] | 16 (16.7, 17.6) |
+| s3 | 168 | 16 | $0.59 | yes | 0.47 [0.37, 0.57] | 0.40 [0.30, 0.50] | 16 (13.9, 14.8) |
+| s4 | 155 | 24 | $0.66 | yes | 0.44 [0.34, 0.54] | 0.37 [0.28, 0.47] | 19 (13.2, 14.1) |
+| s5 | 163 | 19 | $0.57 | yes | 0.45 [0.35, 0.55] | 0.39 [0.29, 0.49] | 15 (13.6, 14.6) |
+| s6 | 162 | 16 | $0.66 | yes | 0.45 [0.35, 0.55] | 0.39 [0.29, 0.49] | 20 (13.6, 14.6) |
+| s7 | 196 | 19 | $0.58 | yes | 0.51 [0.41, 0.61] | 0.44 [0.34, 0.54] | 15 (15.6, 16.4) |
+| s8 | 186 | 17 | $0.68 | yes | 0.50 [0.40, 0.60] | 0.42 [0.32, 0.52] | 14 (15.0, 15.9) |
+| s9 | 178 | 24 | $0.72 | yes | 0.50 [0.40, 0.60] | 0.41 [0.31, 0.51] | 21 (14.5, 15.5) |
 
-**Trade-off.** Every seed found the rare attentive pocket and described it as a triggering
-condition. The agent finds fewer cells and reaches its first failure later, because each
-seed first puts one run in all 108 cells before probing. Against the baselines' first 188
-runs the cell gap is small.
+"Random/grid at the same runs" is the share of the 100 campaigns that contain the collision
+mode within their first n runs, n being the seed's runs used, with a 95% Clopper–Pearson
+interval.
 
-**Why preliminary.** The agent's interval overlaps both baselines'. If it were no better
-than random at 188 runs, all three seeds would still find the pocket about 13% of the time
-(0.51³). The matched comparison cuts baselines at the agent's mean, not per seed.
+- **The pre-specified test.** The agent found the mode in 10 of 10 seeds (1.00 [0.69,
+  1.00]). At the same per-seed budgets, random search would be expected to find it 4.88
+  times and grid search 4.10 times. The probability of 10 of 10 is 7.4 × 10⁻⁴ for random and
+  1.3 × 10⁻⁴ for grid (Poisson-binomial, treating the baseline shares as known).
+- **Breadth.** At matched budgets the agent averages 16.1 distinct failing cells, against
+  14.4 (random) and 15.4 (grid). Against the baselines' full 300 runs it finds fewer (20.5
+  and 21.1), because it stops early.
+- **Speed.** Its first failure comes at run 12.0 ± 16.1, against 8.8 and 9.1, because each
+  seed first puts one run in all 108 cells.
+- **v0.1 to v0.2.** With three seeds compared at their mean budget, v0.1 reported fewer
+  failing cells and called the detection result indicative. Per-seed matching and seven
+  more seeds change both.
 
-**Transcripts.** Every tool call of the three seeds, with its input and output, is in
-`results/transcript_agent_s0.json` to `_s2.json`. Outputs are cut at 2,000 characters. The
+**Transcripts.** Every tool call of the ten seeds, with its input and output, is in
+`results/transcript_agent_s0.json` to `_s9.json`. Outputs are cut at 2,000 characters. The
 only edit: the report path in each `submit_report` result is shortened from the local
 absolute path to `results/report_agent_s<k>.md`.
 
@@ -88,40 +103,59 @@ From `results/transcript_agent_s0.json`:
 
 ## Held-out check of submitted conditions
 
-`python -m avval.cli posthoc` re-evaluates each submitted SQL predicate on the 100,000
-estimation runs the agent never saw (`results/posthoc_predicates.md`). Failure = collision
-or TTC < 1.5 s.
+`python -m avval.cli posthoc` re-evaluates every submitted SQL predicate, 24 in all, on the
+100,000 estimation runs the agent never saw (`results/posthoc_predicates.md`). Failure means
+a collision or a TTC below 1.5 s. Per seed, the condition holding the most AC-01 collisions:
 
 | seed | condition | failure rate inside [95% CI] | lift | AC-01 collisions inside (of 67) | vs. reference box |
 | --- | --- | --- | --- | --- | --- |
-| s0 | cut-in, headway < 0.45 s, closing ≥ 8 m/s, speed ≥ 22 m/s | 93.9% [87.3, 97.7] | 54.8 | 18 | entirely inside, covers 26% of its failures |
-| s1 | cut-in, headway ≤ 0.6 s, closing ≥ 6 m/s | 51.2% [47.3, 55.1] | 34.7 | 62 | 97% inside, covers 93% |
-| s2 | cut-in, headway ≤ 0.4 s, closing ≥ 6 m/s | 78.0% [72.0, 83.2] | 47.8 | 45 | 97% inside, covers 48% |
-| s0 | lead braking > 5 m/s², headway < 1.6 s, distracted | 80.5% [76.4, 84.1] | 54.8 | 0 | disjoint: second failure mode |
-| s1, s2 | lead braking ≥ 5 m/s², distracted | 52.6% [50.3, 54.9] | 62.4 | 0 | disjoint: second failure mode |
+| s0 | cut-in, headway < 0.45 s, closing ≥ 8 m/s, speed ≥ 22 m/s | 93.9% [87.3, 97.7] | 54.8 | 18 | inside it |
+| s1 | cut-in, headway ≤ 0.6 s, closing ≥ 6 m/s | 51.2% [47.3, 55.1] | 34.7 | 62 | overlapping |
+| s2 | cut-in, headway ≤ 0.4 s, closing ≥ 6 m/s | 78.0% [72.0, 83.2] | 47.8 | 45 | overlapping |
+| s3 | cut-in, headway ≤ 0.3 s, closing ≥ 9 m/s | no runs | – | 0 | empty |
+| s4 | cut-in, headway ≤ 0.5 s, closing ≥ 6 m/s | 62.5% [57.8, 66.9] | 40.9 | 55 | overlapping |
+| s5 | cut-in, headway < 0.8 s, closing ≥ 6 m/s | 33.7% [30.9, 36.6] | 23.3 | 63 | contains it |
+| s6 | cut-in, initial gap ÷ closing speed < 1.5 s | 100% [99.2, 100] | 73.1 | 63 | overlapping |
+| s7 | cut-in, headway < 0.5 s, closing ≥ 8 m/s | 87.5% [81.4, 92.2] | 52.5 | 35 | inside it |
+| s8 | cut-in, headway ≤ 0.6 s, closing ≥ 7 m/s | 60.4% [55.7, 64.9] | 39.3 | 54 | inside it |
+| s9 | cut-in, initial gap ≤ 14.5 m, closing ≥ 9 m/s | no runs | – | 0 | empty |
 
-The conditions are precise, with a precision–coverage trade-off across seeds; none holds
-more than 62 of the 67 AC-01 collisions. The reference box was drawn after the fact from the
-estimation itself, built for coverage (38.7% failure rate, 61 of 67 collisions), so it isn't
-a fair precision target. The fair comparison is automatic rule extraction from the same runs
-(a decision-tree baseline, on the roadmap). The lead-braking conditions describe the
-distracted-driver failures behind AC-03; s1's and s2's contain 54% of all failing runs.
+- **A precision–coverage trade-off across seeds.** The eight usable cut-in conditions run
+  from narrow and precise (s0: 94%, 18 collisions) to broad (s5: 34%, all 63 cut-in
+  collisions). None holds the 4 lead-braking collisions except s6's third condition,
+  `lead_brake AND attentive`, which is so broad (48,011 runs, lift 0.1) that it says nothing.
+- **s6's best condition is partly true by definition.** Initial gap ÷ closing speed is the
+  TTC at the cut-in, and failure includes a TTC below 1.5 s, so every run inside fails. Its
+  coverage, all 63 cut-in collisions, is the informative part.
+- **Four conditions hold no held-out runs** (s3 TC-02 and TC-03, s5 TC-02, s9 TC-01). They
+  name exact ODD corners, such as a headway of exactly 0.3 s or a closing speed of exactly
+  9 m/s, which the agent can run directly but the exposure model never samples. In
+  `results/posthoc_predicates.md` they appear with 0 runs inside; the "disjoint" label in
+  its comparison table means empty for these four.
+- **The second failure mode.** Eleven conditions describe lead braking of about 5 m/s² or
+  more with a distracted driver, the failures behind AC-03, with 49–91% of runs inside
+  failing.
+- **The reference box is not a fair precision target.** It was drawn after the fact around
+  the estimation's own collisions, built for coverage (38.7% failure rate, 61 of 67
+  collisions). The fair comparison is automatic rule extraction from the agent's own runs:
+  the decision-tree baseline on the roadmap.
 
-**Validation status in the agent reports.** The agents ran before the final code, so their
-reports, written at submission, found no estimation matching the release. The changes since
-were to the agent loop, reporting and tooling. The policy and the parsed configuration are
-identical, and no simulation module changed. `scripts/rerender_agent_reports.py` re-renders
-each report from the stored runs and the agent's logged submission and attaches the release
-verdict. Each report says so, and names the source hash the agent ran under. The summary,
-conditions and hypothesis tests are the agent's own; the re-render left every other section
-unchanged apart from row order in two tables.
+**Validation status in the agent reports.** Every report was re-rendered with
+`scripts/rerender_agent_reports.py` once the estimation for this release existed, from the
+stored runs and the agent's logged submission. Seeds 0–2 ran under earlier agent and
+reporting code; seeds 3–9 under code that differs from this release only in how
+`results/benchmark.md` is formatted. The policy and the parsed configuration are identical
+throughout, and no simulation module changed. Each report says it was re-rendered and names
+the source hash the agent ran under. The summary, conditions and hypothesis tests are the
+agent's own; the re-render changed nothing else apart from row order in a few tables.
 
 ## Cost and prompt caching
 
-The seeds cost $0.53, $0.63 and $0.57 at list prices, with 88–92% of input tokens read from
-cache; uncached they'd have cost $1.38, $1.90 and $1.41 (`results/usage_agent_s*.json`).
-Not counted: a short smoke test on Claude Haiku and one Sonnet run that stopped early because
-its replies hit the output-token limit, which has since been raised.
+The ten seeds cost $0.53–0.72 each at list prices, $6.20 together, with 88–94% of input
+tokens read from cache. Uncached they would have cost $1.38–2.44 each, $18.37 together
+(`results/usage_agent_s*.json`). Not counted: a short smoke test on Claude Haiku and one
+Sonnet run that stopped early because its replies hit the output-token limit, which has
+since been raised.
 
 Caching uses two breakpoints: an explicit one on the system prompt (caching tools and
 prompt) and top-level automatic caching, which moves a breakpoint to the end of the
