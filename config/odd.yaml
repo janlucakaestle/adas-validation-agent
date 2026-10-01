@@ -1,0 +1,77 @@
+# Operational Design Domain (ODD) and test-parameter space for the ACC-with-hand-back function.
+# Every scenario the validation campaign runs must sit inside these ranges.
+# SAE Level 2 (reference framework: UNECE R171, DCAS). The driver supervises at all times and
+# is the fallback; see "System definition" in README.md.
+function_under_test: "Adaptive Cruise Control (learned policy) with driver-intervention request, SAE L2"
+parameters:
+  scenario:
+    values: [lead_brake, cut_in]
+    description: >
+      lead_brake = the vehicle ahead brakes to a stop from steady following.
+      cut_in = a slower vehicle cuts into the ego lane at a given time headway.
+  ego_speed:
+    range: [15.0, 36.0]  # TODO(data): placeholder
+    unit: m/s
+    description: Ego speed at scenario start (also the ACC set speed).
+  headway:
+    # Per-scenario ranges (TASKS2:T17). PLACEHOLDERS: TODO(data).
+    ranges:
+      lead_brake: [0.8, 3.0]  # typical ACC following settings plus some slack
+      cut_in: [0.3, 2.0]      # cut-ins at under a second are common
+    unit: s
+    description: >-
+      Initial time headway to the lead / cut-in vehicle: gap divided by ego speed. The
+      simulator's initial gap is headway * ego_speed, so short absolute gaps occur only at
+      low speed, as in real traffic.
+  # Scenario-specific parameters: each applies to exactly one scenario (`scenario` key),
+  # is required for that scenario and must be omitted (or null) for the other.
+  lead_decel:
+    range: [1.0, 9.0]  # TODO(data): placeholder
+    unit: m/s^2
+    scenario: lead_brake
+    description: Lead vehicle deceleration (capped by road friction).
+  closing_speed:
+    range: [1.0, 9.0]  # TODO(data): placeholder
+    unit: m/s
+    scenario: cut_in
+    description: Closing speed at the moment of cut-in (ego speed minus cut-in vehicle speed).
+  friction:
+    range: [0.5, 1.0]  # lower bound by decision (TASKS2:T18); TODO(data): placeholder
+    unit: "-"
+    description: >-
+      Tyre-road friction coefficient: 1.0 dry, about 0.5 wet (the lower ODD bound).
+      Ice and snow are outside the ODD.
+  driver_state:
+    values: [attentive, distracted]
+    description: >
+      Driver state at the takeover request. 'attentive' is the intended use: an L2 driver
+      supervising with eyes on the road. 'distracted' is reasonably foreseeable misuse at L2
+      (SOTIF): a driver engaged in a non-driving task that driver monitoring did not prevent.
+      Reaction-time parameters and sources: config/driver.yaml.
+    # `category` is intended_use | foreseeable_misuse. It is stored per run as driver_category,
+    # so SQL can group by it.
+    states:
+      attentive:
+        definition: >-
+          No secondary task; the driver supervises the L2 function with eyes on the road.
+        category: intended_use
+      distracted:
+        definition: >-
+          The driver is engaged in a non-driving task (the reaction-time source used a reading
+          task) and must first re-engage when the system requests intervention.
+        category: foreseeable_misuse
+coverage:
+  # Coverage cells = scenario x binned continuous parameters. driver_state is sampled, not binned.
+  # Each scenario is binned on the shared parameters plus its own scenario-specific parameter.
+  bins:
+    lead_brake:
+      ego_speed: &ego_speed_bins [15.0, 22.0, 29.0, 36.0]
+      headway: [0.8, 1.5333, 2.2667, 3.0]  # three even bins (placeholder edges)
+      lead_decel: [1.0, 3.5, 6.0, 9.0]
+      friction: &friction_bins [0.5, 0.75, 1.0]
+    cut_in:
+      ego_speed: *ego_speed_bins
+      headway: [0.3, 0.8667, 1.4333, 2.0]  # three even bins (placeholder edges)
+      closing_speed: [1.0, 3.5, 6.0, 9.0]
+      friction: *friction_bins
+  min_runs_per_cell: 1  # TODO(data): placeholder

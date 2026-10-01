@@ -1,0 +1,47 @@
+# Driver model: time from the event that prompts a response to the driver's first input, and the
+# braking response after it. Two states only (SAE L2: an attentive, supervising driver, and a
+# distracted driver as reasonably foreseeable misuse). Sources and caveats: README "Driver model".
+#
+# Times are drawn from a log-normal matched to each state's mean and SD. Draws below the state's
+# floor are REDRAWN, not clipped, so no probability mass piles up at the floor.
+# Assumption (B2): times are independent of speed across the ODD (15-36 m/s); the distracted
+# source was measured at a constant 70 mph.
+# Currently every state starts reacting at the takeover request (TOR); see README "System
+# definition" for why this is pessimistic for the attentive driver.
+
+# Time from the first input to effective braking. During this delay the driver has control
+# but holds the brake level inherited from the ACC; brake build-up starts after it.
+brake_onset_delay_s: 0.0  # TODO(data): 0.0 = braking builds from the first input
+# The driver brakes towards min(peak_decel_fraction * mu * g, brake_demand_factor * needed braking).
+brake_demand_factor: 1.5  # TODO(data): driver over-brakes relative to the needed deceleration
+
+states:
+  attentive:
+    # Brake reaction time to an unexpected event. Mean between Green (2000)'s "unexpected"
+    # (1.25 s) and "surprise" (1.5 s) categories; consistent with Summala (2000), 1.0-1.3 s for
+    # unalerted drivers at a TTC of about 4 s.
+    takeover_mean_s: 1.3
+    # Coefficient of variation of about 0.35-0.37 in the brake-reaction literature
+    # (Johansson & Rumar, 1971: 1.01 +/- 0.37 s, n = 321; Magister et al., 2005: 0.42 +/- 0.14 s).
+    takeover_sd_s: 0.5
+    # Close to the fastest reactions Johansson & Rumar (1971) observed (about 0.4 s), rounded up.
+    floor_s: 0.5
+    source: >-
+      Green (2000) and Summala (2000) for the mean; Johansson & Rumar (1971) and
+      Magister et al. (2005) for the coefficient of variation and the floor
+    peak_decel_fraction: 0.9  # TODO(data): fraction of the friction limit mu * g
+    brake_jerk: 25.0          # TODO(data): m/s^3, brake build-up and release rate
+  distracted:
+    # Kaestle, Anvari, Peters, Krol & Wurdemann (2025), IEEE Transactions on Haptics: urgent
+    # takeovers after a reading task, stationary obstacle at about 7 s TTC, 70 mph, visual and
+    # audio takeover request, time to first meaningful input.
+    # Alternative, all feedback modalities pooled: 4.75 +/- 1.24 s.
+    takeover_mean_s: 4.59
+    takeover_sd_s: 1.33
+    floor_s: 1.77  # TODO(data): replace with the author's value (fastest takeover in the study)
+    source: >-
+      Kaestle, Anvari, Peters, Krol & Wurdemann (2025), "Correlation between reaction time,
+      multi-modal feedback and take-over requests for level 3 automated vehicles", IEEE
+      Transactions on Haptics (visual + audio takeover request)
+    peak_decel_fraction: 0.9  # TODO(data)
+    brake_jerk: 25.0          # TODO(data)

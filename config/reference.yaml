@@ -1,0 +1,31 @@
+# Reference controllers used to judge whether a failure was preventable.
+#
+# Each reference replays the same case (same lead-vehicle model and integrator as the
+# simulator) with an idealised ego response: it holds its speed until the hazard appears
+# (cut-in at t = 0, lead braking at its onset), waits `reaction_time_s`, then builds braking
+# at `jerk_mps3` (null = instantly) up to its maximum deceleration and holds it until the ego
+# stops. No authority limit and no hand-back.
+
+ideal:
+  # An ideal system braking at the friction limit the moment the hazard appears. Among all
+  # ego profiles that start braking at the hazard and never exceed this deceleration, this one
+  # has the smallest ego position, and so the largest gap, at every instant. A collision is
+  # *unpreventable* (preventable = FALSE) if this reference also collides. A run the system
+  # itself avoided is always preventable: a system can brake before the hazard (e.g. when the
+  # initial headway is already short), which this reference does not.
+  decel_fraction_of_mu_g: 0.9  # TODO(data): modelling choice (0.9 of the friction limit)
+  reaction_time_s: 0.0
+  jerk_mps3: null
+
+careful_competent_driver:
+  # Optional second reference in the style of the UN R157 "careful and competent human
+  # driver" model. R157 regulates L3 lane keeping; its driver model is used here only as a human
+  # benchmark, not as a statement about this function, which is L2. Disabled: its parameters must come from the regulation or data and are
+  # deliberately not filled in here. When enabled, every value must be set; the result is
+  # stored per run as ccd_preventable (NULL while disabled). This is a simplified,
+  # longitudinal-only reading (reaction delay then jerk-limited braking), not the full R157
+  # model, which also defines perception of a cut-in from lateral motion.
+  enabled: false
+  reaction_time_s: null          # TODO(data): perception + reaction time after hazard onset (s)
+  decel_fraction_of_mu_g: null   # TODO(data): or replace with an absolute deceleration from R157
+  jerk_mps3: null                # TODO(data): brake build-up rate (m/s^3)

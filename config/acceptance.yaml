@@ -1,0 +1,82 @@
+# Acceptance criteria, each evaluated as SQL over the `runs` table of one campaign.
+# `where` optionally restricts the population. Each criterion has an explicit `kind`:
+#   rate:     `event` is a boolean SQL expression; value = share of runs where it is true,
+#             with a 95% Clopper-Pearson interval.
+#   quantile: `metric` is a numeric SQL expression and `q` the quantile; value =
+#             quantile_cont(metric, q), with a 95% percentile-bootstrap interval (fixed seed).
+# A PASS needs the *conservative* end of the interval to meet the threshold (the upper bound
+# for "<=", the lower bound for ">="). See avval/evaluation.py for the full status rules.
+# Thresholds are illustrative, not regulatory values: in practice they are agreed with Product and Safety.
+# `min_n` is the minimum number of runs in the criterion's population (after `where`) before its
+# result counts as evidence. Below it a would-be PASS is INSUFFICIENT EVIDENCE, and no GO is possible.
+criteria:
+  - id: AC-01
+    name: Collision-free with attentive supervision
+    rationale: >
+      The intended use case, an attentive driver supervising the L2 function, must never end
+      in a preventable collision inside the ODD.
+      A zero-rate target can be falsified but not proven by testing: with no collisions the
+      report states the 95% upper bound on the rate instead of claiming a PASS.
+      Collisions that the ideal reference (friction-limited braking from hazard onset) also
+      cannot avoid are physics, not the function, and are reported by AC-06 instead.
+    kind: rate
+    event: "collision"
+    where: "driver_state = 'attentive' AND preventable"
+    op: "<="
+    threshold: 0.0  # TODO(data): illustrative (zero-collision goal)
+    min_n: 100  # TODO(data): placeholder; derive from the validation target
+  - id: AC-02
+    name: TTC safety margin
+    rationale: >
+      95% of collision-free runs keep a minimum time-to-collision of at least 1.5 s.
+      Collisions are excluded here because AC-01 and AC-03 cover them. Runs where the
+      vehicles never close (min_ttc NULL) count as infinite TTC, not as missing.
+    kind: quantile
+    metric: "coalesce(min_ttc, 'Infinity'::DOUBLE)"
+    q: 0.05
+    where: "NOT collision"
+    op: ">="
+    threshold: 1.5  # TODO(data): illustrative
+    min_n: 100  # TODO(data): placeholder; derive from the validation target
+  - id: AC-03
+    name: Hand-back robustness under foreseeable misuse
+    rationale: >
+      Reasonably foreseeable misuse at L2: when the system requests intervention from the
+      distracted driver (driver_state = 'distracted', driver_category = foreseeable_misuse),
+      collisions stay below 5%. Only preventable runs count (see AC-06).
+    kind: rate
+    event: "collision"
+    where: "tor_issued AND driver_category = 'foreseeable_misuse' AND preventable"
+    op: "<="
+    threshold: 0.05  # TODO(data): illustrative (TASKS3:T34 derives it)
+    min_n: 100  # TODO(data): placeholder; derive from the validation target
+  - id: AC-04
+    name: Longitudinal comfort
+    rationale: Without a hand-back, 95th-percentile jerk stays within 5 m/s^3.
+    kind: quantile
+    metric: "max_jerk"
+    q: 0.95
+    where: "NOT tor_issued"
+    op: "<="
+    threshold: 5.0  # TODO(data): illustrative
+    min_n: 100  # TODO(data): placeholder; derive from the validation target
+  - id: AC-06
+    name: Share of unpreventable runs (information only)
+    rationale: >
+      Runs in which even the ideal reference collides. Not pass/fail: it shows how much of
+      the tested ODD is physically unavoidable, and so how much AC-01 and AC-03 exclude.
+    kind: rate
+    event: "NOT preventable"
+    where: null
+    op: null         # no op/threshold: reported with status INFO
+    threshold: null
+    min_n: 100  # TODO(data): placeholder; derive from the validation target
+# Retired criteria. IDs are never reused for a different meaning, so old reports stay unambiguous.
+retired_criteria:
+  - id: AC-05
+    name: Hand-back robustness under visual occlusion
+    retired_by: "TASKS2:T15"
+    reason: The restricted-vision driver state was removed; the visual-occlusion category no longer exists.
+# A single run counts as a "failure" (used to compare search efficiency) if this SQL predicate is true.
+# min_ttc is NULL when the vehicles never close, hence the coalesce.
+failure_predicate: "collision OR coalesce(min_ttc < 1.5, false)"

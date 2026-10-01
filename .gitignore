@@ -1,0 +1,22 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# results/: track only the frozen policy, showcase figures, final reports and API usage.
+# Databases, transcripts, CSVs and any other intermediate output stay local.
+results/*
+!results/policy.json
+!results/*.png
+!results/report_estimate.md
+!results/report_random.md
+!results/report_grid.md
+!results/report_agent_s*.md
+!results/benchmark.md
+!results/sensitivity.md
+!results/posthoc_predicates.md
+!results/findings.md
+!results/ac01_clusters.md
+!results/usage_*.json
+!results/transcript_agent_s0.json
+!results/transcript_agent_s1.json
+!results/transcript_agent_s2.json

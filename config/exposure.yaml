@@ -1,0 +1,37 @@
+# Exposure model: how often each situation inside the ODD occurs in real driving.
+#
+# ILLUSTRATIVE PLACEHOLDERS. Every weight below is invented to show the mechanism and is
+# marked TODO(data). Acceptance criteria are evaluated on an *estimation campaign* sampled from
+# this distribution (`python -m avval.cli estimate`), so its verdict is only as meaningful as
+# these weights. In a real programme they would come from naturalistic driving / fleet data.
+#
+# Categorical parameters: weight per value (must sum to 1).
+# Continuous parameters: piecewise-uniform histogram; `bins` are edges inside the ODD range,
+# `weights` the probability of each bin (must sum to 1). The scenario-specific parameter is
+# only sampled for its own scenario.
+
+scenario:          # TODO(data): illustrative
+  lead_brake: 0.6
+  cut_in: 0.4
+driver_state:      # TODO(data): illustrative; mostly attentive supervision
+  attentive: 0.80
+  distracted: 0.20  # the sum of the five removed non-attentive states' weights
+ego_speed:         # TODO(data): illustrative, m/s
+  bins: [15.0, 22.0, 29.0, 36.0]
+  weights: [0.2, 0.4, 0.4]
+headway:           # TODO(data): illustrative, s, per scenario; short headways are rarer
+  lead_brake:
+    bins: [0.8, 1.5333, 2.2667, 3.0]
+    weights: [0.2, 0.4, 0.4]
+  cut_in:
+    bins: [0.3, 0.8667, 1.4333, 2.0]
+    weights: [0.3, 0.4, 0.3]
+lead_decel:        # TODO(data): illustrative, m/s^2; harsh braking is rare
+  bins: [1.0, 3.5, 6.0, 9.0]
+  weights: [0.7, 0.25, 0.05]
+closing_speed:     # TODO(data): illustrative, m/s
+  bins: [1.0, 3.5, 6.0, 9.0]
+  weights: [0.6, 0.3, 0.1]
+friction:          # TODO(data): illustrative; mostly dry roads
+  bins: [0.5, 0.75, 1.0]  # lower edge moved from 0.4 with the ODD floor (TASKS2:T18)
+  weights: [0.2, 0.8]
