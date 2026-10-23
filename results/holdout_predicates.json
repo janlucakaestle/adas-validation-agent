@@ -1,0 +1,578 @@
+{
+ "holdout_protocol_id": "11f362476056b96f74759bc897db0889a9692d5ddafae3f013c4cdddd240bc59",
+ "frozen_set_sha256": "ae153ba5af675f786e8c2e96a4eecdda0770e2b7cf01c19170617c5b0a438822",
+ "campaign": "holdout",
+ "analysis_version": "holdout-analysis/v4",
+ "rows": [
+  {
+   "source": "agent_s0",
+   "condition": "TC-01",
+   "predicate": "scenario='lead_brake' AND driver_state='distracted' AND lead_decel >= 6",
+   "condition_sha256": "9d73d710264769297d8689ae935794c995f5c619f6a53386ee4cb79964a275d9",
+   "derived_from": [
+    "agent_s0"
+   ],
+   "release_id": "fe59625d9428753862687a3969fa0abf194b64e8afeabe42898bdbcca7498d81",
+   "predicate_sha256": "5ed4b9985ca6475049a4acad88150704cd079cc3a973268a9b0e768e2ef1548a",
+   "where": "scenario='lead_brake' AND driver_state='distracted' AND lead_decel >= 6",
+   "target": "collision",
+   "runs_inside": 601,
+   "runs_outside": 99399,
+   "target_rate_inside": 0.36605657237936773,
+   "target_rate_outside": 0.002162999627762855,
+   "lift": 169.23561506017103,
+   "inside_rate_ci95": [
+    0.3274513428423331,
+    0.40598523228034156
+   ],
+   "exposure_mass": 0.0064,
+   "region_events_inside": 0,
+   "region_events_total": 55,
+   "support": "exposure-supported"
+  },
+  {
+   "source": "agent_s0",
+   "condition": "TC-02",
+   "predicate": "scenario='cut_in' AND headway <= 0.3 AND closing_speed >= 9",
+   "condition_sha256": "4df503878aaeb46b24058c6af0efab8ed46f125912da0f9d0c77d9707f46b79a",
+   "derived_from": [
+    "agent_s0"
+   ],
+   "release_id": "fe59625d9428753862687a3969fa0abf194b64e8afeabe42898bdbcca7498d81",
+   "predicate_sha256": "0ac169fe9fdcbdf9abaf4f90dfa4de9d7a25055522c3d06d4a644f966f8f1d1c",
+   "where": "scenario='cut_in' AND headway <= 0.3 AND closing_speed >= 9",
+   "target": "collision",
+   "runs_inside": 0,
+   "runs_outside": 100000,
+   "target_rate_inside": null,
+   "target_rate_outside": 0.00435,
+   "lift": null,
+   "inside_rate_ci95": [
+    null,
+    null
+   ],
+   "exposure_mass": 0.0,
+   "region_events_inside": 0,
+   "region_events_total": 55,
+   "support": "unsupported (zero exposure measure)"
+  },
+  {
+   "source": "agent_s1",
+   "condition": "TC-01",
+   "predicate": "scenario = 'lead_brake' AND driver_state = 'distracted' AND lead_decel >= 6.5",
+   "condition_sha256": "670e92a4390d30bfd325f4c222808e5ebbc62213e90951a31e81781be6e12b64",
+   "derived_from": [
+    "agent_s1"
+   ],
+   "release_id": "fe59625d9428753862687a3969fa0abf194b64e8afeabe42898bdbcca7498d81",
+   "predicate_sha256": "9b52e4cdf52b4c502c8f11bb2abf02070e23ee110b86316329d437479682f8ae",
+   "where": "scenario = 'lead_brake' AND driver_state = 'distracted' AND lead_decel >= 6.5",
+   "target": "collision",
+   "runs_inside": 492,
+   "runs_outside": 99508,
+   "target_rate_inside": 0.38414634146341464,
+   "target_rate_outside": 0.002472163042167464,
+   "lift": 155.38875669244499,
+   "inside_rate_ci95": [
+    0.3409603319799153,
+    0.4287334838118375
+   ],
+   "exposure_mass": 0.005225,
+   "region_events_inside": 0,
+   "region_events_total": 55,
+   "support": "exposure-supported"
+  },
+  {
+   "source": "agent_s1",
+   "condition": "TC-02",
+   "predicate": "scenario = 'cut_in' AND headway <= 0.35 AND closing_speed >= 8.5",
+   "condition_sha256": "99eb5783ef1dec8b3b63d4ab7ab44fdc745b0fc448621c7c1d9bf99fa6144ab8",
+   "derived_from": [
+    "agent_s1"
+   ],
+   "release_id": "fe59625d9428753862687a3969fa0abf194b64e8afeabe42898bdbcca7498d81",
+   "predicate_sha256": "3c9869c7c40ed7274f8e9ced6439dd770ceb889db438790bed9546aad21c7b86",
+   "where": "scenario = 'cut_in' AND headway <= 0.35 AND closing_speed >= 8.5",
+   "target": "collision",
+   "runs_inside": 18,
+   "runs_outside": 99982,
+   "target_rate_inside": 0.7777777777777778,
+   "target_rate_outside": 0.004210757936428557,
+   "lift": 184.71206122987596,
+   "inside_rate_ci95": [
+    0.52362723426352,
+    0.9359079522823335
+   ],
+   "exposure_mass": 0.00017,
+   "region_events_inside": 10,
+   "region_events_total": 55,
+   "support": "neighbourhood (low exposure measure)"
+  },
+  {
+   "source": "agent_s2",
+   "condition": "TC-01",
+   "predicate": "scenario = 'lead_brake' AND driver_state = 'distracted' AND lead_decel >= 6.0 AND headway <= 2.0 AND ego_speed >= 18.5",
+   "condition_sha256": "ec3d66ee5527df822fc8f3668f101abae302e6f48548b440d0a54343b1220b76",
+   "derived_from": [
+    "agent_s2"
+   ],
+   "release_id": "fe59625d9428753862687a3969fa0abf194b64e8afeabe42898bdbcca7498d81",
+   "predicate_sha256": "532d55fa67f59c64e506848ffbe805e690fbb7e173a5b2a43f94f6943934a7bc",
+   "where": "scenario = 'lead_brake' AND driver_state = 'distracted' AND lead_decel >= 6.0 AND headway <= 2.0 AND ego_speed >= 18.5",
+   "target": "collision",
+   "runs_inside": 244,
+   "runs_outside": 99756,
+   "target_rate_inside": 0.6270491803278688,
+   "target_rate_outside": 0.0028268976302177314,
+   "lift": 221.81531217300312,
+   "inside_rate_ci95": [
+    0.5630714880997751,
+    0.6878991258059906
+   ],
+   "exposure_mass": 0.00251,
+   "region_events_inside": 0,
+   "region_events_total": 55,
+   "support": "exposure-supported"
+  },
+  {
+   "source": "agent_s2",
+   "condition": "TC-02",
+   "predicate": "scenario = 'cut_in' AND headway <= 0.35 AND closing_speed >= 9.0",
+   "condition_sha256": "2694019c783910c137845aa4d2a16bc9b05d811b0fcead20f0efbd655c0d16a0",
+   "derived_from": [
+    "agent_s2"
+   ],
+   "release_id": "fe59625d9428753862687a3969fa0abf194b64e8afeabe42898bdbcca7498d81",
+   "predicate_sha256": "e10c3496344909b8ac173d24639dd2549f4c0244468a298d1d194673dab2f622",
+   "where": "scenario = 'cut_in' AND headway <= 0.35 AND closing_speed >= 9.0",
+   "target": "collision",
+   "runs_inside": 0,
+   "runs_outside": 100000,
+   "target_rate_inside": null,
+   "target_rate_outside": 0.00435,
+   "lift": null,
+   "inside_rate_ci95": [
+    null,
+    null
+   ],
+   "exposure_mass": 0.0,
+   "region_events_inside": 0,
+   "region_events_total": 55,
+   "support": "unsupported (zero exposure measure)"
+  },
+  {
+   "source": "agent_s3",
+   "condition": "TC-01",
+   "predicate": "scenario = 'lead_brake' AND driver_state = 'distracted' AND lead_decel >= 6 AND headway <= 2.63",
+   "condition_sha256": "a207b61fc461883466067c476305002f512713db368d0abc7e73214b21e42e81",
+   "derived_from": [
+    "agent_s3"
+   ],
+   "release_id": "fe59625d9428753862687a3969fa0abf194b64e8afeabe42898bdbcca7498d81",
+   "predicate_sha256": "fbb0dc9ac1eef3c57cf2eab8dd2be45333985be36c1bdb216865bf5adfeba975",
+   "where": "scenario = 'lead_brake' AND driver_state = 'distracted' AND lead_decel >= 6 AND headway <= 2.63",
+   "target": "collision",
+   "runs_inside": 484,
+   "runs_outside": 99516,
+   "target_rate_inside": 0.4318181818181818,
+   "target_rate_outside": 0.0022709915993408096,
+   "lift": 190.14521319388575,
+   "inside_rate_ci95": [
+    0.3871907715090558,
+    0.47728352498761506
+   ],
+   "exposure_mass": 0.005155,
+   "region_events_inside": 0,
+   "region_events_total": 55,
+   "support": "exposure-supported"
+  },
+  {
+   "source": "agent_s3",
+   "condition": "TC-02",
+   "predicate": "scenario = 'cut_in' AND headway <= 0.4 AND closing_speed >= 9",
+   "condition_sha256": "52ff8a4377cfb69abae8282b7814b378a9cc7afd6151c07cdb61e907b7bd89ec",
+   "derived_from": [
+    "agent_s3"
+   ],
+   "release_id": "fe59625d9428753862687a3969fa0abf194b64e8afeabe42898bdbcca7498d81",
+   "predicate_sha256": "a77045edd4c6e8f119e732ffab9ee8f0b1adb7593ae9f15ad5f51366ed1a8ad5",
+   "where": "scenario = 'cut_in' AND headway <= 0.4 AND closing_speed >= 9",
+   "target": "collision",
+   "runs_inside": 0,
+   "runs_outside": 100000,
+   "target_rate_inside": null,
+   "target_rate_outside": 0.00435,
+   "lift": null,
+   "inside_rate_ci95": [
+    null,
+    null
+   ],
+   "exposure_mass": 0.0,
+   "region_events_inside": 0,
+   "region_events_total": 55,
+   "support": "unsupported (zero exposure measure)"
+  },
+  {
+   "source": "agent_s4",
+   "condition": "TC-01",
+   "predicate": "scenario='lead_brake' AND driver_state='distracted' AND headway<=1.9 AND lead_decel>=7 AND friction>=0.6",
+   "condition_sha256": "93b260294d62ad0fce09694588b7425423ec8af25027a15f792e98444527cffa",
+   "derived_from": [
+    "agent_s4"
+   ],
+   "release_id": "fe59625d9428753862687a3969fa0abf194b64e8afeabe42898bdbcca7498d81",
+   "predicate_sha256": "5d0022a533ddab833271cdba562c2f213308b47067392f885ab3425aa19f99c0",
+   "where": "scenario='lead_brake' AND driver_state='distracted' AND headway<=1.9 AND lead_decel>=7 AND friction>=0.6",
+   "target": "collision",
+   "runs_inside": 139,
+   "runs_outside": 99861,
+   "target_rate_inside": 0.697841726618705,
+   "target_rate_outside": 0.003384704739588027,
+   "lift": 206.17506704695415,
+   "inside_rate_ci95": [
+    0.6142536386024819,
+    0.7727822699569459
+   ],
+   "exposure_mass": 0.00147,
+   "region_events_inside": 0,
+   "region_events_total": 55,
+   "support": "exposure-supported"
+  },
+  {
+   "source": "agent_s4",
+   "condition": "TC-02",
+   "predicate": "scenario='cut_in' AND headway<=0.3 AND closing_speed>=9",
+   "condition_sha256": "ccba55455dbef3d76a56fa132f2cbc9227c3c857d22b9d843385aeaeaf32f43f",
+   "derived_from": [
+    "agent_s4"
+   ],
+   "release_id": "fe59625d9428753862687a3969fa0abf194b64e8afeabe42898bdbcca7498d81",
+   "predicate_sha256": "82cd1edb00faa493a3cae46bceac4fe46d13705897b78ab502ee683a9c173c5b",
+   "where": "scenario='cut_in' AND headway<=0.3 AND closing_speed>=9",
+   "target": "collision",
+   "runs_inside": 0,
+   "runs_outside": 100000,
+   "target_rate_inside": null,
+   "target_rate_outside": 0.00435,
+   "lift": null,
+   "inside_rate_ci95": [
+    null,
+    null
+   ],
+   "exposure_mass": 0.0,
+   "region_events_inside": 0,
+   "region_events_total": 55,
+   "support": "unsupported (zero exposure measure)"
+  },
+  {
+   "source": "agent_s5",
+   "condition": "TC-01",
+   "predicate": "scenario = 'lead_brake' AND driver_state = 'distracted' AND lead_decel >= 9.0 AND headway <= 2.27 AND ego_speed >= 22 AND friction >= 0.75",
+   "condition_sha256": "0a7809e2bf8ab45554c6e8944bd2d693f28d28e3a3d9cb0be52b2bcbf90a69c2",
+   "derived_from": [
+    "agent_s5"
+   ],
+   "release_id": "fe59625d9428753862687a3969fa0abf194b64e8afeabe42898bdbcca7498d81",
+   "predicate_sha256": "fa07abe4ba1b58d90f87faf031c29c18b2d2f118b5b537dfc958ac8a4a29ec76",
+   "where": "scenario = 'lead_brake' AND driver_state = 'distracted' AND lead_decel >= 9.0 AND headway <= 2.27 AND ego_speed >= 22 AND friction >= 0.75",
+   "target": "collision",
+   "runs_inside": 0,
+   "runs_outside": 100000,
+   "target_rate_inside": null,
+   "target_rate_outside": 0.00435,
+   "lift": null,
+   "inside_rate_ci95": [
+    null,
+    null
+   ],
+   "exposure_mass": 0.0,
+   "region_events_inside": 0,
+   "region_events_total": 55,
+   "support": "unsupported (zero exposure measure)"
+  },
+  {
+   "source": "agent_s5",
+   "condition": "TC-02",
+   "predicate": "scenario = 'cut_in' AND headway <= 0.3 AND closing_speed >= 6.0",
+   "condition_sha256": "07c7c29c482c6083d43ee5a8cf02875cf62230c6dd23a46481cb4d5ed4b48417",
+   "derived_from": [
+    "agent_s5"
+   ],
+   "release_id": "fe59625d9428753862687a3969fa0abf194b64e8afeabe42898bdbcca7498d81",
+   "predicate_sha256": "ad66ab43fe791451a8e5eba4ed67009bff8146198ee4b996957493fbb4d439a5",
+   "where": "scenario = 'cut_in' AND headway <= 0.3 AND closing_speed >= 6.0",
+   "target": "collision",
+   "runs_inside": 0,
+   "runs_outside": 100000,
+   "target_rate_inside": null,
+   "target_rate_outside": 0.00435,
+   "lift": null,
+   "inside_rate_ci95": [
+    null,
+    null
+   ],
+   "exposure_mass": 0.0,
+   "region_events_inside": 0,
+   "region_events_total": 55,
+   "support": "unsupported (zero exposure measure)"
+  },
+  {
+   "source": "agent_s6",
+   "condition": "TC-01",
+   "predicate": "scenario='lead_brake' AND driver_state='distracted' AND lead_decel>=6.5 AND friction>0.5 AND headway<2.3",
+   "condition_sha256": "e2c1e6aa6fcf3cb8348bf10d0589817049700f8be8434a29317bd9caf18e851e",
+   "derived_from": [
+    "agent_s6"
+   ],
+   "release_id": "fe59625d9428753862687a3969fa0abf194b64e8afeabe42898bdbcca7498d81",
+   "predicate_sha256": "9d5a691438e40b501fc40546da55e59a4bb6a302b20b50f53727544bea680eda",
+   "where": "scenario='lead_brake' AND driver_state='distracted' AND lead_decel>=6.5 AND friction>0.5 AND headway<2.3",
+   "target": "collision",
+   "runs_inside": 304,
+   "runs_outside": 99696,
+   "target_rate_inside": 0.5361842105263158,
+   "target_rate_outside": 0.002728294013801958,
+   "lift": 196.52728328173376,
+   "inside_rate_ci95": [
+    0.4783626216941515,
+    0.59329384135638
+   ],
+   "exposure_mass": 0.003215,
+   "region_events_inside": 0,
+   "region_events_total": 55,
+   "support": "exposure-supported"
+  },
+  {
+   "source": "agent_s6",
+   "condition": "TC-02",
+   "predicate": "scenario='cut_in' AND headway<=0.3 AND closing_speed>=9",
+   "condition_sha256": "7f2aeb7d5b03113fe361aa92e988cc8d22b9171aa902d8a75c4da0e602b17576",
+   "derived_from": [
+    "agent_s6"
+   ],
+   "release_id": "fe59625d9428753862687a3969fa0abf194b64e8afeabe42898bdbcca7498d81",
+   "predicate_sha256": "82cd1edb00faa493a3cae46bceac4fe46d13705897b78ab502ee683a9c173c5b",
+   "where": "scenario='cut_in' AND headway<=0.3 AND closing_speed>=9",
+   "target": "collision",
+   "runs_inside": 0,
+   "runs_outside": 100000,
+   "target_rate_inside": null,
+   "target_rate_outside": 0.00435,
+   "lift": null,
+   "inside_rate_ci95": [
+    null,
+    null
+   ],
+   "exposure_mass": 0.0,
+   "region_events_inside": 0,
+   "region_events_total": 55,
+   "support": "unsupported (zero exposure measure)"
+  },
+  {
+   "source": "agent_s7",
+   "condition": "TC-01",
+   "predicate": "driver_state = 'distracted' AND lead_decel >= 6 AND headway <= 1.2",
+   "condition_sha256": "eb6d4aa7bcbd7a1a559156de76f87f09577bc9d8936bffbb2b0ab2cf016cc362",
+   "derived_from": [
+    "agent_s7"
+   ],
+   "release_id": "fe59625d9428753862687a3969fa0abf194b64e8afeabe42898bdbcca7498d81",
+   "predicate_sha256": "b7d18a18e5cb24e34c98b7d112c7f6f0710957be04c6bb07ef54ed6ac8b84b25",
+   "where": "driver_state = 'distracted' AND lead_decel >= 6 AND headway <= 1.2",
+   "target": "collision",
+   "runs_inside": 66,
+   "runs_outside": 99934,
+   "target_rate_inside": 0.8484848484848485,
+   "target_rate_outside": 0.0037925030520143295,
+   "lift": 223.72687295114736,
+   "inside_rate_ci95": [
+    0.7389589287110891,
+    0.9248753700606944
+   ],
+   "exposure_mass": 0.00069,
+   "region_events_inside": 0,
+   "region_events_total": 55,
+   "support": "neighbourhood (low exposure measure)"
+  },
+  {
+   "source": "agent_s7",
+   "condition": "TC-02",
+   "predicate": "scenario = 'cut_in' AND headway <= 0.4 AND closing_speed >= 8 AND friction < 1.0",
+   "condition_sha256": "0f580b26a38556ac903b718e59004b76f04d05e5ca1e9720b85c690d908aedeb",
+   "derived_from": [
+    "agent_s7"
+   ],
+   "release_id": "fe59625d9428753862687a3969fa0abf194b64e8afeabe42898bdbcca7498d81",
+   "predicate_sha256": "69084aeed9f82c53e510a9150392120fcf4921862ead06a30ab900b592c5b8e5",
+   "where": "scenario = 'cut_in' AND headway <= 0.4 AND closing_speed >= 8 AND friction < 1.0",
+   "target": "collision",
+   "runs_inside": 77,
+   "runs_outside": 99923,
+   "target_rate_inside": 0.4935064935064935,
+   "target_rate_outside": 0.003973059255626832,
+   "lift": 124.21322254571626,
+   "inside_rate_ci95": [
+    0.3775768715593875,
+    0.6099506321807169
+   ],
+   "exposure_mass": 0.00074,
+   "region_events_inside": 27,
+   "region_events_total": 55,
+   "support": "neighbourhood (low exposure measure)"
+  },
+  {
+   "source": "agent_s8",
+   "condition": "TC-01",
+   "predicate": "scenario='lead_brake' AND driver_state='distracted' AND lead_decel>=6 AND friction>=0.75 AND headway<=1.9",
+   "condition_sha256": "7a5044109c570274f9b37969407cbf6b54d9b842aeacfadf16fd7feaf5804f26",
+   "derived_from": [
+    "agent_s8"
+   ],
+   "release_id": "fe59625d9428753862687a3969fa0abf194b64e8afeabe42898bdbcca7498d81",
+   "predicate_sha256": "ad40dac65bd0d36c3c827160a6405d1ddca42ece9e302b3a0f8fd2e8256bd5db",
+   "where": "scenario='lead_brake' AND driver_state='distracted' AND lead_decel>=6 AND friction>=0.75 AND headway<=1.9",
+   "target": "collision",
+   "runs_inside": 181,
+   "runs_outside": 99819,
+   "target_rate_inside": 0.6464088397790055,
+   "target_rate_outside": 0.0031857662368887686,
+   "lift": 202.90529552798915,
+   "inside_rate_ci95": [
+    0.5720404456871826,
+    0.7158939052433476
+   ],
+   "exposure_mass": 0.00195,
+   "region_events_inside": 0,
+   "region_events_total": 55,
+   "support": "exposure-supported"
+  },
+  {
+   "source": "agent_s8",
+   "condition": "TC-02",
+   "predicate": "scenario='cut_in' AND headway<=0.3 AND closing_speed>=9",
+   "condition_sha256": "773f9f0475a4b0d1082f42a20072c87280e065f4cf4dfa5bd3c34217ce2287fd",
+   "derived_from": [
+    "agent_s8"
+   ],
+   "release_id": "fe59625d9428753862687a3969fa0abf194b64e8afeabe42898bdbcca7498d81",
+   "predicate_sha256": "82cd1edb00faa493a3cae46bceac4fe46d13705897b78ab502ee683a9c173c5b",
+   "where": "scenario='cut_in' AND headway<=0.3 AND closing_speed>=9",
+   "target": "collision",
+   "runs_inside": 0,
+   "runs_outside": 100000,
+   "target_rate_inside": null,
+   "target_rate_outside": 0.00435,
+   "lift": null,
+   "inside_rate_ci95": [
+    null,
+    null
+   ],
+   "exposure_mass": 0.0,
+   "region_events_inside": 0,
+   "region_events_total": 55,
+   "support": "unsupported (zero exposure measure)"
+  },
+  {
+   "source": "agent_s9",
+   "condition": "TC-01",
+   "predicate": "scenario='lead_brake' AND driver_state='distracted' AND lead_decel>=4.75 AND ego_speed>=25.5",
+   "condition_sha256": "7fe455750e508c041134df5476457d15707ebccd42468fa69383f4408ca2dcd6",
+   "derived_from": [
+    "agent_s9"
+   ],
+   "release_id": "fe59625d9428753862687a3969fa0abf194b64e8afeabe42898bdbcca7498d81",
+   "predicate_sha256": "d1ace458e573f56de1496dc9a4576ec9bfc294cb99611cf3edf724998e089923",
+   "where": "scenario='lead_brake' AND driver_state='distracted' AND lead_decel>=4.75 AND ego_speed>=25.5",
+   "target": "collision",
+   "runs_inside": 1224,
+   "runs_outside": 98776,
+   "target_rate_inside": 0.2222222222222222,
+   "target_rate_outside": 0.0016501984287681218,
+   "lift": 134.66394001363327,
+   "inside_rate_ci95": [
+    0.1992128864836963,
+    0.24657392882515383
+   ],
+   "exposure_mass": 0.01263,
+   "region_events_inside": 0,
+   "region_events_total": 55,
+   "support": "exposure-supported"
+  },
+  {
+   "source": "agent_s9",
+   "condition": "TC-02",
+   "predicate": "scenario='cut_in' AND headway<=0.3 AND closing_speed>=9",
+   "condition_sha256": "42b436cba353a6c4b5734246e39255e14b2bf6372ec21a309df177149ae2ae48",
+   "derived_from": [
+    "agent_s9"
+   ],
+   "release_id": "fe59625d9428753862687a3969fa0abf194b64e8afeabe42898bdbcca7498d81",
+   "predicate_sha256": "82cd1edb00faa493a3cae46bceac4fe46d13705897b78ab502ee683a9c173c5b",
+   "where": "scenario='cut_in' AND headway<=0.3 AND closing_speed>=9",
+   "target": "collision",
+   "runs_inside": 0,
+   "runs_outside": 100000,
+   "target_rate_inside": null,
+   "target_rate_outside": 0.00435,
+   "lift": null,
+   "inside_rate_ci95": [
+    null,
+    null
+   ],
+   "exposure_mass": 0.0,
+   "region_events_inside": 0,
+   "region_events_total": 55,
+   "support": "unsupported (zero exposure measure)"
+  },
+  {
+   "condition": "box-cut_in",
+   "predicate": "scenario = 'cut_in' AND headway <= 0.60 AND closing_speed >= 5.9",
+   "derived_from": [
+    "estimate"
+   ],
+   "release_id": "fe59625d9428753862687a3969fa0abf194b64e8afeabe42898bdbcca7498d81",
+   "source": "reference",
+   "predicate_sha256": "8f4384c2822b13d1474158ec856ffa34b6fcf6c4f9d3112bdb64884e24456866",
+   "where": "scenario = 'cut_in' AND headway <= 0.60 AND closing_speed >= 5.9",
+   "target": "collision",
+   "runs_inside": 718,
+   "runs_outside": 99282,
+   "target_rate_inside": 0.10167130919220056,
+   "target_rate_outside": 0.0036461795693076286,
+   "lift": 27.88433955585651,
+   "inside_rate_ci95": [
+    0.08054292916871375,
+    0.12613598655352012
+   ],
+   "exposure_mass": 0.00702,
+   "region_events_inside": 50,
+   "region_events_total": 55,
+   "support": "exposure-supported"
+  },
+  {
+   "condition": "box-lead_brake",
+   "predicate": "scenario = 'lead_brake' AND headway <= 1.65 AND lead_decel >= 7.4",
+   "derived_from": [
+    "estimate"
+   ],
+   "release_id": "fe59625d9428753862687a3969fa0abf194b64e8afeabe42898bdbcca7498d81",
+   "source": "reference",
+   "predicate_sha256": "6df44a5cce812c47dfbd330d60b3995908756b1c7618e824a4618e1036d9124b",
+   "where": "scenario = 'lead_brake' AND headway <= 1.65 AND lead_decel >= 7.4",
+   "target": "collision",
+   "runs_inside": 383,
+   "runs_outside": 99617,
+   "target_rate_inside": 0.1566579634464752,
+   "target_rate_outside": 0.003764417719867091,
+   "lift": 41.61545691906006,
+   "inside_rate_ci95": [
+    0.12172541571905252,
+    0.19700065309409778
+   ],
+   "exposure_mass": 0.004225,
+   "region_events_inside": 2,
+   "region_events_total": 55,
+   "support": "exposure-supported"
+  }
+ ]
+}

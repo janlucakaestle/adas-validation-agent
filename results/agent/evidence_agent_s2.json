@@ -1,0 +1,1224 @@
+{
+ "schema": "evidence/v3",
+ "campaign": "agent_s2",
+ "release_id": "fe59625d9428753862687a3969fa0abf194b64e8afeabe42898bdbcca7498d81",
+ "runtime_id": "d37505bee00e01c235487f54dbb579f8dc71978020d9565f2c940eb2fcf3ae3c",
+ "protocol_id": "4a879572d3e65102fa78f013d357c0caaabed603db99992e6a02ba64c8c444a9",
+ "data_sha256": "f4a6504bb28a40c536c4dc8171e4327cb49a9cbab863df9fcb7fff49fd9f0804",
+ "author": "agent (claude-sonnet-5)",
+ "summary": "## Campaign summary (agent_s2, 259/300 runs used)\n\n**Approach:** Ran a structured coverage sweep across the full ODD grid (bin midpoints for ego_speed, headway, friction, lead_decel/closing_speed, crossed with scenario and driver_state \u2014 216 runs, 1 per coverage cell), then used `runs` queries to find where collisions clustered, formed hypotheses, and confirmed them with targeted replicate runs (43 further runs) and `test_predicate`.\n\n**Key finding 1 \u2014 Distracted driver + strong lead braking at short/medium headway (lead_brake).**\nAcross the coverage sweep, zero collisions occurred for attentive drivers anywhere in the lead_brake ODD (including at lead_decel=9, headway=0.8 \u2014 the most severe coverage cell tested for attentive, 0/12 collisions). For **distracted** drivers, collisions appeared as soon as lead_decel reached ~6 m/s\u00b2 together with headway \u2264 ~2 s and ego_speed \u2265 ~18.5 m/s, with collision rate \u2248 67% inside vs \u22484% outside this predicate (lift \u224815\u00d7, test_id c7cc7f19dbbb). The mechanism visible in the data: the distracted driver's reaction/takeover delay (takeover_time) is stochastic and often exceeds ~3.5\u20134 s; when it does, under hard lead braking at short headway the gap closes to contact before the driver (or the ACC) can react. At the lowest ego_speed bin (15 m/s) even decel=9, headway=0.8, distracted showed 0/6 collisions \u2014 low speed gives enough margin despite the long reaction delay, so the condition is speed-dependent as stated.\n\n**Key finding 2 \u2014 Extreme cut-in corner (very short headway + very high closing speed), independent of driver state.**\nIn the broad coverage sweep (bin midpoints, closing_speed up to 7.5 m/s, headway down to 0.58 s) zero cut_in collisions occurred for either driver state (0/108 for cut_in specifically). Only when probing the extreme ODD corner \u2014 headway \u2264 0.35 s and closing_speed \u2265 9 m/s (the ODD maxima) at low friction (0.5) and high ego_speed (36 m/s) \u2014 did collisions appear, and at a high rate (\u224877% inside vs \u22488% outside, lift \u22489.5\u00d7, test_id 08f63d20be6c). Notably this triggers for **both** attentive (5/8, 62.5%) and distracted (5/5, 100%) drivers, indicating the kinematic margin at this ODD corner is so small that even an attentive driver's ~1 s reaction time is often too slow. Reducing closing_speed to 6 m/s or headway to 0.87 s (one bin up) at the same extreme removed all collisions in the samples taken \u2014 consistent with a narrow, corner-of-the-ODD effect rather than a broad cut_in weakness.\n\n**Limitations:**\n- Sample sizes for the confirmatory conditions are modest (13\u201330 runs inside each predicate); confidence intervals are wide (e.g., 47\u201395% for the cut_in corner).\n- Thresholds (lead_decel\u22486, headway\u22482.0, ego_speed\u224818.5 for lead_brake; headway\u22480.35, closing_speed\u22489 for cut_in) are empirical boundaries from the specific values tested, not exact minima \u2014 finer sweeps near these boundaries would sharpen them.\n- All rates are internal to this search-driven campaign (deliberately oversampling rare/severe regions) and must not be read as real-world incidence rates.\n- `avoidable_by_reference` was not analyzed in depth; a follow-up should check whether these collisions are flagged as avoidable or not by the reference policy to separate function deficiencies from physically-constrained cases.\n\n**Recommended next tests:** finer sweep of lead_decel in [5,7] and headway in [1.5,2.5] at ego_speed\u2208[18,22] to localize the lead_brake threshold; finer sweep of closing_speed in [7,9] and headway in [0.3,0.9] to localize the cut_in corner boundary; repeat both at additional friction levels (currently only 0.5/0.625/0.75/0.875 sampled, not the 1.0 dry extreme for the corner case).\n",
+ "conditions": [
+  {
+   "description": "Lead_brake scenario with a distracted (foreseeable-misuse) driver, strong lead-vehicle braking (>=6 m/s^2), short-to-medium headway (<=2.0 s), and ego speed >=18.5 m/s: the driver's stochastic takeover delay frequently exceeds the time available to stop, producing collisions at ~67% rate versus ~4% outside this condition (lift ~15x). No collisions were observed for attentive drivers under the same severe braking/headway combinations.",
+   "predicate": "scenario = 'lead_brake' AND driver_state = 'distracted' AND lead_decel >= 6.0 AND headway <= 2.0 AND ego_speed >= 18.5",
+   "predicate_sha256": "532d55fa67f59c64e506848ffbe805e690fbb7e173a5b2a43f94f6943934a7bc",
+   "test": {
+    "id": "c7cc7f19dbbb",
+    "sha256": "c7cc7f19dbbb8a8e75141bcf47f675b8b3718318e1f1696c3d0e1e3a167f399b",
+    "where": "scenario = 'lead_brake' AND driver_state = 'distracted' AND lead_decel >= 6.0 AND headway <= 2.0 AND ego_speed >= 18.5",
+    "target": "collision",
+    "result": {
+     "where": "scenario = 'lead_brake' AND driver_state = 'distracted' AND lead_decel >= 6.0 AND headway <= 2.0 AND ego_speed >= 18.5",
+     "target": "collision",
+     "runs_inside": 30,
+     "runs_outside": 229,
+     "target_rate_inside": 0.6666666666666666,
+     "target_rate_outside": 0.043668122270742356,
+     "lift": 15.266666666666667,
+     "inside_rate_ci95": [
+      0.47187995521011944,
+      0.8271257784739607
+     ]
+    },
+    "result_sha256": "5ea6e89bf32d3914809bc34024f86dd1548226d796eb8d4aa312f899e6f0da8a",
+    "n_runs": 259
+   },
+   "evidence": {
+    "id": "8e1a1626b54a",
+    "sha256": "8e1a1626b54ae6258fe208892ce13624c79602ddc981eaab08407c40cfcd1366",
+    "sql": "SELECT driver_state, ego_speed, headway, lead_decel, friction, count(*) AS n, sum(CASE WHEN collision THEN 1 ELSE 0 END) AS collisions, round(avg(CASE WHEN collision THEN 1 ELSE 0 END),3) AS rate FROM runs WHERE scenario = 'lead_brake' AND driver_state = 'distracted' AND lead_decel >= 6.0 AND headway <= 2.0 AND ego_speed >= 18.5 GROUP BY 1,2,3,4,5 ORDER BY ego_speed, lead_decel, headway, friction",
+    "rows": [
+     {
+      "driver_state": "distracted",
+      "ego_speed": 18.5,
+      "headway": 1.1667,
+      "lead_decel": 7.5,
+      "friction": 0.625,
+      "n": 1,
+      "collisions": "0",
+      "rate": 0.0
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 18.5,
+      "headway": 1.1667,
+      "lead_decel": 7.5,
+      "friction": 0.875,
+      "n": 1,
+      "collisions": "1",
+      "rate": 1.0
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 18.5,
+      "headway": 1.9,
+      "lead_decel": 7.5,
+      "friction": 0.625,
+      "n": 1,
+      "collisions": "0",
+      "rate": 0.0
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 18.5,
+      "headway": 1.9,
+      "lead_decel": 7.5,
+      "friction": 0.875,
+      "n": 1,
+      "collisions": "0",
+      "rate": 0.0
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 25.5,
+      "headway": 1.1667,
+      "lead_decel": 6.0,
+      "friction": 0.75,
+      "n": 5,
+      "collisions": "3",
+      "rate": 0.6
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 25.5,
+      "headway": 1.1667,
+      "lead_decel": 7.5,
+      "friction": 0.625,
+      "n": 1,
+      "collisions": "1",
+      "rate": 1.0
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 25.5,
+      "headway": 1.1667,
+      "lead_decel": 7.5,
+      "friction": 0.75,
+      "n": 5,
+      "collisions": "5",
+      "rate": 1.0
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 25.5,
+      "headway": 1.1667,
+      "lead_decel": 7.5,
+      "friction": 0.875,
+      "n": 1,
+      "collisions": "1",
+      "rate": 1.0
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 25.5,
+      "headway": 1.9,
+      "lead_decel": 7.5,
+      "friction": 0.625,
+      "n": 1,
+      "collisions": "0",
+      "rate": 0.0
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 25.5,
+      "headway": 1.9,
+      "lead_decel": 7.5,
+      "friction": 0.875,
+      "n": 1,
+      "collisions": "1",
+      "rate": 1.0
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 29.0,
+      "headway": 1.1667,
+      "lead_decel": 6.0,
+      "friction": 0.75,
+      "n": 3,
+      "collisions": "3",
+      "rate": 1.0
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 32.5,
+      "headway": 1.1667,
+      "lead_decel": 7.5,
+      "friction": 0.625,
+      "n": 1,
+      "collisions": "1",
+      "rate": 1.0
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 32.5,
+      "headway": 1.1667,
+      "lead_decel": 7.5,
+      "friction": 0.875,
+      "n": 1,
+      "collisions": "1",
+      "rate": 1.0
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 32.5,
+      "headway": 1.9,
+      "lead_decel": 7.5,
+      "friction": 0.625,
+      "n": 1,
+      "collisions": "0",
+      "rate": 0.0
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 32.5,
+      "headway": 1.9,
+      "lead_decel": 7.5,
+      "friction": 0.875,
+      "n": 1,
+      "collisions": "1",
+      "rate": 1.0
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 36.0,
+      "headway": 0.8,
+      "lead_decel": 9.0,
+      "friction": 0.5,
+      "n": 5,
+      "collisions": "2",
+      "rate": 0.4
+     }
+    ],
+    "truncated": false,
+    "rows_sha256": "daf030519b0715159acb3c89a77d2948704b4406348ba75dde358c1d221f0911",
+    "n_runs": 259
+   },
+   "condition_sha256": "ec3d66ee5527df822fc8f3668f101abae302e6f48548b440d0a54343b1220b76"
+  },
+  {
+   "description": "Cut_in scenario at the extreme corner of the ODD: very short initial headway (<=0.35 s) combined with very high closing speed (>=9 m/s, the ODD maximum), at low friction and high ego speed. Collisions occur at a high rate (~77%) regardless of driver state (attentive 62.5%, distracted 100%), indicating the physical/kinematic margin at this corner is too small for either an attentive or distracted driver's reaction time, unlike the rest of the sampled cut_in ODD where zero collisions were observed.",
+   "predicate": "scenario = 'cut_in' AND headway <= 0.35 AND closing_speed >= 9.0",
+   "predicate_sha256": "e10c3496344909b8ac173d24639dd2549f4c0244468a298d1d194673dab2f622",
+   "test": {
+    "id": "08f63d20be6c",
+    "sha256": "08f63d20be6c09798d43515630519dedecc078b9432dd7c60ec3bf9498eb02e8",
+    "where": "scenario = 'cut_in' AND headway <= 0.35 AND closing_speed >= 9.0",
+    "target": "collision",
+    "result": {
+     "where": "scenario = 'cut_in' AND headway <= 0.35 AND closing_speed >= 9.0",
+     "target": "collision",
+     "runs_inside": 13,
+     "runs_outside": 246,
+     "target_rate_inside": 0.7692307692307693,
+     "target_rate_outside": 0.08130081300813008,
+     "lift": 9.461538461538462,
+     "inside_rate_ci95": [
+      0.46186846076595905,
+      0.9496189265088485
+     ]
+    },
+    "result_sha256": "7008b8b3da99a035ed644290071f4b053c3d7995c587daab9034c32e593f8e9a",
+    "n_runs": 259
+   },
+   "evidence": {
+    "id": "110908b6886b",
+    "sha256": "110908b6886bba740e009af713230298130eb0cf2b1a46f402522dd6bf99640c",
+    "sql": "SELECT driver_state, ego_speed, headway, closing_speed, friction, count(*) AS n, sum(CASE WHEN collision THEN 1 ELSE 0 END) AS collisions, round(avg(CASE WHEN collision THEN 1 ELSE 0 END),3) AS rate FROM runs WHERE scenario = 'cut_in' AND headway <= 0.35 AND closing_speed >= 9.0 GROUP BY 1,2,3,4,5 ORDER BY driver_state",
+    "rows": [
+     {
+      "driver_state": "attentive",
+      "ego_speed": 36.0,
+      "headway": 0.3,
+      "closing_speed": 9.0,
+      "friction": 0.5,
+      "n": 8,
+      "collisions": "5",
+      "rate": 0.625
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 36.0,
+      "headway": 0.3,
+      "closing_speed": 9.0,
+      "friction": 0.5,
+      "n": 5,
+      "collisions": "5",
+      "rate": 1.0
+     }
+    ],
+    "truncated": false,
+    "rows_sha256": "a67d361d9db53f23d26c971d476e332b1ac802f767814d203ef93ecdd4a2cf86",
+    "n_runs": 259
+   },
+   "condition_sha256": "2694019c783910c137845aa4d2a16bc9b05d811b0fcead20f0efbd655c0d16a0"
+  }
+ ],
+ "ledger": {
+  "campaign": "agent_s2",
+  "entries": [
+   {
+    "seq": 0,
+    "kind": "test_predicate",
+    "where": "scenario = 'lead_brake' AND driver_state = 'distracted' AND lead_decel >= 7.0",
+    "target": "collision",
+    "result": {
+     "where": "scenario = 'lead_brake' AND driver_state = 'distracted' AND lead_decel >= 7.0",
+     "target": "collision",
+     "runs_inside": 18,
+     "runs_outside": 198,
+     "target_rate_inside": 0.3888888888888889,
+     "target_rate_outside": 0.0,
+     "lift": null,
+     "inside_rate_ci95": [
+      0.17298585478975187,
+      0.6425487941069372
+     ]
+    },
+    "n_runs": 216,
+    "sha256": "ecf26c52ba56f03d066c2ecddc082e5d5438e92b04d000325ce2664bbb9d5938"
+   },
+   {
+    "seq": 1,
+    "kind": "test_predicate",
+    "where": "scenario = 'cut_in'",
+    "target": "collision",
+    "result": {
+     "where": "scenario = 'cut_in'",
+     "target": "collision",
+     "runs_inside": 108,
+     "runs_outside": 108,
+     "target_rate_inside": 0.0,
+     "target_rate_outside": 0.06481481481481481,
+     "lift": 0.0,
+     "inside_rate_ci95": [
+      0.0,
+      0.033579550218654476
+     ]
+    },
+    "n_runs": 216,
+    "sha256": "8f4d134151e45bb26dbafc995499dc64608e8dade8e32a0fccc6d209b8b2c813"
+   },
+   {
+    "seq": 2,
+    "kind": "test_predicate",
+    "where": "scenario = 'lead_brake' AND driver_state = 'distracted' AND lead_decel >= 7.0 AND headway <= 2.0",
+    "target": "collision",
+    "result": {
+     "where": "scenario = 'lead_brake' AND driver_state = 'distracted' AND lead_decel >= 7.0 AND headway <= 2.0",
+     "target": "collision",
+     "runs_inside": 12,
+     "runs_outside": 204,
+     "target_rate_inside": 0.5833333333333334,
+     "target_rate_outside": 0.0,
+     "lift": null,
+     "inside_rate_ci95": [
+      0.27666968568210587,
+      0.8483477701915698
+     ]
+    },
+    "n_runs": 216,
+    "sha256": "af02ca870739458083d9e003a4b44446777e6af5f336d84aa01bbe201139d392"
+   },
+   {
+    "seq": 3,
+    "kind": "test_predicate",
+    "where": "scenario = 'lead_brake' AND driver_state = 'distracted' AND lead_decel >= 7.0 AND headway > 2.0",
+    "target": "collision",
+    "result": {
+     "where": "scenario = 'lead_brake' AND driver_state = 'distracted' AND lead_decel >= 7.0 AND headway > 2.0",
+     "target": "collision",
+     "runs_inside": 6,
+     "runs_outside": 210,
+     "target_rate_inside": 0.0,
+     "target_rate_outside": 0.03333333333333333,
+     "lift": 0.0,
+     "inside_rate_ci95": [
+      0.0,
+      0.45925812643990044
+     ]
+    },
+    "n_runs": 216,
+    "sha256": "37624cfadbab80e5c2861957a7ade733f5241322a06fd74c225203d859d8813f"
+   },
+   {
+    "seq": 4,
+    "kind": "test_predicate",
+    "where": "scenario = 'lead_brake' AND driver_state = 'attentive' AND lead_decel >= 7.0 AND headway <= 2.0",
+    "target": "collision",
+    "result": {
+     "where": "scenario = 'lead_brake' AND driver_state = 'attentive' AND lead_decel >= 7.0 AND headway <= 2.0",
+     "target": "collision",
+     "runs_inside": 12,
+     "runs_outside": 204,
+     "target_rate_inside": 0.0,
+     "target_rate_outside": 0.03431372549019608,
+     "lift": 0.0,
+     "inside_rate_ci95": [
+      0.0,
+      0.2646484693970512
+     ]
+    },
+    "n_runs": 216,
+    "sha256": "dd68fad98aaaa360f8818683456ad237cfd7058492d9e663ede8092aa33dd62d"
+   },
+   {
+    "seq": 5,
+    "kind": "test_predicate",
+    "where": "scenario = 'lead_brake' AND driver_state = 'distracted' AND lead_decel >= 6.0 AND headway <= 2.0 AND ego_speed >= 18.5",
+    "target": "collision",
+    "result": {
+     "where": "scenario = 'lead_brake' AND driver_state = 'distracted' AND lead_decel >= 6.0 AND headway <= 2.0 AND ego_speed >= 18.5",
+     "target": "collision",
+     "runs_inside": 30,
+     "runs_outside": 224,
+     "target_rate_inside": 0.6666666666666666,
+     "target_rate_outside": 0.03125,
+     "lift": 21.333333333333332,
+     "inside_rate_ci95": [
+      0.47187995521011944,
+      0.8271257784739607
+     ]
+    },
+    "n_runs": 254,
+    "sha256": "7cd30fb3673890eb290d34678e57e143567d32dd6cc3850d2980d338f35f88cf"
+   },
+   {
+    "seq": 6,
+    "kind": "test_predicate",
+    "where": "scenario = 'cut_in' AND headway <= 0.35 AND closing_speed >= 9.0",
+    "target": "collision",
+    "result": {
+     "where": "scenario = 'cut_in' AND headway <= 0.35 AND closing_speed >= 9.0",
+     "target": "collision",
+     "runs_inside": 8,
+     "runs_outside": 246,
+     "target_rate_inside": 0.875,
+     "target_rate_outside": 0.08130081300813008,
+     "lift": 10.762500000000001,
+     "inside_rate_ci95": [
+      0.4734903291247935,
+      0.9968402764687481
+     ]
+    },
+    "n_runs": 254,
+    "sha256": "f8ad5427ff400a9488726e17944547ec8a60933d254e0d085b1e35dc908a6321"
+   },
+   {
+    "seq": 7,
+    "kind": "query_results",
+    "sql": "SELECT driver_state, count(*) AS n, sum(CASE WHEN collision THEN 1 ELSE 0 END) AS collisions, avg(CASE WHEN collision THEN 1 ELSE 0 END) AS rate FROM runs WHERE scenario='cut_in' AND headway <= 0.35 AND closing_speed >= 9.0 GROUP BY driver_state",
+    "rows": [
+     {
+      "driver_state": "distracted",
+      "n": 5,
+      "collisions": "5",
+      "rate": 1.0
+     },
+     {
+      "driver_state": "attentive",
+      "n": 3,
+      "collisions": "2",
+      "rate": 0.666666666666667
+     }
+    ],
+    "truncated": false,
+    "n_runs": 254,
+    "sha256": "603fd07732730be687fba269606c6866869155a8276837567c3a388e9437c099"
+   },
+   {
+    "seq": 8,
+    "kind": "query_results",
+    "sql": "SELECT driver_state, ego_speed, lead_decel, headway, friction, collision, min_ttc, takeover_time FROM runs WHERE scenario='lead_brake' AND driver_state='distracted' AND lead_decel>=6.0 AND headway<=2.0 ORDER BY ego_speed, lead_decel",
+    "rows": [
+     {
+      "driver_state": "distracted",
+      "ego_speed": 15.0,
+      "lead_decel": 6.0,
+      "headway": 0.8,
+      "friction": 0.75,
+      "collision": false,
+      "min_ttc": 1.337444097810834,
+      "takeover_time": 2.915816188917283
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 15.0,
+      "lead_decel": 6.0,
+      "headway": 0.8,
+      "friction": 0.75,
+      "collision": false,
+      "min_ttc": 1.337444097810834,
+      "takeover_time": 7.095413877146346
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 15.0,
+      "lead_decel": 6.0,
+      "headway": 0.8,
+      "friction": 0.75,
+      "collision": false,
+      "min_ttc": 1.337444097810834,
+      "takeover_time": 5.425486169299743
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 15.0,
+      "lead_decel": 9.0,
+      "headway": 0.8,
+      "friction": 0.5,
+      "collision": false,
+      "min_ttc": 1.573512440553763,
+      "takeover_time": 3.832023019793664
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 15.0,
+      "lead_decel": 9.0,
+      "headway": 0.8,
+      "friction": 0.5,
+      "collision": false,
+      "min_ttc": 1.573512440553763,
+      "takeover_time": 4.783857760773992
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 15.0,
+      "lead_decel": 9.0,
+      "headway": 0.8,
+      "friction": 0.5,
+      "collision": false,
+      "min_ttc": 1.573512440553763,
+      "takeover_time": 3.897195577012166
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 18.5,
+      "lead_decel": 7.5,
+      "headway": 1.1667,
+      "friction": 0.625,
+      "collision": false,
+      "min_ttc": 1.129962520861458,
+      "takeover_time": 3.302383353715602
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 18.5,
+      "lead_decel": 7.5,
+      "headway": 1.1667,
+      "friction": 0.875,
+      "collision": true,
+      "min_ttc": 0.03565566392414,
+      "takeover_time": 3.978335825446067
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 18.5,
+      "lead_decel": 7.5,
+      "headway": 1.9,
+      "friction": 0.625,
+      "collision": false,
+      "min_ttc": 1.448829706858814,
+      "takeover_time": 3.334270701085477
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 18.5,
+      "lead_decel": 7.5,
+      "headway": 1.9,
+      "friction": 0.875,
+      "collision": false,
+      "min_ttc": 0.9474775951073,
+      "takeover_time": 5.394149652920882
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 25.5,
+      "lead_decel": 6.0,
+      "headway": 1.1667,
+      "friction": 0.75,
+      "collision": false,
+      "min_ttc": 1.559971883153167,
+      "takeover_time": 2.746101855796384
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 25.5,
+      "lead_decel": 6.0,
+      "headway": 1.1667,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.008269733966838,
+      "takeover_time": 5.806253676430723
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 25.5,
+      "lead_decel": 6.0,
+      "headway": 1.1667,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.008269733966838,
+      "takeover_time": 5.815520411986253
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 25.5,
+      "lead_decel": 6.0,
+      "headway": 1.1667,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.008269733966838,
+      "takeover_time": 5.775329473401286
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 25.5,
+      "lead_decel": 6.0,
+      "headway": 1.1667,
+      "friction": 0.75,
+      "collision": false,
+      "min_ttc": 1.521749523378497,
+      "takeover_time": 2.820955384299942
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 25.5,
+      "lead_decel": 7.5,
+      "headway": 1.9,
+      "friction": 0.875,
+      "collision": true,
+      "min_ttc": 0.010566729936941,
+      "takeover_time": 4.547530139759496
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 25.5,
+      "lead_decel": 7.5,
+      "headway": 1.1667,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.004278170401817,
+      "takeover_time": 3.780661857380305
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 25.5,
+      "lead_decel": 7.5,
+      "headway": 1.1667,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.011947023807347,
+      "takeover_time": 8.35538402922165
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 25.5,
+      "lead_decel": 7.5,
+      "headway": 1.1667,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.030231879501385,
+      "takeover_time": 3.947585167636661
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 25.5,
+      "lead_decel": 7.5,
+      "headway": 1.1667,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.016383066589055,
+      "takeover_time": 3.060113607787609
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 25.5,
+      "lead_decel": 7.5,
+      "headway": 1.1667,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.011947023807347,
+      "takeover_time": 5.758707543618895
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 25.5,
+      "lead_decel": 7.5,
+      "headway": 1.1667,
+      "friction": 0.875,
+      "collision": true,
+      "min_ttc": 0.038347281203253,
+      "takeover_time": 5.09721329894005
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 25.5,
+      "lead_decel": 7.5,
+      "headway": 1.1667,
+      "friction": 0.625,
+      "collision": true,
+      "min_ttc": 0.027357311717221,
+      "takeover_time": 6.795209675544452
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 25.5,
+      "lead_decel": 7.5,
+      "headway": 1.9,
+      "friction": 0.625,
+      "collision": false,
+      "min_ttc": 1.660812953376372,
+      "takeover_time": 3.201189462830762
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 29.0,
+      "lead_decel": 6.0,
+      "headway": 1.1667,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.044572397064921,
+      "takeover_time": 5.943697504715637
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 29.0,
+      "lead_decel": 6.0,
+      "headway": 1.1667,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.045283923763166,
+      "takeover_time": 4.922596068906272
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 29.0,
+      "lead_decel": 6.0,
+      "headway": 1.1667,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.03217101648255,
+      "takeover_time": 4.364660871865905
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 32.5,
+      "lead_decel": 7.5,
+      "headway": 1.9,
+      "friction": 0.875,
+      "collision": true,
+      "min_ttc": 0.011994160166265,
+      "takeover_time": 6.701104807080718
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 32.5,
+      "lead_decel": 7.5,
+      "headway": 1.1667,
+      "friction": 0.875,
+      "collision": true,
+      "min_ttc": 0.000926371102627,
+      "takeover_time": 5.571487625583932
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 32.5,
+      "lead_decel": 7.5,
+      "headway": 1.1667,
+      "friction": 0.625,
+      "collision": true,
+      "min_ttc": 0.003374106603779,
+      "takeover_time": 5.59909284602751
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 32.5,
+      "lead_decel": 7.5,
+      "headway": 1.9,
+      "friction": 0.625,
+      "collision": false,
+      "min_ttc": 1.548968458132312,
+      "takeover_time": 3.342079288594892
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 36.0,
+      "lead_decel": 9.0,
+      "headway": 0.8,
+      "friction": 0.5,
+      "collision": false,
+      "min_ttc": 0.807065735903417,
+      "takeover_time": 4.217515985874378
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 36.0,
+      "lead_decel": 9.0,
+      "headway": 0.8,
+      "friction": 0.5,
+      "collision": true,
+      "min_ttc": 0.011393242810324,
+      "takeover_time": 5.82077769959997
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 36.0,
+      "lead_decel": 9.0,
+      "headway": 0.8,
+      "friction": 0.5,
+      "collision": false,
+      "min_ttc": 1.39214848616422,
+      "takeover_time": 3.561855358954148
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 36.0,
+      "lead_decel": 9.0,
+      "headway": 0.8,
+      "friction": 0.5,
+      "collision": true,
+      "min_ttc": 0.012560456906096,
+      "takeover_time": 4.693719653289856
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 36.0,
+      "lead_decel": 9.0,
+      "headway": 0.8,
+      "friction": 0.5,
+      "collision": false,
+      "min_ttc": 0.440715020470355,
+      "takeover_time": 4.487639607765771
+     }
+    ],
+    "truncated": false,
+    "n_runs": 254,
+    "sha256": "12102ecfa2f1bb9ecb5ff928aa6275a8c26702ea8cf5858146e8d2820c494a5e"
+   },
+   {
+    "seq": 9,
+    "kind": "test_predicate",
+    "where": "scenario = 'lead_brake' AND driver_state = 'distracted' AND lead_decel >= 6.0 AND headway <= 2.0 AND ego_speed >= 18.5",
+    "target": "collision",
+    "result": {
+     "where": "scenario = 'lead_brake' AND driver_state = 'distracted' AND lead_decel >= 6.0 AND headway <= 2.0 AND ego_speed >= 18.5",
+     "target": "collision",
+     "runs_inside": 30,
+     "runs_outside": 229,
+     "target_rate_inside": 0.6666666666666666,
+     "target_rate_outside": 0.043668122270742356,
+     "lift": 15.266666666666667,
+     "inside_rate_ci95": [
+      0.47187995521011944,
+      0.8271257784739607
+     ]
+    },
+    "n_runs": 259,
+    "sha256": "c7cc7f19dbbb8a8e75141bcf47f675b8b3718318e1f1696c3d0e1e3a167f399b"
+   },
+   {
+    "seq": 10,
+    "kind": "test_predicate",
+    "where": "scenario = 'cut_in' AND headway <= 0.35 AND closing_speed >= 9.0",
+    "target": "collision",
+    "result": {
+     "where": "scenario = 'cut_in' AND headway <= 0.35 AND closing_speed >= 9.0",
+     "target": "collision",
+     "runs_inside": 13,
+     "runs_outside": 246,
+     "target_rate_inside": 0.7692307692307693,
+     "target_rate_outside": 0.08130081300813008,
+     "lift": 9.461538461538462,
+     "inside_rate_ci95": [
+      0.46186846076595905,
+      0.9496189265088485
+     ]
+    },
+    "n_runs": 259,
+    "sha256": "08f63d20be6c09798d43515630519dedecc078b9432dd7c60ec3bf9498eb02e8"
+   },
+   {
+    "seq": 11,
+    "kind": "query_results",
+    "sql": "SELECT driver_state, ego_speed, headway, lead_decel, friction, count(*) AS n, sum(CASE WHEN collision THEN 1 ELSE 0 END) AS collisions, round(avg(CASE WHEN collision THEN 1 ELSE 0 END),3) AS rate FROM runs WHERE scenario = 'lead_brake' AND driver_state = 'distracted' AND lead_decel >= 6.0 AND headway <= 2.0 AND ego_speed >= 18.5 GROUP BY 1,2,3,4,5 ORDER BY ego_speed, lead_decel",
+    "rows": [
+     {
+      "driver_state": "distracted",
+      "ego_speed": 18.5,
+      "headway": 1.1667,
+      "lead_decel": 7.5,
+      "friction": 0.875,
+      "n": 1,
+      "collisions": "1",
+      "rate": 1.0
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 18.5,
+      "headway": 1.9,
+      "lead_decel": 7.5,
+      "friction": 0.875,
+      "n": 1,
+      "collisions": "0",
+      "rate": 0.0
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 18.5,
+      "headway": 1.1667,
+      "lead_decel": 7.5,
+      "friction": 0.625,
+      "n": 1,
+      "collisions": "0",
+      "rate": 0.0
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 18.5,
+      "headway": 1.9,
+      "lead_decel": 7.5,
+      "friction": 0.625,
+      "n": 1,
+      "collisions": "0",
+      "rate": 0.0
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 25.5,
+      "headway": 1.1667,
+      "lead_decel": 6.0,
+      "friction": 0.75,
+      "n": 5,
+      "collisions": "3",
+      "rate": 0.6
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 25.5,
+      "headway": 1.9,
+      "lead_decel": 7.5,
+      "friction": 0.625,
+      "n": 1,
+      "collisions": "0",
+      "rate": 0.0
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 25.5,
+      "headway": 1.9,
+      "lead_decel": 7.5,
+      "friction": 0.875,
+      "n": 1,
+      "collisions": "1",
+      "rate": 1.0
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 25.5,
+      "headway": 1.1667,
+      "lead_decel": 7.5,
+      "friction": 0.625,
+      "n": 1,
+      "collisions": "1",
+      "rate": 1.0
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 25.5,
+      "headway": 1.1667,
+      "lead_decel": 7.5,
+      "friction": 0.75,
+      "n": 5,
+      "collisions": "5",
+      "rate": 1.0
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 25.5,
+      "headway": 1.1667,
+      "lead_decel": 7.5,
+      "friction": 0.875,
+      "n": 1,
+      "collisions": "1",
+      "rate": 1.0
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 29.0,
+      "headway": 1.1667,
+      "lead_decel": 6.0,
+      "friction": 0.75,
+      "n": 3,
+      "collisions": "3",
+      "rate": 1.0
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 32.5,
+      "headway": 1.1667,
+      "lead_decel": 7.5,
+      "friction": 0.875,
+      "n": 1,
+      "collisions": "1",
+      "rate": 1.0
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 32.5,
+      "headway": 1.1667,
+      "lead_decel": 7.5,
+      "friction": 0.625,
+      "n": 1,
+      "collisions": "1",
+      "rate": 1.0
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 32.5,
+      "headway": 1.9,
+      "lead_decel": 7.5,
+      "friction": 0.625,
+      "n": 1,
+      "collisions": "0",
+      "rate": 0.0
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 32.5,
+      "headway": 1.9,
+      "lead_decel": 7.5,
+      "friction": 0.875,
+      "n": 1,
+      "collisions": "1",
+      "rate": 1.0
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 36.0,
+      "headway": 0.8,
+      "lead_decel": 9.0,
+      "friction": 0.5,
+      "n": 5,
+      "collisions": "2",
+      "rate": 0.4
+     }
+    ],
+    "truncated": false,
+    "n_runs": 259,
+    "sha256": "2257c463a1542e8115d6a1bd925c81f93cfa2f95c1dd6f2aa35ae0ea229554ad"
+   },
+   {
+    "seq": 12,
+    "kind": "query_results",
+    "sql": "SELECT driver_state, ego_speed, headway, closing_speed, friction, count(*) AS n, sum(CASE WHEN collision THEN 1 ELSE 0 END) AS collisions, round(avg(CASE WHEN collision THEN 1 ELSE 0 END),3) AS rate FROM runs WHERE scenario = 'cut_in' AND headway <= 0.35 AND closing_speed >= 9.0 GROUP BY 1,2,3,4,5 ORDER BY driver_state",
+    "rows": [
+     {
+      "driver_state": "attentive",
+      "ego_speed": 36.0,
+      "headway": 0.3,
+      "closing_speed": 9.0,
+      "friction": 0.5,
+      "n": 8,
+      "collisions": "5",
+      "rate": 0.625
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 36.0,
+      "headway": 0.3,
+      "closing_speed": 9.0,
+      "friction": 0.5,
+      "n": 5,
+      "collisions": "5",
+      "rate": 1.0
+     }
+    ],
+    "truncated": false,
+    "n_runs": 259,
+    "sha256": "110908b6886bba740e009af713230298130eb0cf2b1a46f402522dd6bf99640c"
+   },
+   {
+    "seq": 13,
+    "kind": "query_results",
+    "sql": "SELECT driver_state, ego_speed, headway, lead_decel, friction, count(*) AS n, sum(CASE WHEN collision THEN 1 ELSE 0 END) AS collisions, round(avg(CASE WHEN collision THEN 1 ELSE 0 END),3) AS rate FROM runs WHERE scenario = 'lead_brake' AND driver_state = 'distracted' AND lead_decel >= 6.0 AND headway <= 2.0 AND ego_speed >= 18.5 GROUP BY 1,2,3,4,5 ORDER BY ego_speed, lead_decel, headway, friction",
+    "rows": [
+     {
+      "driver_state": "distracted",
+      "ego_speed": 18.5,
+      "headway": 1.1667,
+      "lead_decel": 7.5,
+      "friction": 0.625,
+      "n": 1,
+      "collisions": "0",
+      "rate": 0.0
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 18.5,
+      "headway": 1.1667,
+      "lead_decel": 7.5,
+      "friction": 0.875,
+      "n": 1,
+      "collisions": "1",
+      "rate": 1.0
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 18.5,
+      "headway": 1.9,
+      "lead_decel": 7.5,
+      "friction": 0.625,
+      "n": 1,
+      "collisions": "0",
+      "rate": 0.0
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 18.5,
+      "headway": 1.9,
+      "lead_decel": 7.5,
+      "friction": 0.875,
+      "n": 1,
+      "collisions": "0",
+      "rate": 0.0
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 25.5,
+      "headway": 1.1667,
+      "lead_decel": 6.0,
+      "friction": 0.75,
+      "n": 5,
+      "collisions": "3",
+      "rate": 0.6
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 25.5,
+      "headway": 1.1667,
+      "lead_decel": 7.5,
+      "friction": 0.625,
+      "n": 1,
+      "collisions": "1",
+      "rate": 1.0
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 25.5,
+      "headway": 1.1667,
+      "lead_decel": 7.5,
+      "friction": 0.75,
+      "n": 5,
+      "collisions": "5",
+      "rate": 1.0
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 25.5,
+      "headway": 1.1667,
+      "lead_decel": 7.5,
+      "friction": 0.875,
+      "n": 1,
+      "collisions": "1",
+      "rate": 1.0
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 25.5,
+      "headway": 1.9,
+      "lead_decel": 7.5,
+      "friction": 0.625,
+      "n": 1,
+      "collisions": "0",
+      "rate": 0.0
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 25.5,
+      "headway": 1.9,
+      "lead_decel": 7.5,
+      "friction": 0.875,
+      "n": 1,
+      "collisions": "1",
+      "rate": 1.0
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 29.0,
+      "headway": 1.1667,
+      "lead_decel": 6.0,
+      "friction": 0.75,
+      "n": 3,
+      "collisions": "3",
+      "rate": 1.0
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 32.5,
+      "headway": 1.1667,
+      "lead_decel": 7.5,
+      "friction": 0.625,
+      "n": 1,
+      "collisions": "1",
+      "rate": 1.0
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 32.5,
+      "headway": 1.1667,
+      "lead_decel": 7.5,
+      "friction": 0.875,
+      "n": 1,
+      "collisions": "1",
+      "rate": 1.0
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 32.5,
+      "headway": 1.9,
+      "lead_decel": 7.5,
+      "friction": 0.625,
+      "n": 1,
+      "collisions": "0",
+      "rate": 0.0
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 32.5,
+      "headway": 1.9,
+      "lead_decel": 7.5,
+      "friction": 0.875,
+      "n": 1,
+      "collisions": "1",
+      "rate": 1.0
+     },
+     {
+      "driver_state": "distracted",
+      "ego_speed": 36.0,
+      "headway": 0.8,
+      "lead_decel": 9.0,
+      "friction": 0.5,
+      "n": 5,
+      "collisions": "2",
+      "rate": 0.4
+     }
+    ],
+    "truncated": false,
+    "n_runs": 259,
+    "sha256": "8e1a1626b54ae6258fe208892ce13624c79602ddc981eaab08407c40cfcd1366"
+   }
+  ],
+  "ledger_sha256": "f7f989d5e14b6cb4cd66df21e21cc3c8d3c0716af969734c2530241b68f5729d"
+ },
+ "bundle_sha256": "759ef3ec21075c6d416b179adb754d6cf8514faf220e88e60adaadcf5863fa9d"
+}

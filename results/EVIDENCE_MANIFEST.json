@@ -1,0 +1,459 @@
+{
+  "schema": "evidence-manifest/v1",
+  "release_id": "fe59625d9428753862687a3969fa0abf194b64e8afeabe42898bdbcca7498d81",
+  "evidence_commit": "43d549f3981403b13317ba99cffb86c97d5e5abe",
+  "evidence_commit_note": "Commit of the private development history the final campaigns ran from. The release ID is computed from the parsed configuration, the policy and the avval/ source, so it can be recomputed from this repository with `python -m avval.cli release`; the evidence package verifies on its own.",
+  "evidence_mode": "final",
+  "package": {
+    "archive": "adas-validation-agent-v1.0-evidence.zip",
+    "archive_sha256": "cd27a369b6633f031ffbeadcd30a15056acdbe345d134adbd87193a300ac8b6a",
+    "archive_bytes": 98175399,
+    "package_sha256": "df80dbe8c050805db80aa5ad09fb9ebfee07ec586b563cff99d51d67b9ff2295",
+    "package_files": 896,
+    "where": "attached to the v1.0 GitHub Release",
+    "verify": "python -m avval.cli verify-package <unzipped>/package"
+  },
+  "files": [
+    {
+      "path": "results/ac01_clusters.md",
+      "sha256": "867d814edced68c41be28b64eba3e15b9411477c8530538c5161c7b40de31d47",
+      "bytes": 1199,
+      "package_path": "other/ac01_clusters.md"
+    },
+    {
+      "path": "results/agent/evidence_agent_s0.json",
+      "sha256": "65d17b866ee88c16bef97b8ca12a4f58125142fc92e20544c03b8a8f9ccf1ffa",
+      "bytes": 66769,
+      "package_path": "benchmark/evidence_agent_s0.json"
+    },
+    {
+      "path": "results/agent/evidence_agent_s1.json",
+      "sha256": "8d8ac9ba719faf58c94fd44b2ca2f416eb00e267142e9bc4cec61bd9232f02ae",
+      "bytes": 20113,
+      "package_path": "benchmark/evidence_agent_s1.json"
+    },
+    {
+      "path": "results/agent/evidence_agent_s2.json",
+      "sha256": "81332edee356db29783c24ddd350ef194e34258614a515431bf79233dd80a82c",
+      "bytes": 38953,
+      "package_path": "benchmark/evidence_agent_s2.json"
+    },
+    {
+      "path": "results/agent/evidence_agent_s3.json",
+      "sha256": "03d444053ceca089ecea93fdffaae9a9119f82f07b8d4b5f7fde03e62c44cd83",
+      "bytes": 44148,
+      "package_path": "benchmark/evidence_agent_s3.json"
+    },
+    {
+      "path": "results/agent/evidence_agent_s4.json",
+      "sha256": "efb5cf5fa6bbb025887c2d6ec18fe348c5bf4b1e47f9dfab883119170ffd2c06",
+      "bytes": 51416,
+      "package_path": "benchmark/evidence_agent_s4.json"
+    },
+    {
+      "path": "results/agent/evidence_agent_s5.json",
+      "sha256": "86c35156105a10b11d58ffee86783f4709a62a4fac8e9c7591853e9760849a0f",
+      "bytes": 41227,
+      "package_path": "benchmark/evidence_agent_s5.json"
+    },
+    {
+      "path": "results/agent/evidence_agent_s6.json",
+      "sha256": "5055981186d249bc31031c730a481d4b26e0f1c3734f47f308835ec0ef3f34c2",
+      "bytes": 52246,
+      "package_path": "benchmark/evidence_agent_s6.json"
+    },
+    {
+      "path": "results/agent/evidence_agent_s7.json",
+      "sha256": "b6dc89f683df24b34188e4fafccfd658a301d6089e6ee1ba446aead6fe3595e9",
+      "bytes": 50578,
+      "package_path": "benchmark/evidence_agent_s7.json"
+    },
+    {
+      "path": "results/agent/evidence_agent_s8.json",
+      "sha256": "684ef951c75345bfc833125f45b004eecb38e096d2cd953c850c0fae8339da38",
+      "bytes": 33898,
+      "package_path": "benchmark/evidence_agent_s8.json"
+    },
+    {
+      "path": "results/agent/evidence_agent_s9.json",
+      "sha256": "8efa47f29a3aba2412318526f9e5849af47d6a122e4212d4f2987e00e004a806",
+      "bytes": 50769,
+      "package_path": "benchmark/evidence_agent_s9.json"
+    },
+    {
+      "path": "results/agent/report_agent_s0.md",
+      "sha256": "aab1bcba6c7d648333100cbc9117e8bbd83226acb5b6fe12940b39266d82354b",
+      "bytes": 20123,
+      "package_path": "benchmark/report_agent_s0.md"
+    },
+    {
+      "path": "results/agent/report_agent_s1.md",
+      "sha256": "5facf81eb652c7deb07d84f93863d22bc07d630d5a673f763ce39317916b64db",
+      "bytes": 17839,
+      "package_path": "benchmark/report_agent_s1.md"
+    },
+    {
+      "path": "results/agent/report_agent_s2.md",
+      "sha256": "f8500ddd0de372a48ee400be93669faaebb1d8029dc5cfbc5c792176bc2e742f",
+      "bytes": 19140,
+      "package_path": "benchmark/report_agent_s2.md"
+    },
+    {
+      "path": "results/agent/report_agent_s3.md",
+      "sha256": "af3425ca2595a20222ce95b10105736bd11d518122d2c07a55abd5cf001dac5b",
+      "bytes": 20545,
+      "package_path": "benchmark/report_agent_s3.md"
+    },
+    {
+      "path": "results/agent/report_agent_s4.md",
+      "sha256": "8160a9ba2f36f1992d597db8839a4478b36a4625f28a4553618064d0b7f95a10",
+      "bytes": 21477,
+      "package_path": "benchmark/report_agent_s4.md"
+    },
+    {
+      "path": "results/agent/report_agent_s5.md",
+      "sha256": "684850c234d4d6f91223ac08eb8bab9782af1f34dac33f04d8335f4d46fcb2be",
+      "bytes": 19224,
+      "package_path": "benchmark/report_agent_s5.md"
+    },
+    {
+      "path": "results/agent/report_agent_s6.md",
+      "sha256": "9ef162e7ed408edeae3bbfe12314dc060dedc73b0e9f1ba5f9cbdaca1b3f6a22",
+      "bytes": 20381,
+      "package_path": "benchmark/report_agent_s6.md"
+    },
+    {
+      "path": "results/agent/report_agent_s7.md",
+      "sha256": "1c59aa64445f4428b7e6becc086eb19fa347638e40153ac7d0444d64e363ce29",
+      "bytes": 19400,
+      "package_path": "benchmark/report_agent_s7.md"
+    },
+    {
+      "path": "results/agent/report_agent_s8.md",
+      "sha256": "eaaa8581a5a88908f3020d992ab14bc213dd6cf500b0087adcc08c3f561131ae",
+      "bytes": 19111,
+      "package_path": "benchmark/report_agent_s8.md"
+    },
+    {
+      "path": "results/agent/report_agent_s9.md",
+      "sha256": "b9d46380604b260555be4c5803faaba30df73e2ceb9f55b2d07759d4de5fb334",
+      "bytes": 20069,
+      "package_path": "benchmark/report_agent_s9.md"
+    },
+    {
+      "path": "results/agent/transcript_agent_s0.json",
+      "sha256": "6d7eb56228a600704e46e682b8390b5fade998ffe4ba57ad8736329f1f9f6e52",
+      "bytes": 180535,
+      "package_path": "benchmark/transcript_agent_s0.json"
+    },
+    {
+      "path": "results/agent/transcript_agent_s1.json",
+      "sha256": "0e7be181aac93cfa65906d1ee5d02f66a31e06131449181c5b0d719986e160cf",
+      "bytes": 175413,
+      "package_path": "benchmark/transcript_agent_s1.json"
+    },
+    {
+      "path": "results/agent/transcript_agent_s2.json",
+      "sha256": "f93b97335e4fa1f8c730fc67c3070a197e5964228f11620fb23ae9e4495f2260",
+      "bytes": 175154,
+      "package_path": "benchmark/transcript_agent_s2.json"
+    },
+    {
+      "path": "results/agent/transcript_agent_s3.json",
+      "sha256": "f528cc0c8cd007532ca060e32fea7d1c917251477721ce535f920805b729ed20",
+      "bytes": 172010,
+      "package_path": "benchmark/transcript_agent_s3.json"
+    },
+    {
+      "path": "results/agent/transcript_agent_s4.json",
+      "sha256": "00118e64dbae617aa43ece1a925b6836078419f67ef0ec80c18269252e64fe4c",
+      "bytes": 180300,
+      "package_path": "benchmark/transcript_agent_s4.json"
+    },
+    {
+      "path": "results/agent/transcript_agent_s5.json",
+      "sha256": "902012a00808721dae1f261468542e1298a61243f9c20fdf5e3aabc4b59d1e1b",
+      "bytes": 94484,
+      "package_path": "benchmark/transcript_agent_s5.json"
+    },
+    {
+      "path": "results/agent/transcript_agent_s6.json",
+      "sha256": "a47a144a573c608aa3fc5753975615add0af7d68524cebd78bdd33aadf135508",
+      "bytes": 174718,
+      "package_path": "benchmark/transcript_agent_s6.json"
+    },
+    {
+      "path": "results/agent/transcript_agent_s7.json",
+      "sha256": "a930c016463bb7f7f6d5adba0d49108cb712a9b84dac96aefdc4c1848e583743",
+      "bytes": 138209,
+      "package_path": "benchmark/transcript_agent_s7.json"
+    },
+    {
+      "path": "results/agent/transcript_agent_s8.json",
+      "sha256": "b10a48c843a87c0c7be809c8f9b74f44260f931cd7f860bc511d8d258671ea8a",
+      "bytes": 163397,
+      "package_path": "benchmark/transcript_agent_s8.json"
+    },
+    {
+      "path": "results/agent/transcript_agent_s9.json",
+      "sha256": "b1b8674a8c70d17e690b93da4ab5bae40b0a3f4c239cf7e25d4c69dd0615ece2",
+      "bytes": 169352,
+      "package_path": "benchmark/transcript_agent_s9.json"
+    },
+    {
+      "path": "results/agent/usage_agent_s0.json",
+      "sha256": "4102f2c4301f226e4985285164ec1760f5fbfc8073e1ac39bcc5f3e4a5aa84df",
+      "bytes": 4633,
+      "package_path": "benchmark/usage_agent_s0.json"
+    },
+    {
+      "path": "results/agent/usage_agent_s1.json",
+      "sha256": "894d17a1ea73e8d3270e2ac35f5662dd8b3f7303fbbbba00e98a3d7d9a63fe56",
+      "bytes": 4449,
+      "package_path": "benchmark/usage_agent_s1.json"
+    },
+    {
+      "path": "results/agent/usage_agent_s2.json",
+      "sha256": "e70d1a6849dba55dce2039e6ba4e81ebbf77b69ccc767fe058bea3bbbb7557be",
+      "bytes": 4448,
+      "package_path": "benchmark/usage_agent_s2.json"
+    },
+    {
+      "path": "results/agent/usage_agent_s3.json",
+      "sha256": "05e4307a450cdd58451af3731ffd128d45444fa4c4a879c9512a9d508ab62f13",
+      "bytes": 4257,
+      "package_path": "benchmark/usage_agent_s3.json"
+    },
+    {
+      "path": "results/agent/usage_agent_s4.json",
+      "sha256": "cdb279194cea1fb55b980ba9fe495a4dfacfbebb1effb65469fcec938d7ef8ed",
+      "bytes": 4451,
+      "package_path": "benchmark/usage_agent_s4.json"
+    },
+    {
+      "path": "results/agent/usage_agent_s5.json",
+      "sha256": "e18e8842edd59f66ca604219e3320720c4dadaec5092728a4c6fbc15f5e17981",
+      "bytes": 3121,
+      "package_path": "benchmark/usage_agent_s5.json"
+    },
+    {
+      "path": "results/agent/usage_agent_s6.json",
+      "sha256": "19dd9e3e975a219b892c67af25e77dcfdcac1a4f84267caf47c5c6f1f9284e08",
+      "bytes": 2745,
+      "package_path": "benchmark/usage_agent_s6.json"
+    },
+    {
+      "path": "results/agent/usage_agent_s7.json",
+      "sha256": "d41d41c59ecdb89b04dc03d512b91802e395cba3c08c8ee9b66b6201647e4acb",
+      "bytes": 4068,
+      "package_path": "benchmark/usage_agent_s7.json"
+    },
+    {
+      "path": "results/agent/usage_agent_s8.json",
+      "sha256": "d1019c9b90ceb6d386782d67f6fca4b1015fd091f9d61291027d31c737edb817",
+      "bytes": 3311,
+      "package_path": "benchmark/usage_agent_s8.json"
+    },
+    {
+      "path": "results/agent/usage_agent_s9.json",
+      "sha256": "4c8f8e17613d3331e51ae702bb731ff176dcc43e583f64a1e3d5098953d49821",
+      "bytes": 4070,
+      "package_path": "benchmark/usage_agent_s9.json"
+    },
+    {
+      "path": "results/benchmark.md",
+      "sha256": "ec98804c7d1f6f55ee94abdfc7d868fc56e6785e112797b1c01352a971e6909a",
+      "bytes": 6720,
+      "package_path": "benchmark/benchmark.md"
+    },
+    {
+      "path": "results/benchmark_analysis.json",
+      "sha256": "7d6e920b30b85168f6db2c804f38652809573dc655d33629f61942377a6a1275",
+      "bytes": 24595,
+      "package_path": "benchmark/benchmark_analysis.json"
+    },
+    {
+      "path": "results/benchmark_manifest.json",
+      "sha256": "352795ee1e72eb7ddccf75aa380a29c96cdc6238af97d0134d79e169ad167a14",
+      "bytes": 4563,
+      "package_path": "benchmark/benchmark_manifest.json"
+    },
+    {
+      "path": "results/discovery_curves.png",
+      "sha256": "6bb96460be6e8b9ed4a1bcd13ec125b19a3c9ed66d9671f43eac1ffbeb5e32d1",
+      "bytes": 134769,
+      "package_path": "benchmark/discovery_curves.png"
+    },
+    {
+      "path": "results/failure_boundary.json",
+      "sha256": "b9ec28c6b3f5328d4eb80e49cd02a6a4c3a1609357cd8297ebe65888653168f5",
+      "bytes": 7363,
+      "package_path": "other/failure_boundary.json"
+    },
+    {
+      "path": "results/failure_boundary.png",
+      "sha256": "1af4756b21a7f5e1112c06e7458022e17ad678827e39aa9302acca15eed04f85",
+      "bytes": 55352,
+      "package_path": "other/failure_boundary.png"
+    },
+    {
+      "path": "results/findings.md",
+      "sha256": "fc436b4f52f24c4b040eeba990da06eac6bc81389a2f95be63fdd0935bf6a702",
+      "bytes": 876,
+      "package_path": "other/findings.md"
+    },
+    {
+      "path": "results/frozen_predicates.json",
+      "sha256": "dc8155dc6b0db90df79c6d4f6dacdeaeb0ab14eeecf5ce75664df5398eb2197c",
+      "bytes": 10845,
+      "package_path": "holdout/frozen_predicates.json"
+    },
+    {
+      "path": "results/handback_diagnostics_estimate.md",
+      "sha256": "bf110565e311b81390e6ae926b14a9bcc987905aebe2af9f7ef10177fad177ef",
+      "bytes": 316,
+      "package_path": "other/handback_diagnostics_estimate.md"
+    },
+    {
+      "path": "results/holdout_predicates.json",
+      "sha256": "80ad0ab135c367f1dbd9efd6d4c21b87e9b22046696494b8ec681c412ff12015",
+      "bytes": 21361,
+      "package_path": "holdout/holdout_predicates.json"
+    },
+    {
+      "path": "results/holdout_predicates.md",
+      "sha256": "eb415fe3856db2af2759978b888505020b7c6975c54c3269f4ab92aae555f9d0",
+      "bytes": 4973,
+      "package_path": "holdout/holdout_predicates.md"
+    },
+    {
+      "path": "results/holdout_protocol.json",
+      "sha256": "15cd240055bcd851396eef66ddf2751fad2eabb85cf7f87a9e118f9a070142d8",
+      "bytes": 904,
+      "package_path": "holdout/holdout_protocol.json"
+    },
+    {
+      "path": "results/policy.json",
+      "sha256": "5e14254aff132c1b2d674702e85ad3cc3d2c326c6c2440d9f3e43861ceb1a214",
+      "bytes": 27120,
+      "role": "input: frozen release policy (tracked since v0.1)",
+      "package_path": "policy.json"
+    },
+    {
+      "path": "results/policy_meta.json",
+      "sha256": "e36ef12f9500af5d621a67b762a2668007f535a9c761cddfc99c7623503fc02d",
+      "bytes": 964,
+      "role": "input: frozen release policy (tracked since v0.1)",
+      "package_path": "policy_meta.json"
+    },
+    {
+      "path": "results/reference_predicates.json",
+      "sha256": "2594c52c842d5c390962e5ba5f8f980c6d6ae06e8eba85b9ca41424500378396",
+      "bytes": 574,
+      "package_path": "holdout/reference_predicates.json"
+    },
+    {
+      "path": "results/RELEASE_ID",
+      "sha256": "a3d116f5c0b84daa0fca597e47b9e025ec83021149c7188ca3fce8b6a2b4ab50",
+      "bytes": 66
+    },
+    {
+      "path": "results/report_estimate.md",
+      "sha256": "f265ecf4b87a78698147b8c9daa9b6ec74c83c84b30d98b7cf0d2a2e0312be88",
+      "bytes": 8578,
+      "package_path": "estimation/report_estimate.md"
+    },
+    {
+      "path": "results/sensitivity_factorial2.csv",
+      "sha256": "ca283e5a3f39513835693a434fe159de3ec00203340d86a48e1fb0b9d4c32c9d",
+      "bytes": 78246,
+      "package_path": "sensitivity/sensitivity_factorial2.csv"
+    },
+    {
+      "path": "results/sensitivity_factorial2.md",
+      "sha256": "b124575a2e033121fca97811b437db78c0a871f9063d779b4c1c10f62d2676fa",
+      "bytes": 52039,
+      "package_path": "sensitivity/sensitivity_factorial2.md"
+    },
+    {
+      "path": "results/sensitivity_lhs.csv",
+      "sha256": "63d993adfbe49ad3dede630e236390e44963d901831629d416d3ed056d245dec",
+      "bytes": 86276,
+      "package_path": "sensitivity/sensitivity_lhs.csv"
+    },
+    {
+      "path": "results/sensitivity_lhs.md",
+      "sha256": "d4173295b7ab4338236763d7b4898c72627a20b538a952d73c0735a61cc710fd",
+      "bytes": 57132,
+      "package_path": "sensitivity/sensitivity_lhs.md"
+    },
+    {
+      "path": "results/sensitivity_manifest.json",
+      "sha256": "83d4a3d457fa1e9fab86374328c8ca518fe0a423c396c0a2ddced4f2df61b89a",
+      "bytes": 63757,
+      "package_path": "sensitivity/sensitivity_manifest.json"
+    },
+    {
+      "path": "results/sensitivity_oat.csv",
+      "sha256": "26006f7d52c4c2a2f446798e91f0a96b45009c1133ece4f3cbbfd51cfaad7c5c",
+      "bytes": 47128,
+      "package_path": "sensitivity/sensitivity_oat.csv"
+    },
+    {
+      "path": "results/sensitivity_oat.md",
+      "sha256": "3862f0f59efa4a92690605423db987cab92155d7ed74c320abec193ed18bcef5",
+      "bytes": 30976,
+      "package_path": "sensitivity/sensitivity_oat.md"
+    },
+    {
+      "path": "results/sensitivity_oat.png",
+      "sha256": "6fc4bae547dec7738104442712ee77b85b1c6884d5641e825288540dc90eb452",
+      "bytes": 297071,
+      "package_path": "sensitivity/sensitivity_oat.png"
+    }
+  ],
+  "raw_data_not_in_git": [
+    {
+      "file": "results/final_fe59625d94287538/runs_v4.duckdb",
+      "sha256": "3237c0fb6e94118532c0ffb31a8ff4836a2bc4e284bc35406f00f914a303ffc3",
+      "bytes": 122957824,
+      "content": "DuckDB run store of every final campaign (schema v4)"
+    },
+    {
+      "file": "package/runs/estimate.parquet",
+      "sha256": "b39eb4a4fa8551f1ce636e84c6e0513d1a6ff17d057849fc374d789243d7ce67",
+      "bytes": 15742366,
+      "content": "per-run records of campaign estimate, inside the evidence package"
+    },
+    {
+      "file": "package/runs/holdout.parquet",
+      "sha256": "59a955183172e63340ba599e7ec6e157b3e8938506ddc079cb636f31b29044d4",
+      "bytes": 15738455,
+      "content": "per-run records of campaign holdout, inside the evidence package"
+    }
+  ],
+  "regenerate": {
+    "note": "Needs a clean, committed tree of this repository, the exact environment in requirements-lock.txt and ANTHROPIC_API_KEY for the agent seeds. Outputs go to results/final_<release-id prefix>/.",
+    "commands": [
+      "python -m avval.cli --final release",
+      "python -m avval.cli --final characterise",
+      "python -m avval.cli --final estimate --n 100000 --seed 0",
+      "python -m avval.cli --final benchmark-freeze",
+      "python -m avval.cli --final benchmark-run --strategy <random|grid|boundary|evolutionary|cem|bayesopt>",
+      "python -m avval.cli --final agent --first-seed 0 --seeds 10",
+      "python -m avval.cli --final benchmark-report",
+      "python -m avval.cli --final sensitivity-freeze",
+      "python -m avval.cli --final sensitivity --design <oat|factorial2|lhs>",
+      "python -m avval.cli --final reference-boxes estimate",
+      "python -m avval.cli --final freeze-predicates --from-benchmark",
+      "python -m avval.cli --final holdout-freeze --n 100000 --seed 4242",
+      "python -m avval.cli --final holdout-run",
+      "python -m avval.cli --final holdout-report",
+      "python -m avval.cli --final diagnose estimate",
+      "python -m avval.cli --final findings --estimation estimate --from-benchmark",
+      "python -m avval.cli --final report estimate",
+      "python -m avval.cli --final package",
+      "python -m avval.cli verify-package results/final_<id>/package"
+    ]
+  }
+}

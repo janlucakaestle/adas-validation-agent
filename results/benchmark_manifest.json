@@ -1,0 +1,134 @@
+{
+ "schema": "benchmark-manifest/v4",
+ "protocol": {
+  "schema": "benchmark/v3",
+  "name": "discovery-benchmark-v3",
+  "budget": 300,
+  "seeds": {
+   "agent": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+   ],
+   "baselines": {
+    "first": 0,
+    "count": 100
+   }
+  },
+  "strategies": [
+   "agent",
+   "random",
+   "grid",
+   "cem",
+   "evolutionary",
+   "boundary",
+   "bayesopt"
+  ],
+  "agent": {
+   "model": "claude-sonnet-5",
+   "max_turns": 40,
+   "cost_cap_usd_per_seed": 5.0,
+   "total_cost_cap_usd": 50.0
+  },
+  "information": "Every strategy uses avval/search.py::SearchInterface: the public spec, the same visible per-run columns, the same budget. No strategy sees acceptance criteria, references' parameters, driver-model parameters or other campaigns.",
+  "regions": {
+   "attentive_reference_avoidable_collision": "collision AND avoidable_by_reference AND driver_state = 'attentive'",
+   "misuse_handback_collision": "collision AND avoidable_by_reference AND handback_required AND driver_category = 'foreseeable_misuse'",
+   "silent_margin_erosion": "NOT collision AND NOT tor_issued AND min_ttc_accel < 2.0",
+   "comfort_exceedance": "max_jerk_automated > 5.0"
+  },
+  "primary": {
+   "region": "attentive_reference_avoidable_collision",
+   "test": "posterior_predictive_at_least",
+   "alpha": 0.05,
+   "bootstrap_draws": 4000,
+   "bootstrap_seed": 0
+  },
+  "secondary": [
+   "distinct_target_cells_at_matched_budget",
+   "runs_to_first_target"
+  ],
+  "curve_target": "collision"
+ },
+ "protocol_config_sha256": "41549d2c3eb45e41ed434d7b885e5ce4ceeb2a08a8397a4b10b599840ee59298",
+ "agent_interface_id": "ca0ed8e6e82c3fe9cc4b0d2053f33488e39cfd7b487528c87c543d72eb86daa8",
+ "discovery_sha256": "dd2c9df5d56ce11ff05dd70881e2eb402cf39b6a344724dcd69c604fece6bbfd",
+ "baselines": {
+  "version": "baselines/v4",
+  "information": "SearchInterface.domain() and SearchInterface.run() only",
+  "robustness": {
+   "definition": "0 if collision or end_state = 'horizon_unresolved'; else min(min_ttc, cap); a run that never closes (min_ttc NULL) scores cap",
+   "cap_s": 10.0,
+   "inputs": [
+    "collision",
+    "end_state",
+    "min_ttc"
+   ],
+   "goal": "minimise"
+  },
+  "encoding": "per scenario, (ego_speed, headway, scenario parameter, friction) scaled to [0, 1] by the public ranges; scenario and driver_state categorical",
+  "batch_size": 20,
+  "random": {
+   "distribution": "scenario and driver_state uniform; parameters uniform over the public ranges",
+   "chunk": 100
+  },
+  "grid": {
+   "order": "coverage cells shuffled with stream (seed, 0, 'grid-order')",
+   "point": "uniform within the cell (stream (seed, cell, 'grid-point'))",
+   "then": "random"
+  },
+  "init_batches": 2,
+  "cem": {
+   "elite_fraction": 0.2,
+   "smoothing": 0.7,
+   "min_std": 0.05,
+   "elite_pool": "all runs so far (score <= elite quantile)",
+   "categorical": "smoothed elite frequency of (scenario, driver_state)",
+   "continuous": "Gaussian per scenario from elite mean/std, clipped to [0, 1]"
+  },
+  "evolutionary": {
+   "tournament": 3,
+   "sigma": 0.1,
+   "p_categorical": 0.1,
+   "crossover": "uniform, within one scenario"
+  },
+  "boundary": {
+   "local_sigma": 0.05,
+   "bisect_share": 0.5,
+   "target": "robustness == 0",
+   "bisection": "midpoint to the nearest non-target run of the same scenario and driver state, jitter local_sigma / 4"
+  },
+  "bayesopt": {
+   "candidates": 2000,
+   "kernel": "Constant(1.0) * Matern(length_scale=0.3 per feature, nu=2.5) + White(0.1)",
+   "length_scale": 0.3,
+   "nu": 2.5,
+   "noise": 0.1,
+   "normalize_y": true,
+   "gp_random_state": 0,
+   "features": "x in [0, 1]^4, is first scenario, is first driver state",
+   "acquisition": "expected improvement below the best observed robustness",
+   "diversity": "greedy by EI; squared feature distance > 0.01 between picks",
+   "ties": "numpy argsort order (stable for equal EI)"
+  }
+ },
+ "analysis_version": "benchmark-analysis/v5",
+ "priors": {
+  "jeffreys (primary)": 0.5,
+  "uniform": 1.0,
+  "none (plain Bayesian bootstrap)": 0.0
+ },
+ "release_id": "fe59625d9428753862687a3969fa0abf194b64e8afeabe42898bdbcca7498d81",
+ "runtime_id": "d37505bee00e01c235487f54dbb579f8dc71978020d9565f2c940eb2fcf3ae3c",
+ "evidence_mode": "final",
+ "protocol_id": "4a879572d3e65102fa78f013d357c0caaabed603db99992e6a02ba64c8c444a9",
+ "frozen_at": "2026-10-21T20:44:29.200317",
+ "git_commit": "43d549f3981403b13317ba99cffb86c97d5e5abe"
+}

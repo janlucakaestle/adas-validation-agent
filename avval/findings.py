@@ -1,91 +1,73 @@
-"""Numbers behind the README's findings, recomputed from the stored campaigns.
+"""Numbers behind the README's findings, recomputed from stored campaigns.
 
-Every figure the README quotes about margin erosion, comfort and the single seed-0 baseline
-campaigns comes from `results/findings.md`, written here, so each claim traces to a file.
+Every figure the README quotes about margin erosion, comfort and hand-back behaviour comes
+from `results/findings.md`, written here from named campaigns, so each claim traces to a
+file and to the release that produced it.
 """
 from __future__ import annotations
 
 from . import RESULTS_DIR
-from .benchmark import REGIONS, seed_campaigns
-
-ATTENTIVE_PREVENTABLE = REGIONS["attentive_preventable_collision"]
+from .config import Release
 
 
-def _one(con, sql: str, params=()):
-    return con.execute(sql, list(params)).fetchone()
-
-
-def margin_erosion(store) -> list[str]:
-    """Hand-back monitor vs. acceleration-aware TTC across all benchmark seed campaigns."""
-    names = seed_campaigns(store, "random") + seed_campaigns(store, "grid")
-    if not names:
-        return ["_No benchmark campaigns._"]
-    marks = ", ".join("?" * len(names))
-    base = f"FROM all_runs WHERE campaign IN ({marks}) AND NOT collision AND NOT tor_issued"
+def margin_erosion(store, campaigns: list[str], release: Release) -> list[str]:
+    """Runs whose stop-aware acceleration TTC fell below the monitor's TTC threshold with no
+    hand-back and no collision, across the given search campaigns."""
+    if not campaigns:
+        return ["_No campaigns._"]
+    p = release.sim_params
+    marks = ", ".join("?" * len(campaigns))
+    base = (f"FROM all_runs WHERE campaign IN ({marks}) AND NOT collision AND NOT tor_issued "
+            f"AND min_ttc_accel < {p.tor_ttc_s}")
     con = store.con
-    n_runs = _one(con, f"SELECT count(*) FROM all_runs WHERE campaign IN ({marks})", names)[0]
-    plain = _one(con, f"SELECT count(*) {base} AND min_ttc < 2.0", names)[0]
-    n, lo, lead = _one(con, f"SELECT count(*), min(min_ttc_accel), "
-                            f"count(*) FILTER (WHERE scenario = 'lead_brake') "
-                            f"{base} AND min_ttc_accel < 2.0", names)
-    wet, dry = _one(con, f"SELECT count(*) FILTER (WHERE friction < 0.75), "
-                         f"count(*) FILTER (WHERE friction >= 0.75) "
-                         f"{base} AND min_ttc_accel < 2.0", names)
-    return [
-        f"Across {len(names)} benchmark campaigns ({n_runs:,} runs; `random_s*` and `grid_s*`):",
-        "",
-        f"- runs without collision or hand-back whose constant-speed TTC fell below 2 s: "
-        f"**{plain}**",
-        f"- runs without collision or hand-back whose acceleration-aware TTC fell below 2 s: "
-        f"**{n}** ({lead} of them lead braking), minimum **{lo:.2f} s**" if n else
-        "- runs without collision or hand-back whose acceleration-aware TTC fell below 2 s: 0",
-        f"- of those, friction below 0.75: {wet}; friction 0.75 or above: {dry}"]
+    n_runs = con.execute(f"SELECT count(*) FROM all_runs WHERE campaign IN ({marks})",
+                         campaigns).fetchone()[0]
+    n, lo, lead = con.execute(f"SELECT count(*), min(min_ttc_accel), count(*) FILTER "
+                              f"(WHERE scenario = 'lead_brake') {base}", campaigns).fetchone()
+    return [f"Across {len(campaigns)} campaigns ({n_runs:,} runs): runs without collision or "
+            f"hand-back whose stop-aware acceleration TTC fell below the monitor's "
+            f"{p.tor_ttc_s:g} s: **{n}**" + (f" ({lead} lead braking), minimum **{lo:.2f} s**"
+                                              if n else ""),
+            "", "Why the monitor stayed silent in these runs is decomposed by "
+            "`python -m avval.cli diagnose` (`results/handback_diagnostics_<campaign>.md`)."]
 
 
-def comfort(store, campaign: str = "estimate") -> list[str]:
-    """AC-04's population (no hand-back) with filtered and raw jerk, on the estimation."""
+def comfort(store, campaign: str, release: Release) -> list[str]:
+    """AC-04's population (all runs; automated-control jerk) with whole-run and raw jerk."""
     if not store.n_runs(campaign):
         return [f"_No campaign `{campaign}`._"]
-    row = store.query(
-        "SELECT count(*) AS n, quantile_cont(max_jerk, 0.95) AS p95, "
+    thr = next(c["threshold"] for c in release.acceptance["criteria"] if c["id"] == "AC-04")
+    r = store.query(
+        "SELECT count(*) AS n, quantile_cont(coalesce(max_jerk_automated, 'Infinity'::DOUBLE), "
+        "0.95) AS p95_auto, quantile_cont(max_jerk, 0.95) AS p95_run, "
         "quantile_cont(max_jerk_raw, 0.95) AS p95_raw, "
-        "count(*) FILTER (WHERE max_jerk > 5.0) AS over, "
-        "count(*) FILTER (WHERE max_jerk > 5.0 AND scenario = 'cut_in') AS over_cut_in, "
-        "max(max_jerk) AS worst FROM runs WHERE NOT tor_issued", campaign).iloc[0]
-    return [
-        f"Runs without a hand-back in `{campaign}` (AC-04's population): {int(row['n']):,}.",
-        "",
-        f"- 95th percentile of filtered jerk (`max_jerk`, 0.5 s moving average): "
-        f"**{row['p95']:.2f} m/s³**",
-        f"- 95th percentile of raw 20 Hz sample-difference jerk (`max_jerk_raw`): "
-        f"**{row['p95_raw']:.2f} m/s³**",
-        f"- runs above 5 m/s³ (filtered): {int(row['over']):,}, of which cut-ins "
-        f"{int(row['over_cut_in']):,}; largest {row['worst']:.2f} m/s³"]
+        f"count(*) FILTER (WHERE max_jerk_automated > {thr}) AS over, "
+        f"count(*) FILTER (WHERE max_jerk_automated > {thr} AND scenario = 'cut_in') AS over_ci "
+        "FROM runs", campaign).iloc[0]
+    return [f"All {int(r['n']):,} runs of `{campaign}` (AC-04's population):", "",
+            f"- 95th percentile of automated-control jerk (0.5 s moving average): "
+            f"**{r['p95_auto']:.2f} m/s³**",
+            f"- whole-run filtered jerk (includes the driver phase): {r['p95_run']:.2f} m/s³",
+            f"- raw sample-difference jerk: {r['p95_raw']:.2f} m/s³",
+            f"- runs above {thr:g} m/s³ (automated control): {int(r['over']):,}, of which "
+            f"cut-ins {int(r['over_ci']):,}"]
 
 
-def single_baselines(store) -> list[str]:
-    """The single seed-0 baseline campaigns `random` and `grid`."""
-    lines = ["| campaign | runs | attentive runs | collisions | unpreventable "
-             "| attentive preventable collisions |", "|---|---|---|---|---|---|"]
-    for name in ("random", "grid"):
-        if not store.n_runs(name):
-            continue
-        r = store.query(
-            "SELECT count(*) AS n, count(*) FILTER (WHERE driver_state = 'attentive') AS att, "
-            "count(*) FILTER (WHERE collision) AS col, "
-            "count(*) FILTER (WHERE collision AND NOT preventable) AS unprev, "
-            f"count(*) FILTER (WHERE {ATTENTIVE_PREVENTABLE}) AS ap FROM runs", name).iloc[0]
-        lines.append(f"| `{name}` | {int(r['n'])} | {int(r['att'])} | {int(r['col'])} "
-                     f"| {int(r['unprev'])} | {int(r['ap'])} |")
-    return lines
-
-
-def write_findings(store) -> str:
+def write_findings(store, estimation: str, search_campaigns: list[str],
+                   release: Release, final: bool = False) -> str:
+    """Refuses any campaign not COMPLETE under this release and runtime with intact data
+    (and, with `final`, not final evidence): findings never mix releases."""
+    from .estimation import require_campaigns
+    require_campaigns(store, [estimation], release, kind="nominal_estimation", final=final)
+    require_campaigns(store, search_campaigns, release, kind="search", final=final,
+                      full_plan=False)
     lines = ["# Findings: supporting numbers", "",
-             "Recomputed from the stored campaigns by `python -m avval.cli findings`.", "",
-             "## Silent margin erosion", "", *margin_erosion(store), "",
-             "## Comfort and the jerk definition", "", *comfort(store), "",
-             "## Single seed-0 baseline campaigns", "", *single_baselines(store), ""]
+             f"Recomputed by `python -m avval.cli findings` under release "
+             f"`{release.release_id[:16]}…`. Conditional on this release's simulator, models "
+             "and exposure model.", "",
+             "## Margin erosion without hand-back", "",
+             *margin_erosion(store, search_campaigns, release), "",
+             "## Comfort and the jerk definition", "", *comfort(store, estimation, release), ""]
     path = RESULTS_DIR / "findings.md"
     path.write_text("\n".join(lines), encoding="utf-8")
     return str(path)

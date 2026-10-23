@@ -2,55 +2,75 @@
 
 ## What SOTIF requires that this project does not do
 
-- **No hazard analysis and risk evaluation.** No hazard identification, and no severity,
-  exposure or controllability assessment. The acceptance criteria are illustrative choices
-  written before testing, not derived from one.
-- **No justified validation targets.** Thresholds in `acceptance.yaml`, `min_n` = 100 and
-  all of `config/exposure.yaml` are placeholders. A real programme would derive the target
-  (e.g. fault-free km or hours) from a risk-acceptance argument and field exposure data, and
-  size the estimation to it.
-- **No perception insufficiencies.** Ground-truth gap, speeds and lead deceleration; no
-  sensor model, noise, latency, false or missed detections, or perception triggering
-  conditions. In a real ADAS these often dominate.
-- **No safety argument for the learned component.** ISO/PAS 8800 expects a training-data
-  specification, data-quality management, runtime out-of-distribution monitoring and
-  analysis of learned failure modes. This project only measures closed-loop behaviour and
-  ties results to the weights hash.
+- **No hazard analysis and risk evaluation.** Acceptance criteria are illustrative and
+  written before testing, not derived from a HARA.
+- **No justified validation targets.** Thresholds, tolerable rates, `min_n`, confidence and
+  all exposure weights are placeholders (`TODO(data)`).
+- **No perception insufficiencies.** Ground-truth gap, speeds and lead deceleration.
+- **No safety argument for the learned component** (ISO/PAS 8800): no training-data
+  specification, data-quality management or runtime OOD monitoring.
+
+## The system under test is a demonstrator
+
+- A 32×32 MLP behaviour-cloned from a synthetic IDM expert, with four ground-truth inputs.
+  No perception, noise, temporal model, uncertainty, lateral behaviour or OOD handling.
+  Results do not transfer to production learned ADAS stacks.
+- ACC authority above the training authority is studied with a re-trained policy; with
+  `authority_mode: saturate` such variants are labelled confounded.
 
 ## Modelling
 
-- **Longitudinal only.** Single-lane 1-D; a cut-in simply appears at its headway. The
-  driver takes over by braking only; the lead model is simple. The simulator behind
-  `simulate()` is designed to be swapped.
-- **Driver states change reaction delay only.** No steering, startle, freezing or
-  over-braking. Attentive drivers react at the TOR, not at hazard onset, so AC-01 is
-  pessimistic.
-- **One distracted-driver source** (n = 19, reading task, hazard seen at ≈ 7 s TTC).
-- **Reference controller** bounds only responses that start at the hazard; handled by
-  counting avoided runs as preventable. The competent-driver reference is disabled.
+- **Longitudinal only**, two scenarios; a cut-in simply appears at its headway.
+- **Driver states change reaction delay and braking only.** Both states react at the TOR
+  (pessimistic for the attentive driver). The standstill brake hold, brake demand, jerk,
+  peak deceleration and onset delay are placeholders.
+- **One distracted-driver source** (n = 19, reading task, hazard at ≈ 7 s TTC).
+- **Reference responses are scoped**: brake-only, no steering, no pre-hazard braking,
+  perfect knowledge at onset, a configured deceleration level. "Not avoided by reference"
+  is not physical inevitability. The careful-competent-driver reference is disabled.
+- **Hand-back oracle** (`handback_required`) is "braking at a fixed 3.5 m/s² from hazard
+  onset cannot avoid contact". 3.5 m/s² is the nominal system's own design authority (the
+  demonstrator's training authority), frozen; it is not an external capability requirement,
+  and its assumed match with a published ACC deceleration envelope (ISO 15622) has not been
+  verified (provisional, source to be confirmed). Being fixed, it keeps the populations of
+  design variants identical; it only stratifies AC-03 and defines AC-07/AC-08, so a
+  distracted collision is gated whatever its value. The same number is the sensitivity
+  study's required-deceleration exceedance level.
+- **No target is defined for the reference-independent collision criteria** (AC-09/AC-10);
+  until one is approved, formal GO is impossible by construction.
+- **All acceptance requirements are illustrative**, the hand-back oracle provisional: the
+  framework can produce NO-GO, INSUFFICIENT EVIDENCE or DECISION PENDING REQUIREMENTS, but
+  not a formal GO, until they are approved.
+- **Standstill brake hold** (2.0 m/s²) is a behavioural placeholder, varied 1–4 m/s² in the
+  sensitivity study.
+- **Monitor and actuator delays** are modelled but zero at the nominal point.
+- **Exposure is factorized** with invented weights; correlations between speed, headway,
+  friction and driver state are not modelled. Every rate is conditional on it.
 
 ## Statistical
 
-- **Ten agent seeds, one budget, one model.** 10/10 has a 95% interval of 0.69–1.00. The
-  pre-specified test treats the baselines' detection shares, each from 100 campaigns, as
-  known. Per-seed budgets differ because the agent chooses when to stop; each seed is
-  compared at its own budget.
-- **FAIL uses the point estimate at any n.** Deliberately conservative. At 100,000 runs it
-  decides nothing for AC-01 and AC-03, whose whole intervals miss. AC-04's FAIL is narrow
-  and depends on the jerk definition.
-- **Sensitivity uses 2,000 runs**, one at a time, three points per range; no interactions.
+- One-sided bounds at 95% per criterion; no multiplicity adjustment across criteria or
+  strata (a GO requires every criterion and stratum to pass, which is conservative for the
+  verdict but not a family-wise statement).
+- FAIL on a point-estimate exceedance is deliberately conservative; reports say whether the
+  exceedance is statistically demonstrated.
+- The order-statistic quantile bounds are conservative with ties (e.g. many identical
+  infinite TTCs).
+- The benchmark's posterior-predictive analysis treats agent seeds as fixed observed
+  outcomes and propagates only baseline uncertainty; the agent-side uncertainty is reported
+  as a Clopper–Pearson interval. The Jeffreys prior on each single-budget marginal is a
+  modelling choice; a uniform-prior and a no-prior variant are reported alongside.
+- **The benchmark compares complete strategies**: the LLM can use semantic labels that the
+  numerical baselines ignore (see agent.md, "Information fairness").
+- Sensitivity uses linear screening (SRC) and two-level factorials; strongly non-linear
+  responses need more points.
 
 ## Engineering
 
-- **The agent has been compared only with random and grid search**, at one budget, on one
-  model. Adaptive baselines are on the roadmap.
-- **The agent reports were re-rendered** to attach the release verdict, because the agent
-  ran before this release's estimation existed (`docs/agent.md`). Re-running the re-render
-  needs the results database, which is a local output.
-- **Four submitted conditions can't be evaluated on held-out data:** they name exact ODD
-  corners that the exposure model never samples. The post-hoc table labels them "disjoint";
-  for these four it means empty (`docs/agent.md`).
-- **The SQL sandbox isn't a security boundary.**
-- **Provenance gaps:** sensitivity overrides (`sim_kwargs`) aren't recorded (acceptable only
-  because those runs live in throw-away stores); the git commit isn't compared; rows
-  migrated from older databases keep NULL in later columns and old metric definitions.
+- **The SQL sandbox** is defence in depth for a local tool, not a hardened boundary.
+- **Runtime identity** includes OS and machine: evidence produced on another platform is
+  treated as a different runtime (conservative), and the lock file does not pin OS libraries.
+- **Old databases are not migrated**; v0.2 results must be re-run, not converted.
+- **Search reports of agent campaigns** attach a verdict only if an eligible estimation of
+  the same release exists when they are written, or after a replay-verified compatibility
+  check.

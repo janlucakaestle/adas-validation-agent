@@ -1,0 +1,2103 @@
+{
+ "schema": "sensitivity-manifest/v4",
+ "config": {
+  "schema": "sensitivity/v5",
+  "n": 2000,
+  "seed": 0,
+  "factors": {
+   "attentive_takeover_mean_s": {
+    "path": [
+     "driver",
+     "states",
+     "attentive",
+     "takeover_mean_s"
+    ],
+    "range": [
+     1.0,
+     1.8
+    ]
+   },
+   "attentive_takeover_sd_s": {
+    "path": [
+     "driver",
+     "states",
+     "attentive",
+     "takeover_sd_s"
+    ],
+    "range": [
+     0.4,
+     0.6
+    ]
+   },
+   "distracted_takeover_mean_s": {
+    "path": [
+     "driver",
+     "states",
+     "distracted",
+     "takeover_mean_s"
+    ],
+    "range": [
+     3.5,
+     6.0
+    ]
+   },
+   "distracted_takeover_sd_s": {
+    "path": [
+     "driver",
+     "states",
+     "distracted",
+     "takeover_sd_s"
+    ],
+    "range": [
+     0.9,
+     1.8
+    ]
+   },
+   "brake_onset_delay_s": {
+    "path": [
+     "driver",
+     "brake_onset_delay_s"
+    ],
+    "range": [
+     0.0,
+     0.5
+    ]
+   },
+   "brake_demand_factor": {
+    "path": [
+     "driver",
+     "brake_demand_factor"
+    ],
+    "range": [
+     1.0,
+     2.0
+    ]
+   },
+   "peak_decel_fraction": {
+    "path": [
+     "driver",
+     "states",
+     "*",
+     "peak_decel_fraction"
+    ],
+    "range": [
+     0.7,
+     1.0
+    ]
+   },
+   "brake_jerk_mps3": {
+    "path": [
+     "driver",
+     "states",
+     "*",
+     "brake_jerk"
+    ],
+    "range": [
+     10.0,
+     40.0
+    ]
+   },
+   "standstill_hold_decel_mps2": {
+    "path": [
+     "driver",
+     "standstill_hold_decel_mps2"
+    ],
+    "range": [
+     1.0,
+     4.0
+    ]
+   },
+   "distracted_share": {
+    "path": [
+     "exposure",
+     "factors",
+     "driver_state",
+     "weights",
+     "distracted"
+    ],
+    "range": [
+     0.05,
+     0.4
+    ],
+    "complement": [
+     "exposure",
+     "factors",
+     "driver_state",
+     "weights",
+     "attentive"
+    ]
+   },
+   "tor_required_decel_mps2": {
+    "path": [
+     "sim",
+     "monitor",
+     "tor_required_decel_mps2"
+    ],
+    "range": [
+     2.5,
+     3.5
+    ]
+   },
+   "tor_ttc_s": {
+    "path": [
+     "sim",
+     "monitor",
+     "tor_ttc_s"
+    ],
+    "range": [
+     1.5,
+     3.0
+    ]
+   },
+   "monitor_detection_delay_s": {
+    "path": [
+     "sim",
+     "monitor",
+     "detection_delay_s"
+    ],
+    "range": [
+     0.0,
+     0.5
+    ],
+    "grid": 0.05
+   },
+   "actuator_delay_s": {
+    "path": [
+     "sim",
+     "ego",
+     "actuator_delay_s"
+    ],
+    "range": [
+     0.0,
+     0.3
+    ],
+    "grid": 0.05
+   },
+   "required_decel_margin_m": {
+    "path": [
+     "sim",
+     "required_decel",
+     "margin_m"
+    ],
+    "range": [
+     1.0,
+     3.0
+    ]
+   },
+   "acc_authority_mps2": {
+    "path": [
+     "sim",
+     "ego",
+     "accel_min_mps2"
+    ],
+    "range": [
+     3.0,
+     4.5
+    ],
+    "negate": true
+   }
+  },
+  "excluded": {
+   "handback_oracle_capability": "An evaluation definition, not a property of the system or the world: it does not change any simulated run, only which runs form the AC-03 strata, AC-07 and AC-08. It is fixed (reference.yaml) precisely so that design variants (e.g. ACC authority) keep comparable populations, and its immaturity is carried by its requirement status (provisional).",
+   "ideal_reference_braking_level": "Also an evaluation definition (scope of AC-01/AC-03). Its immaturity is carried by its requirement status; the reference-independent AC-09/AC-10 do not depend on it.",
+   "dt_and_horizon": "Numerical settings, covered by the convergence tests (dt/2) and the explicit horizon_unresolved terminal state rather than by a design-of-experiments.",
+   "exposure_correlations": "The exposure model is factorized; correlations are not parameterised and cannot be varied until a joint model exists (docs/limitations.md).",
+   "reaction_time_speed_dependence": "Not parameterised in the driver model (assumed independent of speed)."
+  },
+  "authority_mode": "retrain",
+  "designs": {
+   "oat": {
+    "points": 3
+   },
+   "factorial2": {
+    "factors": [
+     "distracted_takeover_mean_s",
+     "tor_required_decel_mps2",
+     "acc_authority_mps2",
+     "brake_demand_factor",
+     "distracted_share",
+     "standstill_hold_decel_mps2"
+    ]
+   },
+   "lhs": {
+    "samples": 64,
+    "seed": 0
+   }
+  },
+  "primary_responses": {
+   "eff_ttc_p01": {
+    "kind": "quantile",
+    "q": 0.01,
+    "unit": "s",
+    "metric": "CASE WHEN collision OR end_state = 'horizon_unresolved' THEN 0.0 ELSE coalesce(min_ttc, 'Infinity'::DOUBLE) END"
+   },
+   "eff_ttc_p05": {
+    "kind": "quantile",
+    "q": 0.05,
+    "unit": "s",
+    "metric": "CASE WHEN collision OR end_state = 'horizon_unresolved' THEN 0.0 ELSE coalesce(min_ttc, 'Infinity'::DOUBLE) END"
+   },
+   "eff_ttc_p50": {
+    "kind": "quantile",
+    "q": 0.5,
+    "unit": "s",
+    "metric": "CASE WHEN collision OR end_state = 'horizon_unresolved' THEN 0.0 ELSE coalesce(min_ttc, 'Infinity'::DOUBLE) END"
+   },
+   "required_decel_exceedance": {
+    "kind": "rate",
+    "event": "coalesce(max_required_decel, 0.0) > 3.5"
+   },
+   "near_miss_1p5s": {
+    "kind": "rate",
+    "event": "NOT collision AND end_state <> 'horizon_unresolved' AND coalesce(min_ttc, 'Infinity'::DOUBLE) < 1.5"
+   }
+  },
+  "uncertainty": {
+   "method": "paired_bootstrap",
+   "draws": 1000,
+   "seed": 0,
+   "confidence": 0.95
+  },
+  "power": {
+   "n": 2000,
+   "eff_ttc_p01": {
+    "nominal": "1.10 s",
+    "se_one_variant": "0.20 s",
+    "mde_unpaired": "0.78 s"
+   },
+   "eff_ttc_p05": {
+    "nominal": "1.87 s",
+    "se_one_variant": "0.027 s",
+    "mde_unpaired": "0.11 s"
+   },
+   "eff_ttc_p50": {
+    "nominal": "2.70 s",
+    "se_one_variant": "0.049 s",
+    "mde_unpaired": "0.20 s"
+   },
+   "required_decel_exceedance": {
+    "nominal": "1.7%",
+    "mde_unpaired": "1.2 percentage points (about 70% relative)"
+   },
+   "near_miss_1p5s": {
+    "nominal": "1.4%",
+    "mde_unpaired": "1.1 percentage points (about 75% relative)"
+   },
+   "secondary_attentive_collision_rate": {
+    "nominal": "about 0.1%",
+    "mde_unpaired": "0.28 percentage points (about 280% relative): not informative on its own"
+   }
+  },
+  "secondary_responses": [
+   "AC-01",
+   "AC-03",
+   "AC-07",
+   "AC-08",
+   "AC-09",
+   "AC-10"
+  ]
+ },
+ "config_sha256": "3e97422425d1fd42677fd4a10e66f9f6d05bd959c93f4961c504bec2ca33b437",
+ "designs": {
+  "oat": [
+   {},
+   {
+    "attentive_takeover_mean_s": 1.0
+   },
+   {
+    "attentive_takeover_mean_s": 1.4
+   },
+   {
+    "attentive_takeover_mean_s": 1.8
+   },
+   {
+    "attentive_takeover_sd_s": 0.4
+   },
+   {
+    "attentive_takeover_sd_s": 0.6
+   },
+   {
+    "distracted_takeover_mean_s": 3.5
+   },
+   {
+    "distracted_takeover_mean_s": 4.75
+   },
+   {
+    "distracted_takeover_mean_s": 6.0
+   },
+   {
+    "distracted_takeover_sd_s": 0.9
+   },
+   {
+    "distracted_takeover_sd_s": 1.35
+   },
+   {
+    "distracted_takeover_sd_s": 1.8
+   },
+   {
+    "brake_onset_delay_s": 0.25
+   },
+   {
+    "brake_onset_delay_s": 0.5
+   },
+   {
+    "brake_demand_factor": 1.0
+   },
+   {
+    "brake_demand_factor": 2.0
+   },
+   {
+    "peak_decel_fraction": 0.7
+   },
+   {
+    "peak_decel_fraction": 0.85
+   },
+   {
+    "peak_decel_fraction": 1.0
+   },
+   {
+    "brake_jerk_mps3": 10.0
+   },
+   {
+    "brake_jerk_mps3": 40.0
+   },
+   {
+    "standstill_hold_decel_mps2": 1.0
+   },
+   {
+    "standstill_hold_decel_mps2": 2.5
+   },
+   {
+    "standstill_hold_decel_mps2": 4.0
+   },
+   {
+    "distracted_share": 0.05
+   },
+   {
+    "distracted_share": 0.225
+   },
+   {
+    "distracted_share": 0.4
+   },
+   {
+    "tor_required_decel_mps2": 2.5
+   },
+   {
+    "tor_required_decel_mps2": 3.5
+   },
+   {
+    "tor_ttc_s": 1.5
+   },
+   {
+    "tor_ttc_s": 2.25
+   },
+   {
+    "tor_ttc_s": 3.0
+   },
+   {
+    "monitor_detection_delay_s": 0.25
+   },
+   {
+    "monitor_detection_delay_s": 0.5
+   },
+   {
+    "actuator_delay_s": 0.15
+   },
+   {
+    "actuator_delay_s": 0.3
+   },
+   {
+    "required_decel_margin_m": 1.0
+   },
+   {
+    "required_decel_margin_m": 3.0
+   },
+   {
+    "acc_authority_mps2": 3.0
+   },
+   {
+    "acc_authority_mps2": 3.75
+   },
+   {
+    "acc_authority_mps2": 4.5
+   }
+  ],
+  "factorial2": [
+   {},
+   {
+    "distracted_takeover_mean_s": 3.5,
+    "tor_required_decel_mps2": 2.5,
+    "acc_authority_mps2": 3.0,
+    "brake_demand_factor": 1.0,
+    "distracted_share": 0.05,
+    "standstill_hold_decel_mps2": 1.0
+   },
+   {
+    "distracted_takeover_mean_s": 3.5,
+    "tor_required_decel_mps2": 2.5,
+    "acc_authority_mps2": 3.0,
+    "brake_demand_factor": 1.0,
+    "distracted_share": 0.05,
+    "standstill_hold_decel_mps2": 4.0
+   },
+   {
+    "distracted_takeover_mean_s": 3.5,
+    "tor_required_decel_mps2": 2.5,
+    "acc_authority_mps2": 3.0,
+    "brake_demand_factor": 1.0,
+    "distracted_share": 0.4,
+    "standstill_hold_decel_mps2": 1.0
+   },
+   {
+    "distracted_takeover_mean_s": 3.5,
+    "tor_required_decel_mps2": 2.5,
+    "acc_authority_mps2": 3.0,
+    "brake_demand_factor": 1.0,
+    "distracted_share": 0.4,
+    "standstill_hold_decel_mps2": 4.0
+   },
+   {
+    "distracted_takeover_mean_s": 3.5,
+    "tor_required_decel_mps2": 2.5,
+    "acc_authority_mps2": 3.0,
+    "brake_demand_factor": 2.0,
+    "distracted_share": 0.05,
+    "standstill_hold_decel_mps2": 1.0
+   },
+   {
+    "distracted_takeover_mean_s": 3.5,
+    "tor_required_decel_mps2": 2.5,
+    "acc_authority_mps2": 3.0,
+    "brake_demand_factor": 2.0,
+    "distracted_share": 0.05,
+    "standstill_hold_decel_mps2": 4.0
+   },
+   {
+    "distracted_takeover_mean_s": 3.5,
+    "tor_required_decel_mps2": 2.5,
+    "acc_authority_mps2": 3.0,
+    "brake_demand_factor": 2.0,
+    "distracted_share": 0.4,
+    "standstill_hold_decel_mps2": 1.0
+   },
+   {
+    "distracted_takeover_mean_s": 3.5,
+    "tor_required_decel_mps2": 2.5,
+    "acc_authority_mps2": 3.0,
+    "brake_demand_factor": 2.0,
+    "distracted_share": 0.4,
+    "standstill_hold_decel_mps2": 4.0
+   },
+   {
+    "distracted_takeover_mean_s": 3.5,
+    "tor_required_decel_mps2": 2.5,
+    "acc_authority_mps2": 4.5,
+    "brake_demand_factor": 1.0,
+    "distracted_share": 0.05,
+    "standstill_hold_decel_mps2": 1.0
+   },
+   {
+    "distracted_takeover_mean_s": 3.5,
+    "tor_required_decel_mps2": 2.5,
+    "acc_authority_mps2": 4.5,
+    "brake_demand_factor": 1.0,
+    "distracted_share": 0.05,
+    "standstill_hold_decel_mps2": 4.0
+   },
+   {
+    "distracted_takeover_mean_s": 3.5,
+    "tor_required_decel_mps2": 2.5,
+    "acc_authority_mps2": 4.5,
+    "brake_demand_factor": 1.0,
+    "distracted_share": 0.4,
+    "standstill_hold_decel_mps2": 1.0
+   },
+   {
+    "distracted_takeover_mean_s": 3.5,
+    "tor_required_decel_mps2": 2.5,
+    "acc_authority_mps2": 4.5,
+    "brake_demand_factor": 1.0,
+    "distracted_share": 0.4,
+    "standstill_hold_decel_mps2": 4.0
+   },
+   {
+    "distracted_takeover_mean_s": 3.5,
+    "tor_required_decel_mps2": 2.5,
+    "acc_authority_mps2": 4.5,
+    "brake_demand_factor": 2.0,
+    "distracted_share": 0.05,
+    "standstill_hold_decel_mps2": 1.0
+   },
+   {
+    "distracted_takeover_mean_s": 3.5,
+    "tor_required_decel_mps2": 2.5,
+    "acc_authority_mps2": 4.5,
+    "brake_demand_factor": 2.0,
+    "distracted_share": 0.05,
+    "standstill_hold_decel_mps2": 4.0
+   },
+   {
+    "distracted_takeover_mean_s": 3.5,
+    "tor_required_decel_mps2": 2.5,
+    "acc_authority_mps2": 4.5,
+    "brake_demand_factor": 2.0,
+    "distracted_share": 0.4,
+    "standstill_hold_decel_mps2": 1.0
+   },
+   {
+    "distracted_takeover_mean_s": 3.5,
+    "tor_required_decel_mps2": 2.5,
+    "acc_authority_mps2": 4.5,
+    "brake_demand_factor": 2.0,
+    "distracted_share": 0.4,
+    "standstill_hold_decel_mps2": 4.0
+   },
+   {
+    "distracted_takeover_mean_s": 3.5,
+    "tor_required_decel_mps2": 3.5,
+    "acc_authority_mps2": 3.0,
+    "brake_demand_factor": 1.0,
+    "distracted_share": 0.05,
+    "standstill_hold_decel_mps2": 1.0
+   },
+   {
+    "distracted_takeover_mean_s": 3.5,
+    "tor_required_decel_mps2": 3.5,
+    "acc_authority_mps2": 3.0,
+    "brake_demand_factor": 1.0,
+    "distracted_share": 0.05,
+    "standstill_hold_decel_mps2": 4.0
+   },
+   {
+    "distracted_takeover_mean_s": 3.5,
+    "tor_required_decel_mps2": 3.5,
+    "acc_authority_mps2": 3.0,
+    "brake_demand_factor": 1.0,
+    "distracted_share": 0.4,
+    "standstill_hold_decel_mps2": 1.0
+   },
+   {
+    "distracted_takeover_mean_s": 3.5,
+    "tor_required_decel_mps2": 3.5,
+    "acc_authority_mps2": 3.0,
+    "brake_demand_factor": 1.0,
+    "distracted_share": 0.4,
+    "standstill_hold_decel_mps2": 4.0
+   },
+   {
+    "distracted_takeover_mean_s": 3.5,
+    "tor_required_decel_mps2": 3.5,
+    "acc_authority_mps2": 3.0,
+    "brake_demand_factor": 2.0,
+    "distracted_share": 0.05,
+    "standstill_hold_decel_mps2": 1.0
+   },
+   {
+    "distracted_takeover_mean_s": 3.5,
+    "tor_required_decel_mps2": 3.5,
+    "acc_authority_mps2": 3.0,
+    "brake_demand_factor": 2.0,
+    "distracted_share": 0.05,
+    "standstill_hold_decel_mps2": 4.0
+   },
+   {
+    "distracted_takeover_mean_s": 3.5,
+    "tor_required_decel_mps2": 3.5,
+    "acc_authority_mps2": 3.0,
+    "brake_demand_factor": 2.0,
+    "distracted_share": 0.4,
+    "standstill_hold_decel_mps2": 1.0
+   },
+   {
+    "distracted_takeover_mean_s": 3.5,
+    "tor_required_decel_mps2": 3.5,
+    "acc_authority_mps2": 3.0,
+    "brake_demand_factor": 2.0,
+    "distracted_share": 0.4,
+    "standstill_hold_decel_mps2": 4.0
+   },
+   {
+    "distracted_takeover_mean_s": 3.5,
+    "tor_required_decel_mps2": 3.5,
+    "acc_authority_mps2": 4.5,
+    "brake_demand_factor": 1.0,
+    "distracted_share": 0.05,
+    "standstill_hold_decel_mps2": 1.0
+   },
+   {
+    "distracted_takeover_mean_s": 3.5,
+    "tor_required_decel_mps2": 3.5,
+    "acc_authority_mps2": 4.5,
+    "brake_demand_factor": 1.0,
+    "distracted_share": 0.05,
+    "standstill_hold_decel_mps2": 4.0
+   },
+   {
+    "distracted_takeover_mean_s": 3.5,
+    "tor_required_decel_mps2": 3.5,
+    "acc_authority_mps2": 4.5,
+    "brake_demand_factor": 1.0,
+    "distracted_share": 0.4,
+    "standstill_hold_decel_mps2": 1.0
+   },
+   {
+    "distracted_takeover_mean_s": 3.5,
+    "tor_required_decel_mps2": 3.5,
+    "acc_authority_mps2": 4.5,
+    "brake_demand_factor": 1.0,
+    "distracted_share": 0.4,
+    "standstill_hold_decel_mps2": 4.0
+   },
+   {
+    "distracted_takeover_mean_s": 3.5,
+    "tor_required_decel_mps2": 3.5,
+    "acc_authority_mps2": 4.5,
+    "brake_demand_factor": 2.0,
+    "distracted_share": 0.05,
+    "standstill_hold_decel_mps2": 1.0
+   },
+   {
+    "distracted_takeover_mean_s": 3.5,
+    "tor_required_decel_mps2": 3.5,
+    "acc_authority_mps2": 4.5,
+    "brake_demand_factor": 2.0,
+    "distracted_share": 0.05,
+    "standstill_hold_decel_mps2": 4.0
+   },
+   {
+    "distracted_takeover_mean_s": 3.5,
+    "tor_required_decel_mps2": 3.5,
+    "acc_authority_mps2": 4.5,
+    "brake_demand_factor": 2.0,
+    "distracted_share": 0.4,
+    "standstill_hold_decel_mps2": 1.0
+   },
+   {
+    "distracted_takeover_mean_s": 3.5,
+    "tor_required_decel_mps2": 3.5,
+    "acc_authority_mps2": 4.5,
+    "brake_demand_factor": 2.0,
+    "distracted_share": 0.4,
+    "standstill_hold_decel_mps2": 4.0
+   },
+   {
+    "distracted_takeover_mean_s": 6.0,
+    "tor_required_decel_mps2": 2.5,
+    "acc_authority_mps2": 3.0,
+    "brake_demand_factor": 1.0,
+    "distracted_share": 0.05,
+    "standstill_hold_decel_mps2": 1.0
+   },
+   {
+    "distracted_takeover_mean_s": 6.0,
+    "tor_required_decel_mps2": 2.5,
+    "acc_authority_mps2": 3.0,
+    "brake_demand_factor": 1.0,
+    "distracted_share": 0.05,
+    "standstill_hold_decel_mps2": 4.0
+   },
+   {
+    "distracted_takeover_mean_s": 6.0,
+    "tor_required_decel_mps2": 2.5,
+    "acc_authority_mps2": 3.0,
+    "brake_demand_factor": 1.0,
+    "distracted_share": 0.4,
+    "standstill_hold_decel_mps2": 1.0
+   },
+   {
+    "distracted_takeover_mean_s": 6.0,
+    "tor_required_decel_mps2": 2.5,
+    "acc_authority_mps2": 3.0,
+    "brake_demand_factor": 1.0,
+    "distracted_share": 0.4,
+    "standstill_hold_decel_mps2": 4.0
+   },
+   {
+    "distracted_takeover_mean_s": 6.0,
+    "tor_required_decel_mps2": 2.5,
+    "acc_authority_mps2": 3.0,
+    "brake_demand_factor": 2.0,
+    "distracted_share": 0.05,
+    "standstill_hold_decel_mps2": 1.0
+   },
+   {
+    "distracted_takeover_mean_s": 6.0,
+    "tor_required_decel_mps2": 2.5,
+    "acc_authority_mps2": 3.0,
+    "brake_demand_factor": 2.0,
+    "distracted_share": 0.05,
+    "standstill_hold_decel_mps2": 4.0
+   },
+   {
+    "distracted_takeover_mean_s": 6.0,
+    "tor_required_decel_mps2": 2.5,
+    "acc_authority_mps2": 3.0,
+    "brake_demand_factor": 2.0,
+    "distracted_share": 0.4,
+    "standstill_hold_decel_mps2": 1.0
+   },
+   {
+    "distracted_takeover_mean_s": 6.0,
+    "tor_required_decel_mps2": 2.5,
+    "acc_authority_mps2": 3.0,
+    "brake_demand_factor": 2.0,
+    "distracted_share": 0.4,
+    "standstill_hold_decel_mps2": 4.0
+   },
+   {
+    "distracted_takeover_mean_s": 6.0,
+    "tor_required_decel_mps2": 2.5,
+    "acc_authority_mps2": 4.5,
+    "brake_demand_factor": 1.0,
+    "distracted_share": 0.05,
+    "standstill_hold_decel_mps2": 1.0
+   },
+   {
+    "distracted_takeover_mean_s": 6.0,
+    "tor_required_decel_mps2": 2.5,
+    "acc_authority_mps2": 4.5,
+    "brake_demand_factor": 1.0,
+    "distracted_share": 0.05,
+    "standstill_hold_decel_mps2": 4.0
+   },
+   {
+    "distracted_takeover_mean_s": 6.0,
+    "tor_required_decel_mps2": 2.5,
+    "acc_authority_mps2": 4.5,
+    "brake_demand_factor": 1.0,
+    "distracted_share": 0.4,
+    "standstill_hold_decel_mps2": 1.0
+   },
+   {
+    "distracted_takeover_mean_s": 6.0,
+    "tor_required_decel_mps2": 2.5,
+    "acc_authority_mps2": 4.5,
+    "brake_demand_factor": 1.0,
+    "distracted_share": 0.4,
+    "standstill_hold_decel_mps2": 4.0
+   },
+   {
+    "distracted_takeover_mean_s": 6.0,
+    "tor_required_decel_mps2": 2.5,
+    "acc_authority_mps2": 4.5,
+    "brake_demand_factor": 2.0,
+    "distracted_share": 0.05,
+    "standstill_hold_decel_mps2": 1.0
+   },
+   {
+    "distracted_takeover_mean_s": 6.0,
+    "tor_required_decel_mps2": 2.5,
+    "acc_authority_mps2": 4.5,
+    "brake_demand_factor": 2.0,
+    "distracted_share": 0.05,
+    "standstill_hold_decel_mps2": 4.0
+   },
+   {
+    "distracted_takeover_mean_s": 6.0,
+    "tor_required_decel_mps2": 2.5,
+    "acc_authority_mps2": 4.5,
+    "brake_demand_factor": 2.0,
+    "distracted_share": 0.4,
+    "standstill_hold_decel_mps2": 1.0
+   },
+   {
+    "distracted_takeover_mean_s": 6.0,
+    "tor_required_decel_mps2": 2.5,
+    "acc_authority_mps2": 4.5,
+    "brake_demand_factor": 2.0,
+    "distracted_share": 0.4,
+    "standstill_hold_decel_mps2": 4.0
+   },
+   {
+    "distracted_takeover_mean_s": 6.0,
+    "tor_required_decel_mps2": 3.5,
+    "acc_authority_mps2": 3.0,
+    "brake_demand_factor": 1.0,
+    "distracted_share": 0.05,
+    "standstill_hold_decel_mps2": 1.0
+   },
+   {
+    "distracted_takeover_mean_s": 6.0,
+    "tor_required_decel_mps2": 3.5,
+    "acc_authority_mps2": 3.0,
+    "brake_demand_factor": 1.0,
+    "distracted_share": 0.05,
+    "standstill_hold_decel_mps2": 4.0
+   },
+   {
+    "distracted_takeover_mean_s": 6.0,
+    "tor_required_decel_mps2": 3.5,
+    "acc_authority_mps2": 3.0,
+    "brake_demand_factor": 1.0,
+    "distracted_share": 0.4,
+    "standstill_hold_decel_mps2": 1.0
+   },
+   {
+    "distracted_takeover_mean_s": 6.0,
+    "tor_required_decel_mps2": 3.5,
+    "acc_authority_mps2": 3.0,
+    "brake_demand_factor": 1.0,
+    "distracted_share": 0.4,
+    "standstill_hold_decel_mps2": 4.0
+   },
+   {
+    "distracted_takeover_mean_s": 6.0,
+    "tor_required_decel_mps2": 3.5,
+    "acc_authority_mps2": 3.0,
+    "brake_demand_factor": 2.0,
+    "distracted_share": 0.05,
+    "standstill_hold_decel_mps2": 1.0
+   },
+   {
+    "distracted_takeover_mean_s": 6.0,
+    "tor_required_decel_mps2": 3.5,
+    "acc_authority_mps2": 3.0,
+    "brake_demand_factor": 2.0,
+    "distracted_share": 0.05,
+    "standstill_hold_decel_mps2": 4.0
+   },
+   {
+    "distracted_takeover_mean_s": 6.0,
+    "tor_required_decel_mps2": 3.5,
+    "acc_authority_mps2": 3.0,
+    "brake_demand_factor": 2.0,
+    "distracted_share": 0.4,
+    "standstill_hold_decel_mps2": 1.0
+   },
+   {
+    "distracted_takeover_mean_s": 6.0,
+    "tor_required_decel_mps2": 3.5,
+    "acc_authority_mps2": 3.0,
+    "brake_demand_factor": 2.0,
+    "distracted_share": 0.4,
+    "standstill_hold_decel_mps2": 4.0
+   },
+   {
+    "distracted_takeover_mean_s": 6.0,
+    "tor_required_decel_mps2": 3.5,
+    "acc_authority_mps2": 4.5,
+    "brake_demand_factor": 1.0,
+    "distracted_share": 0.05,
+    "standstill_hold_decel_mps2": 1.0
+   },
+   {
+    "distracted_takeover_mean_s": 6.0,
+    "tor_required_decel_mps2": 3.5,
+    "acc_authority_mps2": 4.5,
+    "brake_demand_factor": 1.0,
+    "distracted_share": 0.05,
+    "standstill_hold_decel_mps2": 4.0
+   },
+   {
+    "distracted_takeover_mean_s": 6.0,
+    "tor_required_decel_mps2": 3.5,
+    "acc_authority_mps2": 4.5,
+    "brake_demand_factor": 1.0,
+    "distracted_share": 0.4,
+    "standstill_hold_decel_mps2": 1.0
+   },
+   {
+    "distracted_takeover_mean_s": 6.0,
+    "tor_required_decel_mps2": 3.5,
+    "acc_authority_mps2": 4.5,
+    "brake_demand_factor": 1.0,
+    "distracted_share": 0.4,
+    "standstill_hold_decel_mps2": 4.0
+   },
+   {
+    "distracted_takeover_mean_s": 6.0,
+    "tor_required_decel_mps2": 3.5,
+    "acc_authority_mps2": 4.5,
+    "brake_demand_factor": 2.0,
+    "distracted_share": 0.05,
+    "standstill_hold_decel_mps2": 1.0
+   },
+   {
+    "distracted_takeover_mean_s": 6.0,
+    "tor_required_decel_mps2": 3.5,
+    "acc_authority_mps2": 4.5,
+    "brake_demand_factor": 2.0,
+    "distracted_share": 0.05,
+    "standstill_hold_decel_mps2": 4.0
+   },
+   {
+    "distracted_takeover_mean_s": 6.0,
+    "tor_required_decel_mps2": 3.5,
+    "acc_authority_mps2": 4.5,
+    "brake_demand_factor": 2.0,
+    "distracted_share": 0.4,
+    "standstill_hold_decel_mps2": 1.0
+   },
+   {
+    "distracted_takeover_mean_s": 6.0,
+    "tor_required_decel_mps2": 3.5,
+    "acc_authority_mps2": 4.5,
+    "brake_demand_factor": 2.0,
+    "distracted_share": 0.4,
+    "standstill_hold_decel_mps2": 4.0
+   }
+  ],
+  "lhs": [
+   {},
+   {
+    "attentive_takeover_mean_s": 1.205669,
+    "attentive_takeover_sd_s": 0.568287,
+    "distracted_takeover_mean_s": 5.517586,
+    "distracted_takeover_sd_s": 1.030419,
+    "brake_onset_delay_s": 0.029343,
+    "brake_demand_factor": 1.272429,
+    "peak_decel_fraction": 0.784294,
+    "brake_jerk_mps3": 13.950966,
+    "standstill_hold_decel_mps2": 1.836119,
+    "distracted_share": 0.301642,
+    "tor_required_decel_mps2": 2.651847,
+    "tor_ttc_s": 2.118714,
+    "monitor_detection_delay_s": 0.4,
+    "actuator_delay_s": 0.15,
+    "required_decel_margin_m": 2.779047,
+    "acc_authority_mps2": 3.004679
+   },
+   {
+    "attentive_takeover_mean_s": 1.45702,
+    "attentive_takeover_sd_s": 0.533117,
+    "distracted_takeover_mean_s": 3.80697,
+    "distracted_takeover_sd_s": 1.005,
+    "brake_onset_delay_s": 0.459609,
+    "brake_demand_factor": 1.055061,
+    "peak_decel_fraction": 0.868545,
+    "brake_jerk_mps3": 10.80466,
+    "standstill_hold_decel_mps2": 2.917755,
+    "distracted_share": 0.077029,
+    "tor_required_decel_mps2": 2.606285,
+    "tor_ttc_s": 1.596618,
+    "monitor_detection_delay_s": 0.0,
+    "actuator_delay_s": 0.25,
+    "required_decel_margin_m": 2.195975,
+    "acc_authority_mps2": 3.149652
+   },
+   {
+    "attentive_takeover_mean_s": 1.339673,
+    "attentive_takeover_sd_s": 0.596132,
+    "distracted_takeover_mean_s": 4.002129,
+    "distracted_takeover_sd_s": 1.295618,
+    "brake_onset_delay_s": 0.402475,
+    "brake_demand_factor": 1.787422,
+    "peak_decel_fraction": 0.825578,
+    "brake_jerk_mps3": 16.311715,
+    "standstill_hold_decel_mps2": 3.987382,
+    "distracted_share": 0.29919,
+    "tor_required_decel_mps2": 3.046535,
+    "tor_ttc_s": 1.720773,
+    "monitor_detection_delay_s": 0.15,
+    "actuator_delay_s": 0.15,
+    "required_decel_margin_m": 2.099458,
+    "acc_authority_mps2": 4.494893
+   },
+   {
+    "attentive_takeover_mean_s": 1.103396,
+    "attentive_takeover_sd_s": 0.498643,
+    "distracted_takeover_mean_s": 5.556485,
+    "distracted_takeover_sd_s": 1.493433,
+    "brake_onset_delay_s": 0.179956,
+    "brake_demand_factor": 1.031047,
+    "peak_decel_fraction": 0.717894,
+    "brake_jerk_mps3": 12.870487,
+    "standstill_hold_decel_mps2": 3.055374,
+    "distracted_share": 0.253755,
+    "tor_required_decel_mps2": 3.191364,
+    "tor_ttc_s": 1.916546,
+    "monitor_detection_delay_s": 0.25,
+    "actuator_delay_s": 0.05,
+    "required_decel_margin_m": 1.25427,
+    "acc_authority_mps2": 4.423772
+   },
+   {
+    "attentive_takeover_mean_s": 1.555873,
+    "attentive_takeover_sd_s": 0.510393,
+    "distracted_takeover_mean_s": 5.364621,
+    "distracted_takeover_sd_s": 1.44626,
+    "brake_onset_delay_s": 0.463457,
+    "brake_demand_factor": 1.924294,
+    "peak_decel_fraction": 0.770274,
+    "brake_jerk_mps3": 33.86837,
+    "standstill_hold_decel_mps2": 3.451086,
+    "distracted_share": 0.087266,
+    "tor_required_decel_mps2": 2.532651,
+    "tor_ttc_s": 2.1542,
+    "monitor_detection_delay_s": 0.2,
+    "actuator_delay_s": 0.2,
+    "required_decel_margin_m": 2.97799,
+    "acc_authority_mps2": 4.303021
+   },
+   {
+    "attentive_takeover_mean_s": 1.291947,
+    "attentive_takeover_sd_s": 0.517926,
+    "distracted_takeover_mean_s": 5.320014,
+    "distracted_takeover_sd_s": 0.945099,
+    "brake_onset_delay_s": 0.418829,
+    "brake_demand_factor": 1.56272,
+    "peak_decel_fraction": 0.709899,
+    "brake_jerk_mps3": 18.981816,
+    "standstill_hold_decel_mps2": 1.204079,
+    "distracted_share": 0.208659,
+    "tor_required_decel_mps2": 2.967655,
+    "tor_ttc_s": 2.443113,
+    "monitor_detection_delay_s": 0.15,
+    "actuator_delay_s": 0.1,
+    "required_decel_margin_m": 1.091898,
+    "acc_authority_mps2": 3.500433
+   },
+   {
+    "attentive_takeover_mean_s": 1.667889,
+    "attentive_takeover_sd_s": 0.585308,
+    "distracted_takeover_mean_s": 3.577197,
+    "distracted_takeover_sd_s": 1.622318,
+    "brake_onset_delay_s": 0.05534,
+    "brake_demand_factor": 1.182156,
+    "peak_decel_fraction": 0.862734,
+    "brake_jerk_mps3": 22.361988,
+    "standstill_hold_decel_mps2": 1.431784,
+    "distracted_share": 0.270988,
+    "tor_required_decel_mps2": 3.428735,
+    "tor_ttc_s": 2.413952,
+    "monitor_detection_delay_s": 0.0,
+    "actuator_delay_s": 0.2,
+    "required_decel_margin_m": 1.94356,
+    "acc_authority_mps2": 4.211435
+   },
+   {
+    "attentive_takeover_mean_s": 1.059487,
+    "attentive_takeover_sd_s": 0.578361,
+    "distracted_takeover_mean_s": 4.296074,
+    "distracted_takeover_sd_s": 1.410846,
+    "brake_onset_delay_s": 0.066956,
+    "brake_demand_factor": 1.119579,
+    "peak_decel_fraction": 0.77585,
+    "brake_jerk_mps3": 36.470153,
+    "standstill_hold_decel_mps2": 1.515258,
+    "distracted_share": 0.33993,
+    "tor_required_decel_mps2": 2.708922,
+    "tor_ttc_s": 1.531273,
+    "monitor_detection_delay_s": 0.05,
+    "actuator_delay_s": 0.25,
+    "required_decel_margin_m": 1.107447,
+    "acc_authority_mps2": 4.005072
+   },
+   {
+    "attentive_takeover_mean_s": 1.732194,
+    "attentive_takeover_sd_s": 0.541952,
+    "distracted_takeover_mean_s": 5.072356,
+    "distracted_takeover_sd_s": 1.51627,
+    "brake_onset_delay_s": 0.49722,
+    "brake_demand_factor": 1.456441,
+    "peak_decel_fraction": 0.86936,
+    "brake_jerk_mps3": 37.715046,
+    "standstill_hold_decel_mps2": 3.011363,
+    "distracted_share": 0.156112,
+    "tor_required_decel_mps2": 2.731567,
+    "tor_ttc_s": 1.75536,
+    "monitor_detection_delay_s": 0.15,
+    "actuator_delay_s": 0.15,
+    "required_decel_margin_m": 1.036886,
+    "acc_authority_mps2": 3.369679
+   },
+   {
+    "attentive_takeover_mean_s": 1.625193,
+    "attentive_takeover_sd_s": 0.504888,
+    "distracted_takeover_mean_s": 4.327784,
+    "distracted_takeover_sd_s": 1.557656,
+    "brake_onset_delay_s": 0.042808,
+    "brake_demand_factor": 1.774204,
+    "peak_decel_fraction": 0.8045,
+    "brake_jerk_mps3": 23.339021,
+    "standstill_hold_decel_mps2": 2.080268,
+    "distracted_share": 0.295052,
+    "tor_required_decel_mps2": 3.10793,
+    "tor_ttc_s": 1.822328,
+    "monitor_detection_delay_s": 0.45,
+    "actuator_delay_s": 0.1,
+    "required_decel_margin_m": 2.125119,
+    "acc_authority_mps2": 3.906233
+   },
+   {
+    "attentive_takeover_mean_s": 1.134592,
+    "attentive_takeover_sd_s": 0.554146,
+    "distracted_takeover_mean_s": 4.549085,
+    "distracted_takeover_sd_s": 1.22344,
+    "brake_onset_delay_s": 0.153376,
+    "brake_demand_factor": 1.285953,
+    "peak_decel_fraction": 0.726384,
+    "brake_jerk_mps3": 31.680324,
+    "standstill_hold_decel_mps2": 3.072333,
+    "distracted_share": 0.217487,
+    "tor_required_decel_mps2": 3.320265,
+    "tor_ttc_s": 2.254389,
+    "monitor_detection_delay_s": 0.1,
+    "actuator_delay_s": 0.3,
+    "required_decel_margin_m": 1.829674,
+    "acc_authority_mps2": 3.579049
+   },
+   {
+    "attentive_takeover_mean_s": 1.030642,
+    "attentive_takeover_sd_s": 0.558755,
+    "distracted_takeover_mean_s": 3.688823,
+    "distracted_takeover_sd_s": 1.107621,
+    "brake_onset_delay_s": 0.1894,
+    "brake_demand_factor": 1.516008,
+    "peak_decel_fraction": 0.960898,
+    "brake_jerk_mps3": 16.755277,
+    "standstill_hold_decel_mps2": 2.682543,
+    "distracted_share": 0.289859,
+    "tor_required_decel_mps2": 3.47709,
+    "tor_ttc_s": 1.836971,
+    "monitor_detection_delay_s": 0.45,
+    "actuator_delay_s": 0.3,
+    "required_decel_margin_m": 2.740071,
+    "acc_authority_mps2": 4.285369
+   },
+   {
+    "attentive_takeover_mean_s": 1.532216,
+    "attentive_takeover_sd_s": 0.570363,
+    "distracted_takeover_mean_s": 5.746754,
+    "distracted_takeover_sd_s": 1.685939,
+    "brake_onset_delay_s": 0.23724,
+    "brake_demand_factor": 1.99753,
+    "peak_decel_fraction": 0.753929,
+    "brake_jerk_mps3": 24.102503,
+    "standstill_hold_decel_mps2": 3.833546,
+    "distracted_share": 0.128155,
+    "tor_required_decel_mps2": 3.133248,
+    "tor_ttc_s": 2.926249,
+    "monitor_detection_delay_s": 0.2,
+    "actuator_delay_s": 0.15,
+    "required_decel_margin_m": 1.455703,
+    "acc_authority_mps2": 3.650855
+   },
+   {
+    "attentive_takeover_mean_s": 1.436762,
+    "attentive_takeover_sd_s": 0.520471,
+    "distracted_takeover_mean_s": 3.536001,
+    "distracted_takeover_sd_s": 1.185983,
+    "brake_onset_delay_s": 0.146596,
+    "brake_demand_factor": 1.449433,
+    "peak_decel_fraction": 0.969772,
+    "brake_jerk_mps3": 38.675213,
+    "standstill_hold_decel_mps2": 1.627478,
+    "distracted_share": 0.335966,
+    "tor_required_decel_mps2": 2.905732,
+    "tor_ttc_s": 2.686983,
+    "monitor_detection_delay_s": 0.0,
+    "actuator_delay_s": 0.1,
+    "required_decel_margin_m": 1.138404,
+    "acc_authority_mps2": 3.92736
+   },
+   {
+    "attentive_takeover_mean_s": 1.241934,
+    "attentive_takeover_sd_s": 0.417052,
+    "distracted_takeover_mean_s": 4.890598,
+    "distracted_takeover_sd_s": 1.209773,
+    "brake_onset_delay_s": 0.213592,
+    "brake_demand_factor": 1.531253,
+    "peak_decel_fraction": 0.875699,
+    "brake_jerk_mps3": 29.9725,
+    "standstill_hold_decel_mps2": 2.785609,
+    "distracted_share": 0.051324,
+    "tor_required_decel_mps2": 2.871937,
+    "tor_ttc_s": 2.644694,
+    "monitor_detection_delay_s": 0.3,
+    "actuator_delay_s": 0.05,
+    "required_decel_margin_m": 2.664911,
+    "acc_authority_mps2": 4.071237
+   },
+   {
+    "attentive_takeover_mean_s": 1.594318,
+    "attentive_takeover_sd_s": 0.401375,
+    "distracted_takeover_mean_s": 5.83033,
+    "distracted_takeover_sd_s": 1.603313,
+    "brake_onset_delay_s": 0.157519,
+    "brake_demand_factor": 1.301466,
+    "peak_decel_fraction": 0.707878,
+    "brake_jerk_mps3": 32.831048,
+    "standstill_hold_decel_mps2": 3.703786,
+    "distracted_share": 0.26201,
+    "tor_required_decel_mps2": 3.266868,
+    "tor_ttc_s": 2.346232,
+    "monitor_detection_delay_s": 0.5,
+    "actuator_delay_s": 0.2,
+    "required_decel_margin_m": 1.611512,
+    "acc_authority_mps2": 3.597738
+   },
+   {
+    "attentive_takeover_mean_s": 1.145333,
+    "attentive_takeover_sd_s": 0.440865,
+    "distracted_takeover_mean_s": 3.84257,
+    "distracted_takeover_sd_s": 1.351735,
+    "brake_onset_delay_s": 0.075636,
+    "brake_demand_factor": 1.225033,
+    "peak_decel_fraction": 0.894495,
+    "brake_jerk_mps3": 23.908606,
+    "standstill_hold_decel_mps2": 3.408016,
+    "distracted_share": 0.274471,
+    "tor_required_decel_mps2": 2.827566,
+    "tor_ttc_s": 2.5435,
+    "monitor_detection_delay_s": 0.3,
+    "actuator_delay_s": 0.15,
+    "required_decel_margin_m": 1.494365,
+    "acc_authority_mps2": 4.466358
+   },
+   {
+    "attentive_takeover_mean_s": 1.714034,
+    "attentive_takeover_sd_s": 0.445756,
+    "distracted_takeover_mean_s": 5.772373,
+    "distracted_takeover_sd_s": 1.713145,
+    "brake_onset_delay_s": 0.302196,
+    "brake_demand_factor": 1.56156,
+    "peak_decel_fraction": 0.735761,
+    "brake_jerk_mps3": 21.824295,
+    "standstill_hold_decel_mps2": 3.276116,
+    "distracted_share": 0.376877,
+    "tor_required_decel_mps2": 2.682998,
+    "tor_ttc_s": 2.961148,
+    "monitor_detection_delay_s": 0.25,
+    "actuator_delay_s": 0.1,
+    "required_decel_margin_m": 1.5214,
+    "acc_authority_mps2": 4.391421
+   },
+   {
+    "attentive_takeover_mean_s": 1.473884,
+    "attentive_takeover_sd_s": 0.496336,
+    "distracted_takeover_mean_s": 3.728718,
+    "distracted_takeover_sd_s": 0.901502,
+    "brake_onset_delay_s": 0.002272,
+    "brake_demand_factor": 1.356096,
+    "peak_decel_fraction": 0.916913,
+    "brake_jerk_mps3": 11.90955,
+    "standstill_hold_decel_mps2": 3.375778,
+    "distracted_share": 0.065309,
+    "tor_required_decel_mps2": 3.010028,
+    "tor_ttc_s": 1.578395,
+    "monitor_detection_delay_s": 0.2,
+    "actuator_delay_s": 0.2,
+    "required_decel_margin_m": 2.892583,
+    "acc_authority_mps2": 3.981019
+   },
+   {
+    "attentive_takeover_mean_s": 1.250976,
+    "attentive_takeover_sd_s": 0.466823,
+    "distracted_takeover_mean_s": 5.69394,
+    "distracted_takeover_sd_s": 1.397531,
+    "brake_onset_delay_s": 0.336039,
+    "brake_demand_factor": 1.419184,
+    "peak_decel_fraction": 0.833576,
+    "brake_jerk_mps3": 25.204337,
+    "standstill_hold_decel_mps2": 3.512584,
+    "distracted_share": 0.103867,
+    "tor_required_decel_mps2": 2.848301,
+    "tor_ttc_s": 2.72502,
+    "monitor_detection_delay_s": 0.25,
+    "actuator_delay_s": 0.05,
+    "required_decel_margin_m": 2.783319,
+    "acc_authority_mps2": 4.032224
+   },
+   {
+    "attentive_takeover_mean_s": 1.231909,
+    "attentive_takeover_sd_s": 0.563074,
+    "distracted_takeover_mean_s": 3.581026,
+    "distracted_takeover_sd_s": 1.166016,
+    "brake_onset_delay_s": 0.243349,
+    "brake_demand_factor": 1.595232,
+    "peak_decel_fraction": 0.957675,
+    "brake_jerk_mps3": 24.843891,
+    "standstill_hold_decel_mps2": 3.56527,
+    "distracted_share": 0.397611,
+    "tor_required_decel_mps2": 2.78235,
+    "tor_ttc_s": 2.105669,
+    "monitor_detection_delay_s": 0.4,
+    "actuator_delay_s": 0.15,
+    "required_decel_margin_m": 2.472978,
+    "acc_authority_mps2": 3.072966
+   },
+   {
+    "attentive_takeover_mean_s": 1.769028,
+    "attentive_takeover_sd_s": 0.529902,
+    "distracted_takeover_mean_s": 5.864011,
+    "distracted_takeover_sd_s": 1.766435,
+    "brake_onset_delay_s": 0.170919,
+    "brake_demand_factor": 1.007878,
+    "peak_decel_fraction": 0.931465,
+    "brake_jerk_mps3": 33.089018,
+    "standstill_hold_decel_mps2": 2.139383,
+    "distracted_share": 0.135098,
+    "tor_required_decel_mps2": 3.418678,
+    "tor_ttc_s": 2.166589,
+    "monitor_detection_delay_s": 0.35,
+    "actuator_delay_s": 0.05,
+    "required_decel_margin_m": 2.002833,
+    "acc_authority_mps2": 3.40625
+   },
+   {
+    "attentive_takeover_mean_s": 1.046055,
+    "attentive_takeover_sd_s": 0.489346,
+    "distracted_takeover_mean_s": 4.971177,
+    "distracted_takeover_sd_s": 1.482955,
+    "brake_onset_delay_s": 0.328983,
+    "brake_demand_factor": 1.317129,
+    "peak_decel_fraction": 0.763333,
+    "brake_jerk_mps3": 21.483046,
+    "standstill_hold_decel_mps2": 2.605172,
+    "distracted_share": 0.388107,
+    "tor_required_decel_mps2": 3.225521,
+    "tor_ttc_s": 2.762003,
+    "monitor_detection_delay_s": 0.2,
+    "actuator_delay_s": 0.1,
+    "required_decel_margin_m": 1.378496,
+    "acc_authority_mps2": 4.260215
+   },
+   {
+    "attentive_takeover_mean_s": 1.012752,
+    "attentive_takeover_sd_s": 0.581989,
+    "distracted_takeover_mean_s": 3.768381,
+    "distracted_takeover_sd_s": 1.650236,
+    "brake_onset_delay_s": 0.452597,
+    "brake_demand_factor": 1.092647,
+    "peak_decel_fraction": 0.928751,
+    "brake_jerk_mps3": 18.154424,
+    "standstill_hold_decel_mps2": 1.696481,
+    "distracted_share": 0.189219,
+    "tor_required_decel_mps2": 2.986346,
+    "tor_ttc_s": 2.71528,
+    "monitor_detection_delay_s": 0.3,
+    "actuator_delay_s": 0.15,
+    "required_decel_margin_m": 1.214579,
+    "acc_authority_mps2": 3.246538
+   },
+   {
+    "attentive_takeover_mean_s": 1.384295,
+    "attentive_takeover_sd_s": 0.403963,
+    "distracted_takeover_mean_s": 4.992791,
+    "distracted_takeover_sd_s": 1.179117,
+    "brake_onset_delay_s": 0.090627,
+    "brake_demand_factor": 1.424183,
+    "peak_decel_fraction": 0.940778,
+    "brake_jerk_mps3": 26.340173,
+    "standstill_hold_decel_mps2": 1.256326,
+    "distracted_share": 0.265123,
+    "tor_required_decel_mps2": 3.255327,
+    "tor_ttc_s": 2.99589,
+    "monitor_detection_delay_s": 0.3,
+    "actuator_delay_s": 0.15,
+    "required_decel_margin_m": 2.041006,
+    "acc_authority_mps2": 3.11148
+   },
+   {
+    "attentive_takeover_mean_s": 1.303571,
+    "attentive_takeover_sd_s": 0.411774,
+    "distracted_takeover_mean_s": 4.6335,
+    "distracted_takeover_sd_s": 1.042451,
+    "brake_onset_delay_s": 0.197338,
+    "brake_demand_factor": 1.888595,
+    "peak_decel_fraction": 0.889012,
+    "brake_jerk_mps3": 31.320403,
+    "standstill_hold_decel_mps2": 3.114393,
+    "distracted_share": 0.282787,
+    "tor_required_decel_mps2": 3.173375,
+    "tor_ttc_s": 1.878319,
+    "monitor_detection_delay_s": 0.4,
+    "actuator_delay_s": 0.2,
+    "required_decel_margin_m": 2.533164,
+    "acc_authority_mps2": 4.162543
+   },
+   {
+    "attentive_takeover_mean_s": 1.214331,
+    "attentive_takeover_sd_s": 0.59079,
+    "distracted_takeover_mean_s": 5.055881,
+    "distracted_takeover_sd_s": 1.285273,
+    "brake_onset_delay_s": 0.288012,
+    "brake_demand_factor": 1.71475,
+    "peak_decel_fraction": 0.85563,
+    "brake_jerk_mps3": 38.164755,
+    "standstill_hold_decel_mps2": 3.773657,
+    "distracted_share": 0.353486,
+    "tor_required_decel_mps2": 2.614965,
+    "tor_ttc_s": 1.566375,
+    "monitor_detection_delay_s": 0.5,
+    "actuator_delay_s": 0.0,
+    "required_decel_margin_m": 1.762108,
+    "acc_authority_mps2": 3.627068
+   },
+   {
+    "attentive_takeover_mean_s": 1.583612,
+    "attentive_takeover_sd_s": 0.552143,
+    "distracted_takeover_mean_s": 4.233265,
+    "distracted_takeover_sd_s": 1.524355,
+    "brake_onset_delay_s": 0.289993,
+    "brake_demand_factor": 1.965905,
+    "peak_decel_fraction": 0.96412,
+    "brake_jerk_mps3": 35.636764,
+    "standstill_hold_decel_mps2": 2.405709,
+    "distracted_share": 0.196025,
+    "tor_required_decel_mps2": 2.592292,
+    "tor_ttc_s": 1.640938,
+    "monitor_detection_delay_s": 0.45,
+    "actuator_delay_s": 0.2,
+    "required_decel_margin_m": 1.683516,
+    "acc_authority_mps2": 3.538131
+   },
+   {
+    "attentive_takeover_mean_s": 1.262927,
+    "attentive_takeover_sd_s": 0.437916,
+    "distracted_takeover_mean_s": 3.923155,
+    "distracted_takeover_sd_s": 1.584659,
+    "brake_onset_delay_s": 0.367044,
+    "brake_demand_factor": 1.402445,
+    "peak_decel_fraction": 0.759035,
+    "brake_jerk_mps3": 18.69027,
+    "standstill_hold_decel_mps2": 3.156713,
+    "distracted_share": 0.147255,
+    "tor_required_decel_mps2": 3.115375,
+    "tor_ttc_s": 2.229062,
+    "monitor_detection_delay_s": 0.5,
+    "actuator_delay_s": 0.1,
+    "required_decel_margin_m": 2.425183,
+    "acc_authority_mps2": 3.328516
+   },
+   {
+    "attentive_takeover_mean_s": 1.439562,
+    "attentive_takeover_sd_s": 0.454812,
+    "distracted_takeover_mean_s": 4.6957,
+    "distracted_takeover_sd_s": 1.787094,
+    "brake_onset_delay_s": 0.348722,
+    "brake_demand_factor": 1.919394,
+    "peak_decel_fraction": 0.907594,
+    "brake_jerk_mps3": 13.525624,
+    "standstill_hold_decel_mps2": 1.886224,
+    "distracted_share": 0.081188,
+    "tor_required_decel_mps2": 2.90948,
+    "tor_ttc_s": 1.686715,
+    "monitor_detection_delay_s": 0.15,
+    "actuator_delay_s": 0.05,
+    "required_decel_margin_m": 2.701641,
+    "acc_authority_mps2": 3.20601
+   },
+   {
+    "attentive_takeover_mean_s": 1.361512,
+    "attentive_takeover_sd_s": 0.493446,
+    "distracted_takeover_mean_s": 4.820492,
+    "distracted_takeover_sd_s": 1.340479,
+    "brake_onset_delay_s": 0.436817,
+    "brake_demand_factor": 1.830521,
+    "peak_decel_fraction": 0.827782,
+    "brake_jerk_mps3": 25.771728,
+    "standstill_hold_decel_mps2": 2.441321,
+    "distracted_share": 0.2034,
+    "tor_required_decel_mps2": 2.926076,
+    "tor_ttc_s": 1.860212,
+    "monitor_detection_delay_s": 0.05,
+    "actuator_delay_s": 0.0,
+    "required_decel_margin_m": 1.340312,
+    "acc_authority_mps2": 3.476595
+   },
+   {
+    "attentive_takeover_mean_s": 1.545207,
+    "attentive_takeover_sd_s": 0.452924,
+    "distracted_takeover_mean_s": 5.182094,
+    "distracted_takeover_sd_s": 1.695168,
+    "brake_onset_delay_s": 0.353299,
+    "brake_demand_factor": 1.807848,
+    "peak_decel_fraction": 0.774146,
+    "brake_jerk_mps3": 39.177929,
+    "standstill_hold_decel_mps2": 2.024683,
+    "distracted_share": 0.362689,
+    "tor_required_decel_mps2": 3.023126,
+    "tor_ttc_s": 2.839014,
+    "monitor_detection_delay_s": 0.45,
+    "actuator_delay_s": 0.25,
+    "required_decel_margin_m": 1.740477,
+    "acc_authority_mps2": 4.437114
+   },
+   {
+    "attentive_takeover_mean_s": 1.006621,
+    "attentive_takeover_sd_s": 0.43641,
+    "distracted_takeover_mean_s": 4.038505,
+    "distracted_takeover_sd_s": 1.25569,
+    "brake_onset_delay_s": 0.383253,
+    "brake_demand_factor": 1.738079,
+    "peak_decel_fraction": 0.904122,
+    "brake_jerk_mps3": 31.036411,
+    "standstill_hold_decel_mps2": 2.952697,
+    "distracted_share": 0.05879,
+    "tor_required_decel_mps2": 2.562996,
+    "tor_ttc_s": 2.47261,
+    "monitor_detection_delay_s": 0.15,
+    "actuator_delay_s": 0.0,
+    "required_decel_margin_m": 1.311231,
+    "acc_authority_mps2": 3.308519
+   },
+   {
+    "attentive_takeover_mean_s": 1.076105,
+    "attentive_takeover_sd_s": 0.447828,
+    "distracted_takeover_mean_s": 4.85323,
+    "distracted_takeover_sd_s": 1.128791,
+    "brake_onset_delay_s": 0.052389,
+    "brake_demand_factor": 1.635861,
+    "peak_decel_fraction": 0.795804,
+    "brake_jerk_mps3": 34.297515,
+    "standstill_hold_decel_mps2": 1.343302,
+    "distracted_share": 0.173721,
+    "tor_required_decel_mps2": 2.508438,
+    "tor_ttc_s": 2.861055,
+    "monitor_detection_delay_s": 0.45,
+    "actuator_delay_s": 0.2,
+    "required_decel_margin_m": 1.436752,
+    "acc_authority_mps2": 3.791804
+   },
+   {
+    "attentive_takeover_mean_s": 1.281011,
+    "attentive_takeover_sd_s": 0.475614,
+    "distracted_takeover_mean_s": 4.565233,
+    "distracted_takeover_sd_s": 0.914659,
+    "brake_onset_delay_s": 0.113919,
+    "brake_demand_factor": 1.131629,
+    "peak_decel_fraction": 0.703087,
+    "brake_jerk_mps3": 27.124123,
+    "standstill_hold_decel_mps2": 1.582037,
+    "distracted_share": 0.330831,
+    "tor_required_decel_mps2": 3.375635,
+    "tor_ttc_s": 2.601163,
+    "monitor_detection_delay_s": 0.35,
+    "actuator_delay_s": 0.05,
+    "required_decel_margin_m": 2.819228,
+    "acc_authority_mps2": 3.729754
+   },
+   {
+    "attentive_takeover_mean_s": 1.33493,
+    "attentive_takeover_sd_s": 0.422349,
+    "distracted_takeover_mean_s": 5.271092,
+    "distracted_takeover_sd_s": 1.068936,
+    "brake_onset_delay_s": 0.397903,
+    "brake_demand_factor": 1.380016,
+    "peak_decel_fraction": 0.886763,
+    "brake_jerk_mps3": 37.638407,
+    "standstill_hold_decel_mps2": 2.580974,
+    "distracted_share": 0.248301,
+    "tor_required_decel_mps2": 3.242065,
+    "tor_ttc_s": 2.057406,
+    "monitor_detection_delay_s": 0.2,
+    "actuator_delay_s": 0.3,
+    "required_decel_margin_m": 2.235768,
+    "acc_authority_mps2": 3.132598
+   },
+   {
+    "attentive_takeover_mean_s": 1.64204,
+    "attentive_takeover_sd_s": 0.472473,
+    "distracted_takeover_mean_s": 5.636611,
+    "distracted_takeover_sd_s": 1.307853,
+    "brake_onset_delay_s": 0.232687,
+    "brake_demand_factor": 1.187613,
+    "peak_decel_fraction": 0.951329,
+    "brake_jerk_mps3": 26.684975,
+    "standstill_hold_decel_mps2": 2.739321,
+    "distracted_share": 0.315739,
+    "tor_required_decel_mps2": 3.402466,
+    "tor_ttc_s": 1.770375,
+    "monitor_detection_delay_s": 0.4,
+    "actuator_delay_s": 0.1,
+    "required_decel_margin_m": 1.693935,
+    "acc_authority_mps2": 3.888905
+   },
+   {
+    "attentive_takeover_mean_s": 1.604094,
+    "attentive_takeover_sd_s": 0.523699,
+    "distracted_takeover_mean_s": 5.418093,
+    "distracted_takeover_sd_s": 1.124949,
+    "brake_onset_delay_s": 0.106673,
+    "brake_demand_factor": 1.100965,
+    "peak_decel_fraction": 0.880779,
+    "brake_jerk_mps3": 22.668995,
+    "standstill_hold_decel_mps2": 1.011254,
+    "distracted_share": 0.14283,
+    "tor_required_decel_mps2": 3.204391,
+    "tor_ttc_s": 2.206446,
+    "monitor_detection_delay_s": 0.1,
+    "actuator_delay_s": 0.05,
+    "required_decel_margin_m": 2.339152,
+    "acc_authority_mps2": 3.559248
+   },
+   {
+    "attentive_takeover_mean_s": 1.784503,
+    "attentive_takeover_sd_s": 0.513586,
+    "distracted_takeover_mean_s": 5.983656,
+    "distracted_takeover_sd_s": 0.99581,
+    "brake_onset_delay_s": 0.48546,
+    "brake_demand_factor": 1.329397,
+    "peak_decel_fraction": 0.913087,
+    "brake_jerk_mps3": 17.176722,
+    "standstill_hold_decel_mps2": 3.85955,
+    "distracted_share": 0.238764,
+    "tor_required_decel_mps2": 3.146453,
+    "tor_ttc_s": 1.966011,
+    "monitor_detection_delay_s": 0.4,
+    "actuator_delay_s": 0.2,
+    "required_decel_margin_m": 2.392752,
+    "acc_authority_mps2": 4.085148
+   },
+   {
+    "attentive_takeover_mean_s": 1.405845,
+    "attentive_takeover_sd_s": 0.463649,
+    "distracted_takeover_mean_s": 4.173343,
+    "distracted_takeover_sd_s": 1.463739,
+    "brake_onset_delay_s": 0.422282,
+    "brake_demand_factor": 1.206605,
+    "peak_decel_fraction": 0.719141,
+    "brake_jerk_mps3": 27.414358,
+    "standstill_hold_decel_mps2": 2.177731,
+    "distracted_share": 0.23251,
+    "tor_required_decel_mps2": 3.300596,
+    "tor_ttc_s": 2.273541,
+    "monitor_detection_delay_s": 0.35,
+    "actuator_delay_s": 0.2,
+    "required_decel_margin_m": 2.601411,
+    "acc_authority_mps2": 3.797832
+   },
+   {
+    "attentive_takeover_mean_s": 1.320325,
+    "attentive_takeover_sd_s": 0.561099,
+    "distracted_takeover_mean_s": 4.60894,
+    "distracted_takeover_sd_s": 1.725937,
+    "brake_onset_delay_s": 0.015133,
+    "brake_demand_factor": 1.490568,
+    "peak_decel_fraction": 0.936134,
+    "brake_jerk_mps3": 11.647273,
+    "standstill_hold_decel_mps2": 2.042241,
+    "distracted_share": 0.220483,
+    "tor_required_decel_mps2": 3.162323,
+    "tor_ttc_s": 2.781493,
+    "monitor_detection_delay_s": 0.15,
+    "actuator_delay_s": 0.25,
+    "required_decel_margin_m": 2.462753,
+    "acc_authority_mps2": 3.382785
+   },
+   {
+    "attentive_takeover_mean_s": 1.694489,
+    "attentive_takeover_sd_s": 0.506423,
+    "distracted_takeover_mean_s": 4.459015,
+    "distracted_takeover_sd_s": 1.266015,
+    "brake_onset_delay_s": 0.220369,
+    "brake_demand_factor": 1.756998,
+    "peak_decel_fraction": 0.739955,
+    "brake_jerk_mps3": 19.433738,
+    "standstill_hold_decel_mps2": 2.521517,
+    "distracted_share": 0.163643,
+    "tor_required_decel_mps2": 3.089153,
+    "tor_ttc_s": 2.07115,
+    "monitor_detection_delay_s": 0.35,
+    "actuator_delay_s": 0.05,
+    "required_decel_margin_m": 1.789474,
+    "acc_authority_mps2": 4.222036
+   },
+   {
+    "attentive_takeover_mean_s": 1.124613,
+    "attentive_takeover_sd_s": 0.433978,
+    "distracted_takeover_mean_s": 5.60446,
+    "distracted_takeover_sd_s": 1.427023,
+    "brake_onset_delay_s": 0.250276,
+    "brake_demand_factor": 1.870984,
+    "peak_decel_fraction": 0.853704,
+    "brake_jerk_mps3": 20.296155,
+    "standstill_hold_decel_mps2": 1.704802,
+    "distracted_share": 0.311476,
+    "tor_required_decel_mps2": 2.833387,
+    "tor_ttc_s": 1.515623,
+    "monitor_detection_delay_s": 0.1,
+    "actuator_delay_s": 0.2,
+    "required_decel_margin_m": 2.281045,
+    "acc_authority_mps2": 4.313387
+   },
+   {
+    "attentive_takeover_mean_s": 1.476434,
+    "attentive_takeover_sd_s": 0.485877,
+    "distracted_takeover_mean_s": 4.114022,
+    "distracted_takeover_sd_s": 1.152091,
+    "brake_onset_delay_s": 0.280057,
+    "brake_demand_factor": 1.624539,
+    "peak_decel_fraction": 0.786444,
+    "brake_jerk_mps3": 39.72171,
+    "standstill_hold_decel_mps2": 1.77763,
+    "distracted_share": 0.392847,
+    "tor_required_decel_mps2": 2.779733,
+    "tor_ttc_s": 2.498251,
+    "monitor_detection_delay_s": 0.35,
+    "actuator_delay_s": 0.3,
+    "required_decel_margin_m": 1.024105,
+    "acc_authority_mps2": 4.195267
+   },
+   {
+    "attentive_takeover_mean_s": 1.738485,
+    "attentive_takeover_sd_s": 0.50221,
+    "distracted_takeover_mean_s": 4.511842,
+    "distracted_takeover_sd_s": 1.461016,
+    "brake_onset_delay_s": 0.084943,
+    "brake_demand_factor": 1.723105,
+    "peak_decel_fraction": 0.809717,
+    "brake_jerk_mps3": 14.92567,
+    "standstill_hold_decel_mps2": 2.732953,
+    "distracted_share": 0.117077,
+    "tor_required_decel_mps2": 3.07282,
+    "tor_ttc_s": 2.80687,
+    "monitor_detection_delay_s": 0.0,
+    "actuator_delay_s": 0.25,
+    "required_decel_margin_m": 1.984538,
+    "acc_authority_mps2": 3.233351
+   },
+   {
+    "attentive_takeover_mean_s": 1.661121,
+    "attentive_takeover_sd_s": 0.599836,
+    "distracted_takeover_mean_s": 5.108704,
+    "distracted_takeover_sd_s": 1.572675,
+    "brake_onset_delay_s": 0.037991,
+    "brake_demand_factor": 1.671051,
+    "peak_decel_fraction": 0.815545,
+    "brake_jerk_mps3": 30.328999,
+    "standstill_hold_decel_mps2": 2.855636,
+    "distracted_share": 0.149301,
+    "tor_required_decel_mps2": 3.46869,
+    "tor_ttc_s": 2.032552,
+    "monitor_detection_delay_s": 0.45,
+    "actuator_delay_s": 0.1,
+    "required_decel_margin_m": 1.366012,
+    "acc_authority_mps2": 3.054683
+   },
+   {
+    "attentive_takeover_mean_s": 1.511617,
+    "attentive_takeover_sd_s": 0.535389,
+    "distracted_takeover_mean_s": 5.231248,
+    "distracted_takeover_sd_s": 1.055106,
+    "brake_onset_delay_s": 0.372663,
+    "brake_demand_factor": 1.814188,
+    "peak_decel_fraction": 0.986166,
+    "brake_jerk_mps3": 29.057532,
+    "standstill_hold_decel_mps2": 1.420392,
+    "distracted_share": 0.110507,
+    "tor_required_decel_mps2": 3.371248,
+    "tor_ttc_s": 1.786609,
+    "monitor_detection_delay_s": 0.2,
+    "actuator_delay_s": 0.25,
+    "required_decel_margin_m": 1.912317,
+    "acc_authority_mps2": 3.843167
+   },
+   {
+    "attentive_takeover_mean_s": 1.169692,
+    "attentive_takeover_sd_s": 0.481662,
+    "distracted_takeover_mean_s": 4.125184,
+    "distracted_takeover_sd_s": 1.749502,
+    "brake_onset_delay_s": 0.323706,
+    "brake_demand_factor": 1.14895,
+    "peak_decel_fraction": 0.975066,
+    "brake_jerk_mps3": 15.228426,
+    "standstill_hold_decel_mps2": 2.327423,
+    "distracted_share": 0.176071,
+    "tor_required_decel_mps2": 2.531195,
+    "tor_ttc_s": 2.377121,
+    "monitor_detection_delay_s": 0.3,
+    "actuator_delay_s": 0.1,
+    "required_decel_margin_m": 1.879444,
+    "acc_authority_mps2": 4.012348
+   },
+   {
+    "attentive_takeover_mean_s": 1.15019,
+    "attentive_takeover_sd_s": 0.427151,
+    "distracted_takeover_mean_s": 5.179285,
+    "distracted_takeover_sd_s": 1.084101,
+    "brake_onset_delay_s": 0.477853,
+    "brake_demand_factor": 1.481277,
+    "peak_decel_fraction": 0.745171,
+    "brake_jerk_mps3": 17.944281,
+    "standstill_hold_decel_mps2": 3.220221,
+    "distracted_share": 0.123435,
+    "tor_required_decel_mps2": 3.3326,
+    "tor_ttc_s": 2.66729,
+    "monitor_detection_delay_s": 0.4,
+    "actuator_delay_s": 0.0,
+    "required_decel_margin_m": 2.926856,
+    "acc_authority_mps2": 3.044845
+   },
+   {
+    "attentive_takeover_mean_s": 1.09766,
+    "attentive_takeover_sd_s": 0.525266,
+    "distracted_takeover_mean_s": 4.080628,
+    "distracted_takeover_sd_s": 1.375191,
+    "brake_onset_delay_s": 0.269303,
+    "brake_demand_factor": 1.368028,
+    "peak_decel_fraction": 0.838015,
+    "brake_jerk_mps3": 15.650998,
+    "standstill_hold_decel_mps2": 1.952513,
+    "distracted_share": 0.169837,
+    "tor_required_decel_mps2": 2.884354,
+    "tor_ttc_s": 2.931989,
+    "monitor_detection_delay_s": 0.05,
+    "actuator_delay_s": 0.0,
+    "required_decel_margin_m": 2.369101,
+    "acc_authority_mps2": 3.857381
+   },
+   {
+    "attentive_takeover_mean_s": 1.565017,
+    "attentive_takeover_sd_s": 0.590531,
+    "distracted_takeover_mean_s": 4.25376,
+    "distracted_takeover_sd_s": 1.64145,
+    "brake_onset_delay_s": 0.177248,
+    "brake_demand_factor": 1.686301,
+    "peak_decel_fraction": 0.731711,
+    "brake_jerk_mps3": 12.525487,
+    "standstill_hold_decel_mps2": 3.908501,
+    "distracted_share": 0.184839,
+    "tor_required_decel_mps2": 2.625186,
+    "tor_ttc_s": 2.509041,
+    "monitor_detection_delay_s": 0.05,
+    "actuator_delay_s": 0.25,
+    "required_decel_margin_m": 2.649608,
+    "acc_authority_mps2": 3.657897
+   },
+   {
+    "attentive_takeover_mean_s": 1.491491,
+    "attentive_takeover_sd_s": 0.42931,
+    "distracted_takeover_mean_s": 5.957009,
+    "distracted_takeover_sd_s": 1.738777,
+    "brake_onset_delay_s": 0.260975,
+    "brake_demand_factor": 1.264406,
+    "peak_decel_fraction": 0.900096,
+    "brake_jerk_mps3": 35.158866,
+    "standstill_hold_decel_mps2": 1.924004,
+    "distracted_share": 0.096713,
+    "tor_required_decel_mps2": 3.49168,
+    "tor_ttc_s": 2.835293,
+    "monitor_detection_delay_s": 0.25,
+    "actuator_delay_s": 0.25,
+    "required_decel_margin_m": 1.221674,
+    "acc_authority_mps2": 3.262319
+   },
+   {
+    "attentive_takeover_mean_s": 1.799791,
+    "attentive_takeover_sd_s": 0.54988,
+    "distracted_takeover_mean_s": 4.359491,
+    "distracted_takeover_sd_s": 1.196406,
+    "brake_onset_delay_s": 0.309991,
+    "brake_demand_factor": 1.940907,
+    "peak_decel_fraction": 0.984361,
+    "brake_jerk_mps3": 27.910854,
+    "standstill_hold_decel_mps2": 1.112352,
+    "distracted_share": 0.36897,
+    "tor_required_decel_mps2": 2.972601,
+    "tor_ttc_s": 1.635354,
+    "monitor_detection_delay_s": 0.2,
+    "actuator_delay_s": 0.1,
+    "required_decel_margin_m": 2.568398,
+    "acc_authority_mps2": 4.38035
+   },
+   {
+    "attentive_takeover_mean_s": 1.064419,
+    "attentive_takeover_sd_s": 0.5728,
+    "distracted_takeover_mean_s": 3.968113,
+    "distracted_takeover_sd_s": 0.956915,
+    "brake_onset_delay_s": 0.131549,
+    "brake_demand_factor": 1.690058,
+    "peak_decel_fraction": 0.847746,
+    "brake_jerk_mps3": 34.824156,
+    "standstill_hold_decel_mps2": 1.286825,
+    "distracted_share": 0.068467,
+    "tor_required_decel_mps2": 2.804815,
+    "tor_ttc_s": 1.702787,
+    "monitor_detection_delay_s": 0.1,
+    "actuator_delay_s": 0.1,
+    "required_decel_margin_m": 1.590869,
+    "acc_authority_mps2": 3.750189
+   },
+   {
+    "attentive_takeover_mean_s": 1.624765,
+    "attentive_takeover_sd_s": 0.469217,
+    "distracted_takeover_mean_s": 4.915275,
+    "distracted_takeover_sd_s": 1.332164,
+    "brake_onset_delay_s": 0.443383,
+    "brake_demand_factor": 1.039266,
+    "peak_decel_fraction": 0.943851,
+    "brake_jerk_mps3": 10.104372,
+    "standstill_hold_decel_mps2": 2.462874,
+    "distracted_share": 0.202536,
+    "tor_required_decel_mps2": 3.444669,
+    "tor_ttc_s": 2.197674,
+    "monitor_detection_delay_s": 0.1,
+    "actuator_delay_s": 0.05,
+    "required_decel_margin_m": 2.872621,
+    "acc_authority_mps2": 3.953447
+   },
+   {
+    "attentive_takeover_mean_s": 1.182561,
+    "attentive_takeover_sd_s": 0.460783,
+    "distracted_takeover_mean_s": 5.470395,
+    "distracted_takeover_sd_s": 1.537369,
+    "brake_onset_delay_s": 0.377179,
+    "brake_demand_factor": 1.50758,
+    "peak_decel_fraction": 0.997223,
+    "brake_jerk_mps3": 14.341711,
+    "standstill_hold_decel_mps2": 3.628456,
+    "distracted_share": 0.32876,
+    "tor_required_decel_mps2": 2.946449,
+    "tor_ttc_s": 2.304749,
+    "monitor_detection_delay_s": 0.25,
+    "actuator_delay_s": 0.15,
+    "required_decel_margin_m": 2.30737,
+    "acc_authority_mps2": 4.339799
+   },
+   {
+    "attentive_takeover_mean_s": 1.67682,
+    "attentive_takeover_sd_s": 0.575735,
+    "distracted_takeover_mean_s": 5.916415,
+    "distracted_takeover_sd_s": 1.599815,
+    "brake_onset_delay_s": 0.205688,
+    "brake_demand_factor": 1.592711,
+    "peak_decel_fraction": 0.80247,
+    "brake_jerk_mps3": 20.963163,
+    "standstill_hold_decel_mps2": 3.746868,
+    "distracted_share": 0.230386,
+    "tor_required_decel_mps2": 3.292286,
+    "tor_ttc_s": 1.973385,
+    "monitor_detection_delay_s": 0.1,
+    "actuator_delay_s": 0.25,
+    "required_decel_margin_m": 2.079135,
+    "acc_authority_mps2": 3.175017
+   },
+   {
+    "attentive_takeover_mean_s": 1.371817,
+    "attentive_takeover_sd_s": 0.420169,
+    "distracted_takeover_mean_s": 5.67317,
+    "distracted_takeover_sd_s": 1.237599,
+    "brake_onset_delay_s": 0.021584,
+    "brake_demand_factor": 1.249391,
+    "peak_decel_fraction": 0.750837,
+    "brake_jerk_mps3": 36.164083,
+    "standstill_hold_decel_mps2": 3.319074,
+    "distracted_share": 0.360271,
+    "tor_required_decel_mps2": 2.663893,
+    "tor_ttc_s": 1.994849,
+    "monitor_detection_delay_s": 0.35,
+    "actuator_delay_s": 0.3,
+    "required_decel_margin_m": 2.526145,
+    "acc_authority_mps2": 3.432894
+   },
+   {
+    "attentive_takeover_mean_s": 1.513888,
+    "attentive_takeover_sd_s": 0.543855,
+    "distracted_takeover_mean_s": 4.731557,
+    "distracted_takeover_sd_s": 1.662868,
+    "brake_onset_delay_s": 0.122177,
+    "brake_demand_factor": 1.895246,
+    "peak_decel_fraction": 0.791142,
+    "brake_jerk_mps3": 32.097527,
+    "standstill_hold_decel_mps2": 2.284648,
+    "distracted_share": 0.381235,
+    "tor_required_decel_mps2": 3.352039,
+    "tor_ttc_s": 2.416457,
+    "monitor_detection_delay_s": 0.1,
+    "actuator_delay_s": 0.2,
+    "required_decel_margin_m": 1.848401,
+    "acc_authority_mps2": 3.682272
+   },
+   {
+    "attentive_takeover_mean_s": 1.752167,
+    "attentive_takeover_sd_s": 0.457532,
+    "distracted_takeover_mean_s": 5.384564,
+    "distracted_takeover_sd_s": 0.973528,
+    "brake_onset_delay_s": 0.473654,
+    "brake_demand_factor": 1.970616,
+    "peak_decel_fraction": 0.921311,
+    "brake_jerk_mps3": 28.709898,
+    "standstill_hold_decel_mps2": 2.224267,
+    "distracted_share": 0.105906,
+    "tor_required_decel_mps2": 2.701695,
+    "tor_ttc_s": 2.572994,
+    "monitor_detection_delay_s": 0.5,
+    "actuator_delay_s": 0.3,
+    "required_decel_margin_m": 1.635217,
+    "acc_authority_mps2": 3.295165
+   },
+   {
+    "attentive_takeover_mean_s": 1.702542,
+    "attentive_takeover_sd_s": 0.538935,
+    "distracted_takeover_mean_s": 3.62677,
+    "distracted_takeover_sd_s": 0.938261,
+    "brake_onset_delay_s": 0.134252,
+    "brake_demand_factor": 1.654469,
+    "peak_decel_fraction": 0.821392,
+    "brake_jerk_mps3": 29.579013,
+    "standstill_hold_decel_mps2": 1.088403,
+    "distracted_share": 0.089935,
+    "tor_required_decel_mps2": 2.750809,
+    "tor_ttc_s": 2.622851,
+    "monitor_detection_delay_s": 0.35,
+    "actuator_delay_s": 0.0,
+    "required_decel_margin_m": 2.961748,
+    "acc_authority_mps2": 3.710661
+   },
+   {
+    "attentive_takeover_mean_s": 1.4244,
+    "attentive_takeover_sd_s": 0.409327,
+    "distracted_takeover_mean_s": 4.773541,
+    "distracted_takeover_sd_s": 1.025266,
+    "brake_onset_delay_s": 0.315289,
+    "brake_demand_factor": 1.160541,
+    "peak_decel_fraction": 0.979985,
+    "brake_jerk_mps3": 11.199463,
+    "standstill_hold_decel_mps2": 3.579283,
+    "distracted_share": 0.34722,
+    "tor_required_decel_mps2": 2.73451,
+    "tor_ttc_s": 2.327556,
+    "monitor_detection_delay_s": 0.05,
+    "actuator_delay_s": 0.05,
+    "required_decel_margin_m": 1.172629,
+    "acc_authority_mps2": 3.446003
+   },
+   {
+    "attentive_takeover_mean_s": 1.199361,
+    "attentive_takeover_sd_s": 0.41316,
+    "distracted_takeover_mean_s": 3.854849,
+    "distracted_takeover_sd_s": 1.780398,
+    "brake_onset_delay_s": 0.098993,
+    "brake_demand_factor": 1.848764,
+    "peak_decel_fraction": 0.844916,
+    "brake_jerk_mps3": 20.384935,
+    "standstill_hold_decel_mps2": 1.148688,
+    "distracted_share": 0.24602,
+    "tor_required_decel_mps2": 2.553893,
+    "tor_ttc_s": 1.934995,
+    "monitor_detection_delay_s": 0.3,
+    "actuator_delay_s": 0.25,
+    "required_decel_margin_m": 2.184077,
+    "acc_authority_mps2": 4.10681
+   },
+   {
+    "attentive_takeover_mean_s": 1.393619,
+    "attentive_takeover_sd_s": 0.478656,
+    "distracted_takeover_mean_s": 4.407732,
+    "distracted_takeover_sd_s": 1.386751,
+    "brake_onset_delay_s": 0.410953,
+    "brake_demand_factor": 1.068458,
+    "peak_decel_fraction": 0.990668,
+    "brake_jerk_mps3": 36.928901,
+    "standstill_hold_decel_mps2": 1.528268,
+    "distracted_share": 0.323412,
+    "tor_required_decel_mps2": 3.055913,
+    "tor_ttc_s": 2.903571,
+    "monitor_detection_delay_s": 0.25,
+    "actuator_delay_s": 0.15,
+    "required_decel_margin_m": 1.546584,
+    "acc_authority_mps2": 4.147259
+   }
+  ]
+ },
+ "release_id": "fe59625d9428753862687a3969fa0abf194b64e8afeabe42898bdbcca7498d81",
+ "runtime_id": "d37505bee00e01c235487f54dbb579f8dc71978020d9565f2c940eb2fcf3ae3c",
+ "analysis_version": "sensitivity-analysis/v5",
+ "evidence_mode": "final",
+ "protocol_id": "0703cc9e2fcada557bc2efc140dbbb1f63f5280ec9a9e847879edc995d20af33",
+ "frozen_at": "2026-10-22T02:15:25.839200",
+ "git_commit": "43d549f3981403b13317ba99cffb86c97d5e5abe"
+}

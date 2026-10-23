@@ -1,0 +1,64 @@
+# Simulator, ego function and numerical-method parameters.
+#
+# Every constant that can change a simulated outcome lives here (or in driver.yaml /
+# reference.yaml), so it is part of the parsed release configuration and of the release ID.
+# Nothing semantically relevant is a hidden literal in avval/sim.py.
+
+schema: sim/v3
+
+time:
+  dt_s: 0.05                 # integration and control step (20 Hz)
+  horizon_s: 20.0            # simulated time per run
+  # Exogenous events (lead braking onset, delays) must fall on the step grid; a dt that
+  # does not divide them is rejected instead of silently shifting the event.
+
+scenario:
+  lead_brake_onset_s: 1.0    # the lead starts braking at this time (lead_brake)
+  cut_in_onset_s: 0.0        # the cut-in vehicle is present from t = 0 (cut_in)
+
+ego:
+  # Actuator authority of the ACC function (m/s^2). Both are clipped further by friction.
+  accel_min_mps2: -3.5
+  accel_max_mps2: 2.0
+  # Delay between a command and its effect (s). 0 = commands act in the same step.
+  actuator_delay_s: 0.0      # TODO(data): no actuator lag is modelled at the nominal point
+
+monitor:
+  # Hand-back monitor: a takeover request (TOR) is issued when the required deceleration
+  # (see `required_decel` below) exceeds `tor_required_decel_mps2`, or when the monitor's
+  # TTC drops below `tor_ttc_s`.
+  tor_required_decel_mps2: 3.0
+  tor_ttc_s: 2.0
+  # constant_speed: gap / closing speed (the nominal design);
+  # constant_accel: stop-aware TTC with both vehicles' current accelerations (a candidate
+  # design change for sensitivity studies; not the nominal function).
+  ttc_model: constant_speed
+  # Time from the monitor condition first holding to the TOR being issued (s).
+  detection_delay_s: 0.0     # TODO(data): no monitor latency is modelled
+
+required_decel:
+  # Constant ego deceleration needed to end up `margin_m` behind the target, given the
+  # target's current deceleration (it is assumed to keep decelerating until it stops; a
+  # positive target acceleration is treated as zero, which is conservative). The formula
+  # is continuous in the target's acceleration: there is no threshold branch.
+  margin_m: 2.0              # residual standstill / speed-matched gap (m); TODO(data)
+  min_space_m: 0.1           # floor on the usable space, so the formula stays finite (m)
+
+collision:
+  # Contact is declared when the bumper-to-bumper gap reaches this value (m). The crossing
+  # time and impact speed are computed at the exact crossing inside the step (see
+  # avval/sim.py, "Event handling").
+  contact_gap_m: 0.0
+
+termination:
+  # A run ends early when both vehicles are stopped. Reaching the horizon is classified:
+  # horizon_safe if the remaining conflict could be resolved by the ACC alone (required
+  # deceleration at the horizon <= this value), else horizon_unresolved, which acceptance
+  # criteria treat as an adverse outcome (never as safe).
+  horizon_safe_required_decel_mps2: 3.5
+
+metrics:
+  thw_settle_s: 2.0          # min_thw ignores the first 2 s (the initial gap is a test input)
+  jerk_window_s: 0.5         # moving-average window of the filtered jerk metrics
+  near_closing_mps: 0.001    # closing speeds at or below this count as "not closing"
+  thw_min_speed_mps: 1.0     # time headway is only evaluated above this ego speed

@@ -1,0 +1,20 @@
+# Rehearsal sizes (schema rehearsal/v1). NOT a release or protocol file.
+#
+# `python -m avval.cli --rehearsal <command>` runs exactly the command of the final rerun plan
+# in DEVELOPMENT mode (non-evidence), with outputs in results/rehearsal/ and these sizes
+# patched onto the protocol files (benchmark, sensitivity) and the characterisation grid.
+# Release files (odd, driver, reference, exposure, acceptance, sim) and the discovery
+# objectives are never patched, so the rehearsal runs the release that the final run will
+# use. Final mode refuses to run while rehearsal mode is active.
+schema: rehearsal/v1
+characterise: {res: 8, seeds: 2}                 # final: 24 x 24 grid, 8 seeds
+benchmark:
+  budget: 30                                     # final: 300 runs per campaign
+  seeds:
+    agent: [0]                                   # one REAL agent seed (API)
+    baselines: {first: 0, count: 2}              # final: 100 per strategy
+  agent: {cost_cap_usd_per_seed: 0.5, total_cost_cap_usd: 0.5}
+sensitivity:
+  n: 100                                         # final: 2,000 runs per variant
+  designs:                                       # OAT and the 2^6 factorial unchanged
+    lhs: {samples: 8, seed: 0}                   # final: 64 samples

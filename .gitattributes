@@ -3,3 +3,7 @@
 
 *.png    binary
 *.duckdb binary
+
+# Evidence files are stored byte for byte, so their hashes in
+# results/EVIDENCE_MANIFEST.json hold on every checkout.
+results/** -text

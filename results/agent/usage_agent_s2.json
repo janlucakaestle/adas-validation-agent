@@ -1,0 +1,187 @@
+{
+  "model": "claude-sonnet-5",
+  "models_returned": [
+    "claude-sonnet-5"
+  ],
+  "anthropic_version": "1.8.0",
+  "api_calls": 21,
+  "input_tokens_total": 1079441,
+  "cache_read_tokens": 998705,
+  "cache_write_tokens": 80694,
+  "cache_hit_rate": 0.925,
+  "output_tokens": 35281,
+  "est_cost_usd": 0.754,
+  "est_cost_without_cache_usd": 2.512,
+  "first_call_utc": "2026-10-21T20:58:03+00:00",
+  "last_call_utc": "2026-10-21T21:03:04+00:00",
+  "calls": [
+    {
+      "utc": "2026-10-21T20:58:03+00:00",
+      "model": "claude-sonnet-5",
+      "input": 2,
+      "cache_write": 111,
+      "cache_read": 2369,
+      "output": 43
+    },
+    {
+      "utc": "2026-10-21T20:58:04+00:00",
+      "model": "claude-sonnet-5",
+      "input": 2,
+      "cache_write": 2107,
+      "cache_read": 2480,
+      "output": 48
+    },
+    {
+      "utc": "2026-10-21T20:58:57+00:00",
+      "model": "claude-sonnet-5",
+      "input": 2,
+      "cache_write": 1911,
+      "cache_read": 4587,
+      "output": 6333
+    },
+    {
+      "utc": "2026-10-21T20:59:18+00:00",
+      "model": "claude-sonnet-5",
+      "input": 2,
+      "cache_write": 11438,
+      "cache_read": 6498,
+      "output": 2615
+    },
+    {
+      "utc": "2026-10-21T20:59:36+00:00",
+      "model": "claude-sonnet-5",
+      "input": 2,
+      "cache_write": 7541,
+      "cache_read": 17936,
+      "output": 2662
+    },
+    {
+      "utc": "2026-10-21T20:59:58+00:00",
+      "model": "claude-sonnet-5",
+      "input": 2,
+      "cache_write": 7585,
+      "cache_read": 25477,
+      "output": 2987
+    },
+    {
+      "utc": "2026-10-21T21:00:18+00:00",
+      "model": "claude-sonnet-5",
+      "input": 2,
+      "cache_write": 7866,
+      "cache_read": 33062,
+      "output": 2625
+    },
+    {
+      "utc": "2026-10-21T21:00:41+00:00",
+      "model": "claude-sonnet-5",
+      "input": 2,
+      "cache_write": 7498,
+      "cache_read": 40928,
+      "output": 2928
+    },
+    {
+      "utc": "2026-10-21T21:00:46+00:00",
+      "model": "claude-sonnet-5",
+      "input": 2,
+      "cache_write": 7801,
+      "cache_read": 48426,
+      "output": 436
+    },
+    {
+      "utc": "2026-10-21T21:00:50+00:00",
+      "model": "claude-sonnet-5",
+      "input": 2,
+      "cache_write": 804,
+      "cache_read": 56227,
+      "output": 364
+    },
+    {
+      "utc": "2026-10-21T21:00:54+00:00",
+      "model": "claude-sonnet-5",
+      "input": 2,
+      "cache_write": 776,
+      "cache_read": 57031,
+      "output": 233
+    },
+    {
+      "utc": "2026-10-21T21:01:14+00:00",
+      "model": "claude-sonnet-5",
+      "input": 2,
+      "cache_write": 416,
+      "cache_read": 57807,
+      "output": 2537
+    },
+    {
+      "utc": "2026-10-21T21:01:32+00:00",
+      "model": "claude-sonnet-5",
+      "input": 2,
+      "cache_write": 6094,
+      "cache_read": 58223,
+      "output": 1831
+    },
+    {
+      "utc": "2026-10-21T21:01:44+00:00",
+      "model": "claude-sonnet-5",
+      "input": 2,
+      "cache_write": 3524,
+      "cache_read": 64317,
+      "output": 1202
+    },
+    {
+      "utc": "2026-10-21T21:01:51+00:00",
+      "model": "claude-sonnet-5",
+      "input": 2,
+      "cache_write": 1636,
+      "cache_read": 67841,
+      "output": 580
+    },
+    {
+      "utc": "2026-10-21T21:02:06+00:00",
+      "model": "claude-sonnet-5",
+      "input": 2,
+      "cache_write": 4158,
+      "cache_read": 69477,
+      "output": 1322
+    },
+    {
+      "utc": "2026-10-21T21:02:12+00:00",
+      "model": "claude-sonnet-5",
+      "input": 2,
+      "cache_write": 2069,
+      "cache_read": 73635,
+      "output": 519
+    },
+    {
+      "utc": "2026-10-21T21:02:16+00:00",
+      "model": "claude-sonnet-5",
+      "input": 2,
+      "cache_write": 964,
+      "cache_read": 75704,
+      "output": 492
+    },
+    {
+      "utc": "2026-10-21T21:02:42+00:00",
+      "model": "claude-sonnet-5",
+      "input": 2,
+      "cache_write": 2037,
+      "cache_read": 76668,
+      "output": 2534
+    },
+    {
+      "utc": "2026-10-21T21:02:47+00:00",
+      "model": "claude-sonnet-5",
+      "input": 2,
+      "cache_write": 2602,
+      "cache_read": 78705,
+      "output": 453
+    },
+    {
+      "utc": "2026-10-21T21:03:04+00:00",
+      "model": "claude-sonnet-5",
+      "input": 2,
+      "cache_write": 1756,
+      "cache_read": 81307,
+      "output": 2537
+    }
+  ]
+}

@@ -1,6 +1,7 @@
 """The read-only SQL guard, and the sandbox behind it that holds even if the guard is bypassed."""
 import time
 
+import duckdb
 import pytest
 
 import avval.store as store_mod
@@ -31,13 +32,26 @@ WRITE_ATTEMPTS = [
     "SELECT * FROM read_csv_auto('{db}')",
     "INSTALL httpfs",
 ]
+# Reads outside the campaign snapshot: files, globbing, network, extensions, settings. With
+# the keyword guard bypassed, the sandbox itself must refuse each one.
+READ_ESCAPES = [
+    "SELECT * FROM read_text('{db}')",
+    "SELECT * FROM read_blob('{db}')",
+    "SELECT * FROM glob('*')",
+    "SELECT * FROM '{db}'",
+    "SELECT * FROM read_parquet('https://example.com/x.parquet')",
+    "LOAD httpfs",
+    "SELECT * FROM duckdb_settings() WHERE name = 'x'; SET enable_external_access = true",
+    "SELECT * FROM read_csv_auto('{db}')",
+    "COPY runs TO '{tmp}/leak.csv'",
+]
 
 
 @pytest.fixture
 def populated(store, policy):
     for name in ("a", "b"):
         camp = Campaign(name, store, policy, 15, seed=1)
-        camp.run([random_case(camp.rng) for _ in range(15)])
+        camp.run([random_case(camp.case_rng(i)) for i in range(15)])
     return store
 
 
@@ -95,7 +109,47 @@ def test_row_limit(populated):
 
 
 def test_snapshot_follows_new_runs(populated, policy):
-    camp = Campaign("a", populated, policy, 20, seed=2, fresh=False)
-    assert populated.query("SELECT count(*) AS n FROM runs", "a").n[0] == 15
-    camp.run([random_case(camp.rng) for _ in range(5)])
-    assert populated.query("SELECT count(*) AS n FROM runs", "a").n[0] == 20
+    camp = Campaign("c", populated, policy, 20, seed=2)
+    camp.run([random_case(camp.case_rng(i)) for i in range(15)])
+    assert populated.query("SELECT count(*) AS n FROM runs", "c").n[0] == 15
+    camp.run([random_case(camp.case_rng(i)) for i in range(15, 20)])
+    assert populated.query("SELECT count(*) AS n FROM runs", "c").n[0] == 20
+
+
+def test_keyword_filter_has_no_false_positives_on_strings_and_identifiers(populated):
+    """Words like 'set', 'load', 'update' inside string literals, quoted identifiers or
+    comments are not statements; the filter must not reject them."""
+    for sql in ("SELECT 'set' AS x FROM runs LIMIT 1",
+                'SELECT count(*) AS "load" FROM runs',
+                "SELECT 1 AS n -- update later\n",
+                "SELECT scenario FROM runs WHERE scenario <> 'drop table'",
+                "SELECT 1 /* delete; */ AS n"):
+        populated.query(sql, "a")
+
+
+def test_column_allowlist_restricts_the_view(populated):
+    df = populated.query("SELECT * FROM runs", "a", columns=("run_idx", "collision"))
+    assert list(df.columns) == ["run_idx", "collision"]
+    with pytest.raises(Exception, match="seed"):
+        populated.query("SELECT seed FROM runs", "a", columns=("run_idx", "collision"))
+
+
+@pytest.mark.parametrize("attempt", READ_ESCAPES)
+def test_sandbox_refuses_reads_outside_the_snapshot(populated, tmp_path, attempt):
+    db = populated.con.execute("SELECT path FROM duckdb_databases() WHERE NOT internal "
+                               "AND path IS NOT NULL").fetchone()[0]
+    sql = attempt.format(db=db.replace("\\", "/"), tmp=str(tmp_path).replace("\\", "/"))
+    with pytest.raises(duckdb.Error):  # the sandbox refuses it even with the guard bypassed
+        populated._run_sandboxed(sql, "a", max_rows=50, timeout_s=5)
+    with pytest.raises((duckdb.Error, ValueError)):  # and so does the full query path
+        populated.query(sql, "a")
+
+
+def test_guard_rejects_non_select_statements_that_the_sandbox_would_tolerate(populated):
+    for sql in ("PRAGMA database_list", "CHECKPOINT", "DETACH memory", "LOAD httpfs",
+                "USE memory", "RESET memory_limit", "VACUUM"):
+        with pytest.raises(ValueError, match="read-only"):
+            populated.query(sql, "a")
+    dbs = populated._run_sandboxed("SELECT database_name FROM duckdb_databases() "
+                                   "WHERE NOT internal", "a", 50, 5)
+    assert list(dbs.database_name) == ["memory"]  # nothing but the in-memory sandbox

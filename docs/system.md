@@ -7,112 +7,152 @@
 - **Automation level:** SAE Level 2. Reference framework: UNECE R171 (DCAS).
 - **Driver responsibility:** the driver supervises at all times and is the fallback. The
   system never performs a minimal-risk manoeuvre; it hands back by requesting intervention.
-- **System under test:** a learned longitudinal policy, treated as a black box. The ODD,
-  criteria, campaigns and agent run unchanged against any policy with the same interface:
-  gap, speed, relative speed and set speed in; acceleration out.
-- **Not included:** AEB, lateral control, minimal-risk manoeuvre, driver monitoring. So the
+- **System under test:** a 32×32 MLP behaviour-cloned from a synthetic expert (the
+  Intelligent Driver Model) on synthetic nominal-following states. It takes four
+  ground-truth scalars (gap, speed, relative speed, set speed) and outputs an acceleration.
+  It has **no** perception, sensor noise, temporal model, uncertainty estimate, lateral
+  behaviour or runtime out-of-distribution handling. It is a **demonstrator and testbed for
+  the validation method**; results obtained with it do not transfer to production learned
+  ADAS stacks. The ODD, criteria, campaigns and searchers run unchanged against any policy
+  with the same interface.
+- **Not included:** AEB, lateral control, minimal-risk manoeuvre, driver monitoring. The
   distracted-driver state represents misuse that driver monitoring didn't prevent.
-- **Perception:** ideal. The controller sees the true gap, speeds and lead deceleration.
 - **UN R157** (Level 3) appears only as the source of an optional *careful and competent
-  human driver* benchmark (`config/reference.yaml`).
+  human driver* reference (`config/reference.yaml`, disabled).
 
-## Scenarios and ODD
+## Scenarios and ODD (`config/odd.yaml`)
 
-- **Scenarios:** single-lane longitudinal dynamics. `lead_brake`: the lead brakes to a
-  stop at `lead_decel` m/s². `cut_in`: a vehicle appears ahead, closing at
-  `closing_speed` m/s. Both range 1–9. Each scenario takes only its own parameter; the
-  other is rejected and stored as NULL. Coverage bins each scenario on its own parameter.
-- **Initial gap as time headway:** 0.8–3.0 s for `lead_brake`, 0.3–2.0 s for `cut_in`
-  (placeholders, `TODO(data)`). Initial gap = `headway × ego_speed`; both are stored. This
-  excludes impossible starts (5 m at 36 m/s) while allowing short gaps at low speed.
-- **Friction:** 0.5 (wet) to 1.0 (dry); ice and snow are outside the ODD. Friction caps
-  all achievable deceleration, for ego and lead.
+- `lead_brake`: the lead brakes from `lead_brake_onset_s` (sim.yaml, 1.0 s) at `lead_decel`
+  (capped by μg) to a stop. `cut_in`: a vehicle is present from t = 0, `closing_speed` m/s
+  slower. Each scenario takes only its own parameter.
+- Initial gap = `headway × ego_speed`; headway 0.8–3.0 s (lead_brake), 0.3–2.0 s (cut_in).
+- Friction 0.5 (wet) to 1.0 (dry). Friction caps every deceleration, ego and lead.
 
-## Design values of the function
+## Design values of the function (`config/sim.yaml`)
 
-- **Policy:** a 32×32 MLP behaviour-cloned from the Intelligent Driver Model on nominal
-  driving logs. Its error is larger on harsh, out-of-distribution states (`train` prints
-  both). Actuator authority −3.5 to +2.0 m/s², deliberately no AEB.
-- **Hand-back monitor:** issues a TOR when the braking needed to stop behind the target
-  (including the target's own deceleration) exceeds 3.0 m/s², or TTC < 2 s.
+All semantically relevant constants are release configuration, not literals:
+
+| Parameter | Value | Meaning |
+| --- | --- | --- |
+| `ego.accel_min_mps2`, `accel_max_mps2` | −3.5, +2.0 | ACC actuator authority |
+| `ego.actuator_delay_s` | 0 | command-to-effect delay (TODO(data)) |
+| `monitor.tor_required_decel_mps2` | 3.0 | TOR when required deceleration exceeds it |
+| `monitor.tor_ttc_s`, `ttc_model` | 2.0, constant_speed | TOR when monitor TTC falls below it |
+| `monitor.detection_delay_s` | 0 | monitor latency (TODO(data)) |
+| `required_decel.margin_m`, `min_space_m` | 2.0, 0.1 | residual gap and usable-space floor |
+| `collision.contact_gap_m` | 0 | contact definition |
+| `termination.horizon_safe_required_decel_mps2` | 3.5 | classifies runs that reach the horizon |
+| `time.dt_s`, `horizon_s` | 0.05, 20 | step and horizon |
+
+## Simulator method (`avval/sim.py`)
+
+**Step ordering.** At each step time t: (1) exogenous quantities for [t, t+dt), i.e. the
+lead's acceleration; (2) monitor quantities from the current gap, speeds and that
+acceleration; (3) control decisions (TOR, driver, ACC); (4) exact integration; (5) contact
+detection and termination. A lead that starts braking at t is visible to the monitor at t
+(v0.2 used the previous step's lead acceleration, one step late).
+
+**Integration.** Accelerations are constant within a step; each vehicle moves exactly
+(piecewise quadratic, stopping without reversing part-way through the step). Positions,
+speeds and gaps are exact between control decisions.
+
+**Contact.** Contact is the first root in (t, t+dt] of the piecewise-quadratic gap, solved
+in closed form per piece (`first_contact`). Collision time, impact speed and duration are
+evaluated at that instant; a contact in the first step has a positive duration. Exogenous
+events must lie on the step grid (a dt that does not divide them is rejected). Speeds and
+accelerations below 1e-9 are treated as exactly zero, to keep stop times finite.
+
+**Required deceleration.** The constant ego deceleration that ends `margin_m` behind the
+target, given the target's current deceleration b (kept until it stops): with usable space
+s and closing speed c, `b + c²/2s` if the speeds match before the target stops, else
+`v_ego²/2(s + v_lead²/2b)`; for b = 0, `c²/2s`. The branches agree on their boundary and tend
+to the b = 0 formula, so the quantity is continuous in the target's acceleration (v0.2
+switched formulas at a_lead = −0.5 m/s²). Property-tested for continuity, sufficiency and
+necessity.
+
+**Terminal states** (`end_state`): `collision`; `both_stopped`; `horizon_safe` (at the
+horizon the ACC alone could still resolve the conflict); `horizon_unresolved` (it could not).
+Acceptance criteria treat `horizon_unresolved` as adverse, never as safe.
 
 ## Metrics
 
-Computed in `avval/sim.py::compute_metrics` from the trace up to the last sample before
-impact. Collision is its own column and is never encoded in another metric.
+Computed from the trace before contact; collision is its own column.
 
-- `min_gap`: minimum gap in metres; NULL for a collision.
-- `min_ttc`: minimum gap ÷ closing speed before impact; NULL (not a sentinel) when the
-  vehicles never close.
-- `min_ttc_accel`: TTC with both vehicles' current accelerations, the smallest positive
-  root of gap + Δv·τ + ½Δa·τ² = 0 (Δv = v_lead − v_ego, Δa = a_lead − a_ego). It sees a
-  braking lead before speeds diverge. Like the usual "enhanced TTC" it ignores vehicles
-  coming to a stop, which is conservative there.
-- `min_thw`: minimum time headway from t = 2 s on, so a 0.3 s cut-in doesn't fail headway
-  by construction.
-- `max_jerk`: largest change in 0.5 s trailing-average acceleration over any 0.5 s,
-  divided by 0.5 s; independent of the 20 Hz step. `max_jerk_raw` keeps the raw
-  sample-difference value.
-- AC-02 is evaluated on collision-free runs only (AC-01 and AC-03 own collisions). Runs that
-  never close count as infinite TTC.
+- `min_gap`; `min_ttc` (constant-speed); `min_ttc_accel`: TTC extrapolating both vehicles'
+  current accelerations **until they stop** (v0.2's version let a stopping lead reverse,
+  which produced spurious low values).
+- `min_thw` from t = 2 s; `max_jerk` (0.5 s moving average, whole run); `max_jerk_automated`
+  (same, only over windows in automated control, i.e. before the driver's first input; used
+  by AC-04); `max_jerk_raw`.
+- `max_required_decel` (before the TOR) and `tor_reason` (which monitor branch fired), for
+  diagnostics only (hidden from search strategies).
+- `collision_time`, `impact_speed` (at the crossing), `duration`, `hazard_onset_s`.
 
-## Preventability
+## Reference responses (`config/reference.yaml`, `avval/reference.py`)
 
-Some collisions can't be avoided by any system, e.g. a cut-in 5 m ahead closing at 9 m/s
-on a wet road. Every colliding run is replayed with an **ideal reference** (`avval/reference.py`)
-using the same lead model and integrator, braking at 0.9 μg the moment the hazard appears,
-with no authority limit and no hand-back. If the reference also collides, the run is
-`preventable = FALSE`. A run the system avoided is always preventable, since a system can
-brake *before* the hazard when headway is already short, and the reference doesn't.
+Each run's **scenario** is replayed, using the simulator's kinematics and contact
+definition, with a fixed ego response: hold speed until hazard onset (no pre-hazard
+intervention), wait the reaction time, brake (instantly or jerk-limited) to the deceleration
+level and hold it to standstill; brake-only and longitudinal (no steering); perfect
+knowledge of the hazard at onset. Results are scenario properties, computed for **every**
+run, independent of the system under test's actions and of its design parameters. Each
+definition carries a maturity `status` (reference.yaml); a criterion that uses it is at most
+as mature (see evaluation.md):
 
-- AC-01 and AC-03 count preventable runs only.
-- AC-06 reports the unpreventable share as information.
-- The optional careful-competent-driver reference (UN R157 style) is disabled; its
-  parameters are `TODO(data)`.
+- `avoidable_by_reference` — the ideal reference (0.9 μg, no reaction time; status
+  illustrative) avoids contact. FALSE does **not** mean the collision is physically
+  unavoidable: earlier, harder (up to μg) or lateral responses may avoid it. Scopes AC-01
+  and AC-03; AC-09/AC-10 gate the same driver populations without it.
+- `handback_required` — braking **fixed at the nominal system's design authority**
+  (3.5 m/s², status provisional, TODO(data)) from hazard onset does **not** avoid contact.
+  3.5 m/s² is the demonstrator policy's training authority (`avval/policy.py`, since v0.1),
+  frozen in `reference.yaml`; it is not an external, programme-level capability. It was
+  chosen as a typical ACC braking limit and has not been verified against any published ACC
+  deceleration envelope (such as ISO 15622), so no standard is cited — **provisional, source
+  to be confirmed**. Being frozen, it is not read from the configuration under test: an
+  authority variant changes the system, not this population, so AC-03 strata, AC-07 and
+  AC-08 stay comparable across design variants. The same 3.5 m/s² is also the sensitivity
+  study's required-deceleration exceedance level (a deliberate, documented coupling).
+  (An earlier development version used the configured authority, which confounded the
+  authority sensitivity.)
+- `ccd_avoidable_by_reference` — the careful-competent-driver reference; NULL while disabled.
 
-In the seed-0 300-run random and grid campaigns, none of the 13 and 16 collisions was
-unpreventable. In the 100,000-run estimation, 1 of 486 was.
+v0.2 called these "preventable/unpreventable", replayed only collisions, and counted every
+avoided run as preventable, which made the AC-01 population depend on the system's actions.
 
-## Driver model
+## Driver model (`config/driver.yaml`)
 
-Two states, parameters in `config/driver.yaml`. Each state has a `category`
-(`intended_use` or `foreseeable_misuse`), stored per run as `driver_category`.
+| State | Mean | SD | Floor | Source |
+| --- | --- | --- | --- | --- |
+| `attentive` (intended use) | 1.3 s | 0.5 s | 0.5 s | Green (2000), Summala (2000); CV from Johansson & Rumar (1971), Magister et al. (2005) |
+| `distracted` (foreseeable misuse) | 4.59 s | 1.33 s | 1.77 s (placeholder, `TODO(data)`) | Kästle et al. (2025), IEEE Transactions on Haptics |
 
-| State | Mean | SD | Floor | Source | What the source measured |
-| --- | --- | --- | --- | --- | --- |
-| `attentive` (intended use) | 1.3 s | 0.5 s | 0.5 s | Mean: Green (2000), consistent with Summala (2000). SD: CV ≈ 0.35–0.37 (Johansson & Rumar, 1971; Magister et al., 2005). | Brake reaction time to an unexpected event, eyes on the road |
-| `distracted` (foreseeable misuse) | 4.59 s | 1.33 s | 1.77 s (`TODO(data)`) | Kästle, Anvari, Peters, Krol & Wurdemann (2025), IEEE Transactions on Haptics (visual and audio TOR) | Urgent takeovers after a reading task: stationary obstacle at ≈ 7 s TTC, 70 mph, time to first meaningful input |
+- Log-normal matched to mean and SD; draws below the floor are redrawn (capped).
+- Both states start reacting at the TOR, which is pessimistic for the attentive driver.
+- After the first input and `brake_onset_delay_s`, the driver brakes towards
+  min(peak · μg, `brake_demand_factor` × required deceleration), at `brake_jerk`, and holds
+  at least `standstill_hold_decel_mps2` (2.0, TODO(data)) until standstill while a conflict
+  remains. Without that hold, braking proportional to the required deceleration (∝ v²
+  near standstill) never stops the car: it crept on and touched a stopped lead at a few
+  cm/s, seconds later, at a time that depended on dt (`tests/test_standstill_hold.py`). The
+  2.0 m/s² is a behavioural **placeholder**, not validated; it is a sensitivity factor
+  (1–4 m/s²) in every design. Vehicle reversal is prevented by the kinematics independently
+  of it.
+- Placeholders: distracted floor, `brake_onset_delay_s`, `brake_demand_factor`,
+  `standstill_hold_decel_mps2`, `peak_decel_fraction`, `brake_jerk`.
 
-- **Sampling:** log-normal matched to mean and SD. Draws below the floor are redrawn, not
-  clipped. The redraw is capped, and hitting the cap raises an error.
-- **Timing:** both states start reacting at the TOR. An attentive L2 driver would often
-  react at hazard onset, before the TOR, so attentive-driver results (AC-01) are
-  **pessimistic** (see the roadmap).
-- **Distracted-source caveats:** the study was a Level 3 setting where reading was
-  permitted, used here as Level 2 misuse; n = 19, reading task only; reaction times capped
-  at 7 s (biases the mean slightly low); hazard first seen at ≈ 7 s TTC, whereas the
-  simulator's TOR usually fires closer.
-- **Assumption:** reaction times are independent of speed across 15–36 m/s; the source
-  was measured at 70 mph.
-- **Still placeholders:** distracted floor, `brake_onset_delay_s` (0 s),
-  `brake_demand_factor` (1.5 × needed braking), and per state `peak_decel_fraction`
-  (0.9 μg) and `brake_jerk` (25 m/s³).
+## Simulator verification (`tests/test_sim_verification.py`, `tests/test_sim_timing.py`)
 
-## Simulator verification
-
-`tests/test_sim_verification.py` checks the physics against closed-form results, mostly with
-a constant-acceleration stand-in for the policy. Speed uses explicit Euler and the gap the
-trapezoidal rule; with piecewise-constant acceleration this is exact between events, so the
-only error comes from a vehicle stopping mid-step, bounded by a·dt²/8 (≈ 0.001 m at
-3 m/s², 20 Hz).
-
-- Constant deceleration from v stops in v²/2a.
-- A lead braking harder than μg is capped at μg and follows the analytic ramp.
-- Equal speeds with no braking keep the gap constant (to 1e-9 m).
-- A cut-in gap closes at exactly closing speed × t until the ego reacts.
-- A lead braking from t = 1 s follows the analytic position curve to its stop.
-
-A convergence check runs the full closed loop on 144 fixed cases at dt and dt/2: `min_ttc`
-moves by at most 0.1 s (median ≤ 0.01 s), at most one collision outcome flips, and impact
-speed changes by at most g·dt. Deliberate one-line integrator bugs (Euler gap, no friction
-cap, lead braking one step late, 2% closing-speed error) are each caught.
+- Closed-form checks to floating-point round-off (exact integration): stopping distance
+  v²/2a including a mid-step stop; friction-capped lead braking; constant gap at equal
+  speeds; cut-in gap closing at the closing speed; analytic lead position through its stop.
+- Contact at the exact crossing: a 2 m cut-in closing at 9 m/s collides at 2/9 s with
+  9 m/s; a 0.3 m cut-in has duration 0.3/9 s; braking inside the step gives the analytic
+  impact speed.
+- Event ordering: the TOR fires at exactly the lead's onset, identically at dt and dt/2.
+- Convergence on 144 closed-loop cases at dt and dt/2: TOR time within one step, at most one
+  outcome/end-state flip, `min_ttc` within 2·dt (median ≤ 0.01 s), collision time within
+  2·dt, impact speed within g·dt. (Measured: 0 flips, collision time ≤ 0.015 s, impact
+  speed ≤ 0.23 m/s, median `min_ttc` change 0.0003 s.)
+- Property tests: scalar and vectorised contact roots agree and are roots; required
+  deceleration is continuous, sufficient and necessary.

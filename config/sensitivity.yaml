@@ -1,0 +1,114 @@
+# Sensitivity-analysis protocol (schema sensitivity/v5). Not part of any release: every
+# variant is its own release (overrides recorded, different release ID) run as a
+# `sensitivity` campaign, which can never be release evidence. `sensitivity-freeze` writes
+# this protocol, the concrete variant list of every design, the release, runtime and
+# analysis version to results/sensitivity_manifest.json; its hash is the protocol ID that
+# every variant campaign and every output file records. All three designs of the final study
+# must belong to the same frozen protocol.
+#
+# Each factor names a path into the release configuration ("*" = every driver state), a
+# range and optionally `grid` (values are rounded to it; delays must lie on the simulator's
+# step grid). Ranges are provisional (TODO(data)); a conclusion may only mention the factors
+# and ranges listed here.
+
+schema: sensitivity/v5
+n: 2000          # runs per variant (the same exposure sample and seeds for every variant)
+seed: 0
+factors:
+  attentive_takeover_mean_s:   {path: [driver, states, attentive, takeover_mean_s], range: [1.0, 1.8]}
+  attentive_takeover_sd_s:     {path: [driver, states, attentive, takeover_sd_s], range: [0.4, 0.6]}
+  distracted_takeover_mean_s:  {path: [driver, states, distracted, takeover_mean_s], range: [3.5, 6.0]}  # TODO(data)
+  distracted_takeover_sd_s:    {path: [driver, states, distracted, takeover_sd_s], range: [0.9, 1.8]}  # TODO(data)
+  brake_onset_delay_s:         {path: [driver, brake_onset_delay_s], range: [0.0, 0.5]}  # TODO(data)
+  brake_demand_factor:         {path: [driver, brake_demand_factor], range: [1.0, 2.0]}  # TODO(data)
+  peak_decel_fraction:         {path: [driver, states, "*", peak_decel_fraction], range: [0.7, 1.0]}  # TODO(data)
+  brake_jerk_mps3:             {path: [driver, states, "*", brake_jerk], range: [10.0, 40.0]}  # TODO(data)
+  # Driver-behaviour assumption, not a numerical constant: without a hold the driver model
+  # never reaches standstill (creeping contacts; see tests/test_standstill_hold.py). 0 is
+  # therefore excluded from the range; 1-4 m/s^2 brackets gentle to firm holding (TODO(data)).
+  standstill_hold_decel_mps2:  {path: [driver, standstill_hold_decel_mps2], range: [1.0, 4.0]}
+  distracted_share:            {path: [exposure, factors, driver_state, weights, distracted], range: [0.05, 0.40], complement: [exposure, factors, driver_state, weights, attentive]}  # TODO(data)
+  tor_required_decel_mps2:     {path: [sim, monitor, tor_required_decel_mps2], range: [2.5, 3.5]}
+  tor_ttc_s:                   {path: [sim, monitor, tor_ttc_s], range: [1.5, 3.0]}
+  monitor_detection_delay_s:   {path: [sim, monitor, detection_delay_s], range: [0.0, 0.5], grid: 0.05}  # TODO(data)
+  actuator_delay_s:            {path: [sim, ego, actuator_delay_s], range: [0.0, 0.3], grid: 0.05}  # TODO(data)
+  required_decel_margin_m:     {path: [sim, required_decel, margin_m], range: [1.0, 3.0]}  # TODO(data)
+  acc_authority_mps2:          {path: [sim, ego, accel_min_mps2], range: [3.0, 4.5], negate: true}
+# Assumptions deliberately NOT varied here, and why:
+excluded:
+  handback_oracle_capability: >-
+    An evaluation definition, not a property of the system or the world: it does not change
+    any simulated run, only which runs form the AC-03 strata, AC-07 and AC-08. It is fixed
+    (reference.yaml) precisely so that design variants (e.g. ACC authority) keep comparable
+    populations, and its immaturity is carried by its requirement status (provisional).
+  ideal_reference_braking_level: >-
+    Also an evaluation definition (scope of AC-01/AC-03). Its immaturity is carried by its
+    requirement status; the reference-independent AC-09/AC-10 do not depend on it.
+  dt_and_horizon: >-
+    Numerical settings, covered by the convergence tests (dt/2) and the explicit
+    horizon_unresolved terminal state rather than by a design-of-experiments.
+  exposure_correlations: >-
+    The exposure model is factorized; correlations are not parameterised and cannot be
+    varied until a joint model exists (docs/limitations.md).
+  reaction_time_speed_dependence: >-
+    Not parameterised in the driver model (assumed independent of speed).
+# ACC authority above the authority the policy was trained for changes two things at once:
+# the actuator limit and the policy's extrapolation beyond its training targets. With
+# `retrain`, a variant above the training authority uses a policy re-trained (same recipe
+# and seed) for that authority, so the variant is "a design with this authority"; below it,
+# the same policy is simply saturated. The hand-back oracle is fixed, so AC-03 strata, AC-07
+# and AC-08 keep identical populations across authority variants.
+authority_mode: retrain
+designs:
+  oat: {points: 3}                       # one factor at a time, 3 points over each range
+  factorial2:                            # full 2^k factorial at range ends (interactions)
+    factors: [distracted_takeover_mean_s, tor_required_decel_mps2, acc_authority_mps2,
+              brake_demand_factor, distracted_share, standstill_hold_decel_mps2]
+  lhs: {samples: 64, seed: 0}            # Latin hypercube over all factors (global; SRC)
+
+# ---------------------------------------------------------------- responses (v5)
+# Common random numbers: every variant of every design re-runs the SAME n cases with the
+# SAME per-run seeds (cases come from per-run streams derived from (seed, run_idx); a factor
+# that changes an exposure weight changes only that factor's draw in a run, never the
+# others). So every effect is a PAIRED difference: variant minus the nominal variant of the
+# same design (always variant 0), run by run.
+#
+# PRIMARY responses: continuous or high-frequency measures. Fixed here, before any final
+# run; levels are chosen for their meaning, not from data:
+#   effective TTC = AC-02's metric (collision/unresolved = 0 s, never closing = inf);
+#   required-deceleration exceedance level 3.5 m/s^2 = the nominal ACC design authority: the
+#     monitor demanded more braking than the nominal ACC can deliver while the ACC was still
+#     in control (max_required_decel is taken up to the TOR, or over the whole run without
+#     one). COUPLING: the hand-back oracle (reference.yaml) is frozen at the same nominal
+#     authority, so this response and AC-03's strata / AC-07 / AC-08 share one number; an
+#     authority variant changes neither the level nor the oracle;
+#   near-miss margin 1.5 s, deliberately different from the monitor's TOR TTC (2.0 s, a
+#     factor) and from the discovery near-miss (1.0 s, too rare at n = 2,000).
+primary_responses:
+  eff_ttc_p01: {kind: quantile, q: 0.01, unit: s, metric: "CASE WHEN collision OR end_state = 'horizon_unresolved' THEN 0.0 ELSE coalesce(min_ttc, 'Infinity'::DOUBLE) END"}
+  eff_ttc_p05: {kind: quantile, q: 0.05, unit: s, metric: "CASE WHEN collision OR end_state = 'horizon_unresolved' THEN 0.0 ELSE coalesce(min_ttc, 'Infinity'::DOUBLE) END"}
+  eff_ttc_p50: {kind: quantile, q: 0.50, unit: s, metric: "CASE WHEN collision OR end_state = 'horizon_unresolved' THEN 0.0 ELSE coalesce(min_ttc, 'Infinity'::DOUBLE) END"}
+  required_decel_exceedance: {kind: rate, event: "coalesce(max_required_decel, 0.0) > 3.5"}
+  near_miss_1p5s: {kind: rate, event: "NOT collision AND end_state <> 'horizon_unresolved' AND coalesce(min_ttc, 'Infinity'::DOUBLE) < 1.5"}
+# Monte Carlo uncertainty of every effect: paired percentile bootstrap over run indices (the
+# same resampled indices for the nominal and the variant), two-sided 95%. It is the
+# sampling uncertainty of the finite scenario sample, given the frozen model.
+uncertainty: {method: paired_bootstrap, draws: 1000, seed: 0, confidence: 0.95}
+# Detectable effect sizes at n = 2,000 per variant (two-sided 5%, power 80%:
+# MDE = 2.80 x standard error of the difference). Declared from a DEVELOPMENT nominal sample
+# (5,000 runs, seed 1, release of 2026-10-21, not evidence); the CONSERVATIVE unpaired form
+# is given (SE of the difference = sqrt(2) x SE of one variant). Paired differences under
+# common random numbers are usually far more precise; every report gives the realised paired
+# MDE (2.80 x bootstrap SE) next to each effect.
+power:
+  n: 2000
+  eff_ttc_p01: {nominal: "1.10 s", se_one_variant: "0.20 s", mde_unpaired: "0.78 s"}
+  eff_ttc_p05: {nominal: "1.87 s", se_one_variant: "0.027 s", mde_unpaired: "0.11 s"}
+  eff_ttc_p50: {nominal: "2.70 s", se_one_variant: "0.049 s", mde_unpaired: "0.20 s"}
+  required_decel_exceedance: {nominal: "1.7%", mde_unpaired: "1.2 percentage points (about 70% relative)"}
+  near_miss_1p5s: {nominal: "1.4%", mde_unpaired: "1.1 percentage points (about 75% relative)"}
+  secondary_attentive_collision_rate: {nominal: "about 0.1%", mde_unpaired: "0.28 percentage points (about 280% relative): not informative on its own"}
+# SECONDARY responses: collision rates and acceptance statuses of these criteria stay in
+# every output, labelled secondary: at 2,000 runs per variant they are rare-event results
+# whose verdicts are mostly INSUFFICIENT EVIDENCE or decided by a handful of events.
+secondary_responses: [AC-01, AC-03, AC-07, AC-08, AC-09, AC-10]

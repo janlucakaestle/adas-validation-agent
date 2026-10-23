@@ -1,0 +1,72 @@
+# Discovery benchmark protocol (schema benchmark/v3).
+#
+# This is the analysis plan for the NEXT benchmark run. `python -m avval.cli benchmark-freeze`
+# writes it, together with the agent interface hash, the discovery-objective hash, the
+# release ID and the freeze time, to results/benchmark_manifest.json and returns its
+# SHA-256 (the protocol ID). Every benchmark campaign records that protocol ID, and the
+# confirmatory analysis uses only COMPLETE campaigns with that protocol ID and release ID.
+# Change this file after freezing and the protocol ID no longer matches: the analysis refuses.
+#
+# The full baseline specification (avval/baselines.py::BASELINE_SPEC) is hashed into the
+# manifest as well, so changing any baseline hyper-parameter changes the protocol ID.
+#
+# Historical note: the v0.1/v0.2 agent seeds 0-2 ran BEFORE any written protocol existed, and
+# seeds 3-9 under a protocol written later (docs/agent_protocol.md). Those results are
+# exploratory and, after the v3 simulator changes, stale; they are not part of this protocol.
+
+schema: benchmark/v3
+name: discovery-benchmark-v3
+budget: 300                 # runs per campaign, identical for every strategy
+seeds:
+  agent: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+  baselines: {first: 0, count: 100}
+strategies: [agent, random, grid, cem, evolutionary, boundary, bayesopt]
+agent:
+  model: claude-sonnet-5
+  max_turns: 40
+  # Cost caps are a runaway guard, NOT a budget the agent should reach: a seed stopped by
+  # its cost cap before using its 300 runs would not be a matched-budget comparison. Both
+  # caps apply (a seed's cap is min(per-seed cap, total cap - spend so far)). Projection
+  # from 12 real seeds (v0.2 seeds 0-9 at budget 300, two rehearsal seeds; token use per turn
+  # fitted, reproducing every observed cost): $1.61 (median) / $2.37 (worst) per seed at the
+  # 40-turn ceiling; the earlier $1 cap would have bound from turn 21-29. With $5 per seed,
+  # max_turns is the binding limit. Expected total $6-16; cap $50.
+  cost_cap_usd_per_seed: 5.0
+  total_cost_cap_usd: 50.0
+  # The API returns the alias, not a dated snapshot (the Models API lists none for this
+  # model on 2026-10-21), so all agent seeds are run in ONE sitting; every API call is
+  # time-stamped (usage_*.json, campaign provenance) and the report states the time span.
+  # A seed that fails for an infrastructure reason before making any run is retried once;
+  # no seed is re-run because of its result. All seeds are reported.
+information: >-
+  Every strategy uses avval/search.py::SearchInterface: the public spec, the same visible
+  per-run columns, the same budget. No strategy sees acceptance criteria, references'
+  parameters, driver-model parameters or other campaigns.
+
+# Regions (evaluation-only; never shown to any strategy). A campaign "detects" a region
+# within n runs if one of its first n runs satisfies the predicate.
+regions:
+  attentive_reference_avoidable_collision: "collision AND avoidable_by_reference AND driver_state = 'attentive'"
+  misuse_handback_collision: "collision AND avoidable_by_reference AND handback_required AND driver_category = 'foreseeable_misuse'"
+  silent_margin_erosion: "NOT collision AND NOT tor_issued AND min_ttc_accel < 2.0"
+  comfort_exceedance: "max_jerk_automated > 5.0"
+
+primary:
+  region: attentive_reference_avoidable_collision
+  # Per agent seed j with n_j runs used, each baseline's detection probability at n_j is
+  # estimated from its campaigns cut to their first n_j runs. Model
+  # (avval/benchmark.py::posterior_predictive_at_least): Bayesian bootstrap over baseline
+  # campaigns plus two pseudo-trajectories (always / never hit) with Dirichlet weight 0.5
+  # each, one weight vector shared across all budgets (preserves nesting); every single-budget
+  # marginal is the Jeffreys posterior Beta(k + 1/2, m - k + 1/2). Reported: the
+  # posterior-predictive tail probability that the baseline detects in at least as many seeds
+  # as the agent, and its 95% upper credible bound (decision: bound < alpha), with a
+  # prior-sensitivity check (uniform; none). Plug-in values for comparison only. Not p-values.
+  test: posterior_predictive_at_least
+  alpha: 0.05
+  bootstrap_draws: 4000
+  bootstrap_seed: 0
+secondary:
+  - distinct_target_cells_at_matched_budget   # bootstrap 95% interval of the mean difference
+  - runs_to_first_target                      # Kaplan-Meier with censoring; RMST up to the budget
+curve_target: collision

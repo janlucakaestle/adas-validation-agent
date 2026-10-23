@@ -1,3 +1,4 @@
+# schema: odd/v3
 # Operational Design Domain (ODD) and test-parameter space for the ACC-with-hand-back function.
 # Every scenario the validation campaign runs must sit inside these ranges.
 # SAE Level 2 (reference framework: UNECE R171, DCAS). The driver supervises at all times and
@@ -61,8 +62,14 @@ parameters:
           task) and must first re-engage when the system requests intervention.
         category: foreseeable_misuse
 coverage:
-  # Coverage cells = scenario x binned continuous parameters. driver_state is sampled, not binned.
-  # Each scenario is binned on the shared parameters plus its own scenario-specific parameter.
+  # Coverage cells = every combination of the categorical dimensions below and the binned
+  # continuous parameters of each scenario (shared parameters plus the scenario's own one).
+  # driver_state is a coverage dimension because it is causal for AC-01 and AC-03: a
+  # campaign that never ran a distracted driver in a cell has not covered that cell.
+  # A dimension may only be left out with a rationale in `excluded_dimensions`; reports then
+  # name it and do not call the result complete ODD coverage.
+  categorical_dimensions: [scenario, driver_state]
+  excluded_dimensions: {}
   bins:
     lead_brake:
       ego_speed: &ego_speed_bins [15.0, 22.0, 29.0, 36.0]

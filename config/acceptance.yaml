@@ -1,82 +1,197 @@
-# Acceptance criteria, each evaluated as SQL over the `runs` table of one campaign.
-# `where` optionally restricts the population. Each criterion has an explicit `kind`:
-#   rate:     `event` is a boolean SQL expression; value = share of runs where it is true,
-#             with a 95% Clopper-Pearson interval.
-#   quantile: `metric` is a numeric SQL expression and `q` the quantile; value =
-#             quantile_cont(metric, q), with a 95% percentile-bootstrap interval (fixed seed).
-# A PASS needs the *conservative* end of the interval to meet the threshold (the upper bound
-# for "<=", the lower bound for ">="). See avval/evaluation.py for the full status rules.
-# Thresholds are illustrative, not regulatory values: in practice they are agreed with Product and Safety.
-# `min_n` is the minimum number of runs in the criterion's population (after `where`) before its
-# result counts as evidence. Below it a would-be PASS is INSUFFICIENT EVIDENCE, and no GO is possible.
+# Acceptance criteria (schema acceptance/v4), each evaluated as SQL over the `runs` table of
+# one COMPLETE nominal estimation campaign. NOT visible to the search agent.
+#
+# Three layers are reported separately (avval/evaluation.py):
+# 1. statistical result: point estimate and the ONE-SIDED bound at `confidence` (exact
+#    Clopper-Pearson for rates; exact distribution-free order-statistic bound for quantiles);
+# 2. engineering comparison with the target: PASS (n >= min_n and the bound meets the target,
+#    in every stratum), FAIL (the point estimate violates it, or a zero goal is falsified),
+#    INSUFFICIENT EVIDENCE, or NO REQUIREMENT (no target defined: statistics only);
+# 3. formal release-decision eligibility: a criterion can support a formal GO only if its
+#    EFFECTIVE requirement status is `approved`. The effective status is the weakest of the
+#    criterion's own `requirement_status` and the status of every definition its population
+#    uses (`avoidable_by_reference` -> reference.yaml ideal.status, `handback_required` ->
+#    reference.yaml handback_oracle.status). Approval is never inferred from the absence of
+#    TODO comments: a missing status is a configuration error.
+#
+# requirement_status: approved | provisional | illustrative | undefined
+#   undefined = the criterion is gating but no target exists yet (threshold: null). It is
+#   reported with statistics and blocks a formal GO ("DECISION PENDING REQUIREMENTS") but can
+#   never produce a FAIL.
+#
+# Verdict: NO-GO if any gating criterion FAILs (even against a provisional or illustrative
+# target: an observed violation is engineering evidence against release); otherwise
+# INSUFFICIENT EVIDENCE if any is insufficient; otherwise DECISION PENDING REQUIREMENTS unless
+# every gating criterion is PASS with an approved effective requirement; only then GO. A
+# formal decision additionally needs a final-evidence campaign (`--final`).
+#
+# Populations (`where`, `strata`) of gating criteria may use only scenario columns, whose
+# values do not depend on the system under test (checked in code). Numbers used inside SQL
+# are named `params` ({name} placeholders), never hidden literals.
+#
+# Every target below is an ILLUSTRATIVE placeholder (TODO(data)); none is approved.
+
+schema: acceptance/v4
+confidence: 0.95  # TODO(data): illustrative
+
 criteria:
   - id: AC-01
-    name: Collision-free with attentive supervision
+    name: Collisions with attentive supervision, scenarios avoidable by the ideal reference
     rationale: >
-      The intended use case, an attentive driver supervising the L2 function, must never end
-      in a preventable collision inside the ODD.
-      A zero-rate target can be falsified but not proven by testing: with no collisions the
-      report states the 95% upper bound on the rate instead of claiming a PASS.
-      Collisions that the ideal reference (friction-limited braking from hazard onset) also
-      cannot avoid are physics, not the function, and are reported by AC-06 instead.
+      Intended use should not end in a collision in scenarios that the ideal brake-only
+      reference avoids. Unresolved runs count as events. Zero is the goal; the gating target
+      is a positive tolerable rate, because zero cannot be demonstrated by finite testing.
+      Reference-scoped: AC-09 gates the same driver population without the reference filter.
     kind: rate
-    event: "collision"
-    where: "driver_state = 'attentive' AND preventable"
+    event: "collision OR end_state = 'horizon_unresolved'"
+    where: "driver_state = 'attentive' AND avoidable_by_reference"
     op: "<="
-    threshold: 0.0  # TODO(data): illustrative (zero-collision goal)
-    min_n: 100  # TODO(data): placeholder; derive from the validation target
+    threshold: 1.0e-4  # TODO(data)
+    zero_goal: true
+    min_n: 100  # TODO(data)
+    requirement_status: illustrative
+
   - id: AC-02
-    name: TTC safety margin
+    name: 5th-percentile effective minimum TTC
     rationale: >
-      95% of collision-free runs keep a minimum time-to-collision of at least 1.5 s.
-      Collisions are excluded here because AC-01 and AC-03 cover them. Runs where the
-      vehicles never close (min_ttc NULL) count as infinite TTC, not as missing.
+      Safety margin over ALL runs: a collision or an unresolved run counts as an effective
+      TTC of 0 s, so turning a near miss into a collision never improves the criterion.
+      Never-closing runs count as infinite TTC. Evaluated globally and per scenario.
+    kind: quantile
+    metric: "CASE WHEN collision OR end_state = 'horizon_unresolved' THEN 0.0 ELSE coalesce(min_ttc, 'Infinity'::DOUBLE) END"
+    q: 0.05
+    where: null
+    strata: [scenario]
+    op: ">="
+    threshold: 1.5  # TODO(data)
+    min_n: 100  # TODO(data)
+    requirement_status: illustrative
+
+  - id: AC-03
+    name: Collisions under foreseeable misuse, scenarios avoidable by the ideal reference
+    rationale: >
+      Reasonably foreseeable misuse (distracted driver) over EVERY scenario the ideal
+      reference avoids, whether or not a hand-back is required: a distracted-driver collision
+      caused by the policy handling a manageable scenario badly is counted exactly like one
+      after a hand-back. Stratified by `handback_required`, so each part must pass on its
+      own. Missed or late hand-backs are AC-07, unneeded ones AC-08; AC-10 gates the same
+      population without the reference filter.
+    kind: rate
+    event: "collision OR end_state = 'horizon_unresolved'"
+    where: "driver_category = 'foreseeable_misuse' AND avoidable_by_reference"
+    strata: [handback_required]
+    op: "<="
+    threshold: 0.05  # TODO(data): to be derived from a residual-risk argument
+    min_n: 100  # TODO(data)
+    requirement_status: illustrative
+
+  - id: AC-04
+    name: 95th-percentile jerk while automated longitudinal control is active
+    rationale: >
+      Comfort of the automated function over the interval in which the ACC commands the
+      vehicle (before the driver's first input), over ALL runs. A run whose automated
+      interval is too short for the jerk window counts as +infinity, so issuing TORs cannot
+      remove runs. Evaluated per scenario as well. AC-08 limits unneeded hand-backs.
+    kind: quantile
+    metric: "coalesce(max_jerk_automated, 'Infinity'::DOUBLE)"
+    q: 0.95
+    where: null
+    strata: [scenario]
+    op: "<="
+    threshold: 5.0  # TODO(data)
+    min_n: 100  # TODO(data)
+    requirement_status: illustrative
+
+  - id: AC-07
+    name: Missed or late hand-back when one is required
+    rationale: >
+      In scenarios that require a hand-back (fixed-capability oracle, reference.yaml), the
+      TOR must be issued, and no later than `max_tor_latency_s` after hazard onset.
+    kind: rate
+    params: {max_tor_latency_s: 0.5}  # TODO(data)
+    event: "NOT tor_issued OR tor_time - hazard_onset_s > {max_tor_latency_s}"
+    where: "handback_required"
+    op: "<="
+    threshold: 0.01  # TODO(data)
+    min_n: 100  # TODO(data)
+    requirement_status: illustrative
+
+  - id: AC-08
+    name: Hand-backs in scenarios that do not require one
+    rationale: >
+      Precautionary or nuisance TORs where the fixed-capability oracle avoids contact. Bounds
+      how far the function can shift work to the driver; without it, more TORs could shorten
+      the automated interval that AC-04 measures.
+    kind: rate
+    event: "tor_issued"
+    where: "NOT handback_required"
+    op: "<="
+    threshold: 0.25  # TODO(data)
+    min_n: 100  # TODO(data)
+    requirement_status: illustrative
+
+  - id: AC-09
+    name: Overall collisions with attentive supervision (reference-independent)
+    rationale: >
+      Every collision or unresolved run with an attentive driver, whether or not the ideal
+      reference avoids the scenario. "Not avoided by the reference" is not physical
+      impossibility, so no collision may become irrelevant because one chosen reference also
+      failed. No target has been derived yet, so the requirement is undefined: statistics are
+      reported and a formal GO is impossible until a target is approved.
+    kind: rate
+    event: "collision OR end_state = 'horizon_unresolved'"
+    where: "driver_state = 'attentive'"
+    op: "<="
+    threshold: null
+    min_n: 100  # TODO(data)
+    requirement_status: undefined
+
+  - id: AC-10
+    name: Overall collisions under foreseeable misuse (reference-independent)
+    rationale: >
+      As AC-09, for the foreseeable-misuse driver population.
+    kind: rate
+    event: "collision OR end_state = 'horizon_unresolved'"
+    where: "driver_category = 'foreseeable_misuse'"
+    op: "<="
+    threshold: null
+    min_n: 100  # TODO(data)
+    requirement_status: undefined
+
+  - id: AC-06
+    name: Share of runs not avoided by the ideal reference (information only)
+    rationale: >
+      Runs whose scenario the ideal brake-only reference does not avoid. Not physical
+      inevitability; shows how much of the sampled ODD the reference-scoped AC-01 and AC-03
+      exclude (AC-09 and AC-10 include it).
+    kind: rate
+    event: "NOT avoidable_by_reference"
+    where: null
+
+  - id: AC-02-S
+    name: 5th-percentile minimum TTC of collision-free runs (descriptive, survivor-only)
+    rationale: >
+      The pre-v3 AC-02 definition, kept as a description only. It conditions on the
+      outcome, so it can improve when near misses become collisions.
     kind: quantile
     metric: "coalesce(min_ttc, 'Infinity'::DOUBLE)"
     q: 0.05
     where: "NOT collision"
-    op: ">="
-    threshold: 1.5  # TODO(data): illustrative
-    min_n: 100  # TODO(data): placeholder; derive from the validation target
-  - id: AC-03
-    name: Hand-back robustness under foreseeable misuse
+    conditional_on_system_output: true
+
+  - id: AC-03-C
+    name: Collisions after a hand-back to a distracted driver (descriptive, conditional)
     rationale: >
-      Reasonably foreseeable misuse at L2: when the system requests intervention from the
-      distracted driver (driver_state = 'distracted', driver_category = foreseeable_misuse),
-      collisions stay below 5%. Only preventable runs count (see AC-06).
+      The pre-v3 AC-03 population (runs in which the system issued a TOR). It conditions on
+      the system's own action, so it is reported for diagnosis only.
     kind: rate
     event: "collision"
-    where: "tor_issued AND driver_category = 'foreseeable_misuse' AND preventable"
-    op: "<="
-    threshold: 0.05  # TODO(data): illustrative (to be derived from a residual-risk argument)
-    min_n: 100  # TODO(data): placeholder; derive from the validation target
-  - id: AC-04
-    name: Longitudinal comfort
-    rationale: Without a hand-back, 95th-percentile jerk stays within 5 m/s^3.
-    kind: quantile
-    metric: "max_jerk"
-    q: 0.95
-    where: "NOT tor_issued"
-    op: "<="
-    threshold: 5.0  # TODO(data): illustrative
-    min_n: 100  # TODO(data): placeholder; derive from the validation target
-  - id: AC-06
-    name: Share of unpreventable runs (information only)
-    rationale: >
-      Runs in which even the ideal reference collides. Not pass/fail: it shows how much of
-      the tested ODD is physically unavoidable, and so how much AC-01 and AC-03 exclude.
-    kind: rate
-    event: "NOT preventable"
-    where: null
-    op: null         # no op/threshold: reported with status INFO
-    threshold: null
-    min_n: 100  # TODO(data): placeholder; derive from the validation target
-# Retired criteria. IDs are never reused for a different meaning, so old reports stay unambiguous.
+    where: "tor_issued AND driver_category = 'foreseeable_misuse' AND avoidable_by_reference"
+    conditional_on_system_output: true
+
+# Retired criteria. IDs are never reused for a different meaning.
 retired_criteria:
   - id: AC-05
     name: Hand-back robustness under visual occlusion
     retired_by: "driver model reduced to two states (v0.1)"
     reason: The restricted-vision driver state was removed; the visual-occlusion category no longer exists.
-# A single run counts as a "failure" (used to compare search efficiency) if this SQL predicate is true.
-# min_ttc is NULL when the vehicles never close, hence the coalesce.
-failure_predicate: "collision OR coalesce(min_ttc < 1.5, false)"

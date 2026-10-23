@@ -34,8 +34,8 @@ def test_only_two_states_with_named_sources():
     states = load_driver()["states"]
     assert set(states) == {"attentive", "distracted"}
     assert all(st["source"] and st["floor_s"] > 0 for st in states.values())
-    assert {k for k in load_driver() if k != "states"} == {"brake_onset_delay_s",
-                                                          "brake_demand_factor"}
+    assert {k for k in load_driver() if k != "states"} == {
+        "schema", "brake_onset_delay_s", "brake_demand_factor", "standstill_hold_decel_mps2"}
 
 
 @pytest.mark.parametrize("state", ["attentive", "distracted"])

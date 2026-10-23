@@ -1,37 +1,63 @@
-# Exposure model: how often each situation inside the ODD occurs in real driving.
+# Exposure model (schema exposure/v3): how often each situation inside the ODD occurs.
 #
 # ILLUSTRATIVE PLACEHOLDERS. Every weight below is invented to show the mechanism and is
-# marked TODO(data). Acceptance criteria are evaluated on an *estimation campaign* sampled from
-# this distribution (`python -m avval.cli estimate`), so its verdict is only as meaningful as
-# these weights. In a real programme they would come from naturalistic driving / fleet data.
+# marked TODO(data). Every exposure-weighted number (acceptance criteria, verdict, held-out
+# precision) is CONDITIONAL ON THIS MODEL and says so in the reports.
 #
-# Categorical parameters: weight per value (must sum to 1).
-# Continuous parameters: piecewise-uniform histogram; `bins` are edges inside the ODD range,
-# `weights` the probability of each bin (must sum to 1). The scenario-specific parameter is
-# only sampled for its own scenario.
+# Structure: a factor graph sampled in the order listed. A factor without `given` is sampled
+# independently of all others; a factor with `given: [parent, ...]` has one distribution per
+# combination of its categorical parents' values (keys joined with "|"). The current model is
+# FACTORIZED: apart from the per-scenario headway and scenario-specific parameters, every
+# factor is independent. That is an assumption, not a finding: on real roads speed, headway,
+# friction and driver state are correlated (e.g. shorter headways in dense, slower traffic;
+# lower speeds on wet roads). Replacing it with a joint or conditional model needs only new
+# `given` entries here, not code changes.
+#
+# Support: every histogram must span its full ODD range (first edge = ODD lower bound, last
+# edge = ODD upper bound) and every categorical factor must list every ODD value. A region
+# that real driving never visits must be modelled EXPLICITLY with weight 0; reports list such
+# zero-exposure subregions, which stay inside the ODD and inside search and coverage scope.
+# Continuous values are drawn uniformly within the chosen bin.
 
-scenario:          # TODO(data): illustrative
-  lead_brake: 0.6
-  cut_in: 0.4
-driver_state:      # TODO(data): illustrative; mostly attentive supervision
-  attentive: 0.80
-  distracted: 0.20  # the sum of the five removed non-attentive states' weights
-ego_speed:         # TODO(data): illustrative, m/s
-  bins: [15.0, 22.0, 29.0, 36.0]
-  weights: [0.2, 0.4, 0.4]
-headway:           # TODO(data): illustrative, s, per scenario; short headways are rarer
-  lead_brake:
-    bins: [0.8, 1.5333, 2.2667, 3.0]
-    weights: [0.2, 0.4, 0.4]
-  cut_in:
-    bins: [0.3, 0.8667, 1.4333, 2.0]
-    weights: [0.3, 0.4, 0.3]
-lead_decel:        # TODO(data): illustrative, m/s^2; harsh braking is rare
-  bins: [1.0, 3.5, 6.0, 9.0]
-  weights: [0.7, 0.25, 0.05]
-closing_speed:     # TODO(data): illustrative, m/s
-  bins: [1.0, 3.5, 6.0, 9.0]
-  weights: [0.6, 0.3, 0.1]
-friction:          # TODO(data): illustrative; mostly dry roads
-  bins: [0.5, 0.75, 1.0]  # lower edge moved from 0.4 with the ODD floor
-  weights: [0.2, 0.8]
+schema: exposure/v3
+model:
+  label: factorized-placeholder
+  structure: factorized
+  status: placeholder  # TODO(data): replace with fleet / naturalistic-driving estimates
+  assumption: >-
+    Independent factors except headway and the scenario-specific parameter, which depend
+    on the scenario. Weights are invented; all risk numbers are conditional on this model.
+
+factors:
+  scenario:
+    type: categorical
+    weights: {lead_brake: 0.6, cut_in: 0.4}  # TODO(data)
+  driver_state:
+    type: categorical
+    weights: {attentive: 0.80, distracted: 0.20}  # TODO(data): mostly attentive supervision
+  ego_speed:
+    type: histogram  # m/s
+    bins: [15.0, 22.0, 29.0, 36.0]
+    weights: [0.2, 0.4, 0.4]  # TODO(data)
+  headway:
+    type: histogram  # s; short headways are rarer
+    given: [scenario]
+    table:
+      lead_brake: {bins: [0.8, 1.5333, 2.2667, 3.0], weights: [0.2, 0.4, 0.4]}  # TODO(data)
+      cut_in: {bins: [0.3, 0.8667, 1.4333, 2.0], weights: [0.3, 0.4, 0.3]}  # TODO(data)
+  lead_decel:
+    type: histogram  # m/s^2; harsh braking is rare
+    given: [scenario]
+    table:
+      lead_brake: {bins: [1.0, 3.5, 6.0, 9.0], weights: [0.7, 0.25, 0.05]}  # TODO(data)
+      cut_in: not_applicable
+  closing_speed:
+    type: histogram  # m/s
+    given: [scenario]
+    table:
+      cut_in: {bins: [1.0, 3.5, 6.0, 9.0], weights: [0.6, 0.3, 0.1]}  # TODO(data)
+      lead_brake: not_applicable
+  friction:
+    type: histogram  # mostly dry roads
+    bins: [0.5, 0.75, 1.0]
+    weights: [0.2, 0.8]  # TODO(data)

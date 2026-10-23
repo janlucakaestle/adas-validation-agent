@@ -1,26 +1,18 @@
 # Findings: supporting numbers
 
-Recomputed from the stored campaigns by `python -m avval.cli findings`.
+Recomputed by `python -m avval.cli findings` under release `fe59625d94287538…`. Conditional on this release's simulator, models and exposure model.
 
-## Silent margin erosion
+## Margin erosion without hand-back
 
-Across 200 benchmark campaigns (60,000 runs; `random_s*` and `grid_s*`):
+Across 600 campaigns (180,000 runs): runs without collision or hand-back whose stop-aware acceleration TTC fell below the monitor's 2 s: **0**
 
-- runs without collision or hand-back whose constant-speed TTC fell below 2 s: **0**
-- runs without collision or hand-back whose acceleration-aware TTC fell below 2 s: **822** (822 of them lead braking), minimum **1.65 s**
-- of those, friction below 0.75: 409; friction 0.75 or above: 413
+Why the monitor stayed silent in these runs is decomposed by `python -m avval.cli diagnose` (`results/handback_diagnostics_<campaign>.md`).
 
 ## Comfort and the jerk definition
 
-Runs without a hand-back in `estimate` (AC-04's population): 77,863.
+All 100,000 runs of `estimate` (AC-04's population):
 
-- 95th percentile of filtered jerk (`max_jerk`, 0.5 s moving average): **5.04 m/s³**
-- 95th percentile of raw 20 Hz sample-difference jerk (`max_jerk_raw`): **7.32 m/s³**
-- runs above 5 m/s³ (filtered): 4,338, of which cut-ins 4,338; largest 5.70 m/s³
-
-## Single seed-0 baseline campaigns
-
-| campaign | runs | attentive runs | collisions | unpreventable | attentive preventable collisions |
-|---|---|---|---|---|---|
-| `random` | 300 | 140 | 13 | 0 | 1 |
-| `grid` | 300 | 138 | 16 | 0 | 1 |
+- 95th percentile of automated-control jerk (0.5 s moving average): **4.95 m/s³**
+- whole-run filtered jerk (includes the driver phase): 6.51 m/s³
+- raw sample-difference jerk: 25.00 m/s³
+- runs above 5 m/s³ (automated control): 4,554, of which cut-ins 4,499

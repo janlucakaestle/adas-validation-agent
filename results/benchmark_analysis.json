@@ -1,0 +1,1189 @@
+{
+ "campaigns": {
+  "agent": [
+   "agent_s0",
+   "agent_s1",
+   "agent_s2",
+   "agent_s3",
+   "agent_s4",
+   "agent_s5",
+   "agent_s6",
+   "agent_s7",
+   "agent_s8",
+   "agent_s9"
+  ],
+  "random": [
+   "random_s0",
+   "random_s1",
+   "random_s2",
+   "random_s3",
+   "random_s4",
+   "random_s5",
+   "random_s6",
+   "random_s7",
+   "random_s8",
+   "random_s9",
+   "random_s10",
+   "random_s11",
+   "random_s12",
+   "random_s13",
+   "random_s14",
+   "random_s15",
+   "random_s16",
+   "random_s17",
+   "random_s18",
+   "random_s19",
+   "random_s20",
+   "random_s21",
+   "random_s22",
+   "random_s23",
+   "random_s24",
+   "random_s25",
+   "random_s26",
+   "random_s27",
+   "random_s28",
+   "random_s29",
+   "random_s30",
+   "random_s31",
+   "random_s32",
+   "random_s33",
+   "random_s34",
+   "random_s35",
+   "random_s36",
+   "random_s37",
+   "random_s38",
+   "random_s39",
+   "random_s40",
+   "random_s41",
+   "random_s42",
+   "random_s43",
+   "random_s44",
+   "random_s45",
+   "random_s46",
+   "random_s47",
+   "random_s48",
+   "random_s49",
+   "random_s50",
+   "random_s51",
+   "random_s52",
+   "random_s53",
+   "random_s54",
+   "random_s55",
+   "random_s56",
+   "random_s57",
+   "random_s58",
+   "random_s59",
+   "random_s60",
+   "random_s61",
+   "random_s62",
+   "random_s63",
+   "random_s64",
+   "random_s65",
+   "random_s66",
+   "random_s67",
+   "random_s68",
+   "random_s69",
+   "random_s70",
+   "random_s71",
+   "random_s72",
+   "random_s73",
+   "random_s74",
+   "random_s75",
+   "random_s76",
+   "random_s77",
+   "random_s78",
+   "random_s79",
+   "random_s80",
+   "random_s81",
+   "random_s82",
+   "random_s83",
+   "random_s84",
+   "random_s85",
+   "random_s86",
+   "random_s87",
+   "random_s88",
+   "random_s89",
+   "random_s90",
+   "random_s91",
+   "random_s92",
+   "random_s93",
+   "random_s94",
+   "random_s95",
+   "random_s96",
+   "random_s97",
+   "random_s98",
+   "random_s99"
+  ],
+  "grid": [
+   "grid_s0",
+   "grid_s1",
+   "grid_s2",
+   "grid_s3",
+   "grid_s4",
+   "grid_s5",
+   "grid_s6",
+   "grid_s7",
+   "grid_s8",
+   "grid_s9",
+   "grid_s10",
+   "grid_s11",
+   "grid_s12",
+   "grid_s13",
+   "grid_s14",
+   "grid_s15",
+   "grid_s16",
+   "grid_s17",
+   "grid_s18",
+   "grid_s19",
+   "grid_s20",
+   "grid_s21",
+   "grid_s22",
+   "grid_s23",
+   "grid_s24",
+   "grid_s25",
+   "grid_s26",
+   "grid_s27",
+   "grid_s28",
+   "grid_s29",
+   "grid_s30",
+   "grid_s31",
+   "grid_s32",
+   "grid_s33",
+   "grid_s34",
+   "grid_s35",
+   "grid_s36",
+   "grid_s37",
+   "grid_s38",
+   "grid_s39",
+   "grid_s40",
+   "grid_s41",
+   "grid_s42",
+   "grid_s43",
+   "grid_s44",
+   "grid_s45",
+   "grid_s46",
+   "grid_s47",
+   "grid_s48",
+   "grid_s49",
+   "grid_s50",
+   "grid_s51",
+   "grid_s52",
+   "grid_s53",
+   "grid_s54",
+   "grid_s55",
+   "grid_s56",
+   "grid_s57",
+   "grid_s58",
+   "grid_s59",
+   "grid_s60",
+   "grid_s61",
+   "grid_s62",
+   "grid_s63",
+   "grid_s64",
+   "grid_s65",
+   "grid_s66",
+   "grid_s67",
+   "grid_s68",
+   "grid_s69",
+   "grid_s70",
+   "grid_s71",
+   "grid_s72",
+   "grid_s73",
+   "grid_s74",
+   "grid_s75",
+   "grid_s76",
+   "grid_s77",
+   "grid_s78",
+   "grid_s79",
+   "grid_s80",
+   "grid_s81",
+   "grid_s82",
+   "grid_s83",
+   "grid_s84",
+   "grid_s85",
+   "grid_s86",
+   "grid_s87",
+   "grid_s88",
+   "grid_s89",
+   "grid_s90",
+   "grid_s91",
+   "grid_s92",
+   "grid_s93",
+   "grid_s94",
+   "grid_s95",
+   "grid_s96",
+   "grid_s97",
+   "grid_s98",
+   "grid_s99"
+  ],
+  "cem": [
+   "cem_s0",
+   "cem_s1",
+   "cem_s2",
+   "cem_s3",
+   "cem_s4",
+   "cem_s5",
+   "cem_s6",
+   "cem_s7",
+   "cem_s8",
+   "cem_s9",
+   "cem_s10",
+   "cem_s11",
+   "cem_s12",
+   "cem_s13",
+   "cem_s14",
+   "cem_s15",
+   "cem_s16",
+   "cem_s17",
+   "cem_s18",
+   "cem_s19",
+   "cem_s20",
+   "cem_s21",
+   "cem_s22",
+   "cem_s23",
+   "cem_s24",
+   "cem_s25",
+   "cem_s26",
+   "cem_s27",
+   "cem_s28",
+   "cem_s29",
+   "cem_s30",
+   "cem_s31",
+   "cem_s32",
+   "cem_s33",
+   "cem_s34",
+   "cem_s35",
+   "cem_s36",
+   "cem_s37",
+   "cem_s38",
+   "cem_s39",
+   "cem_s40",
+   "cem_s41",
+   "cem_s42",
+   "cem_s43",
+   "cem_s44",
+   "cem_s45",
+   "cem_s46",
+   "cem_s47",
+   "cem_s48",
+   "cem_s49",
+   "cem_s50",
+   "cem_s51",
+   "cem_s52",
+   "cem_s53",
+   "cem_s54",
+   "cem_s55",
+   "cem_s56",
+   "cem_s57",
+   "cem_s58",
+   "cem_s59",
+   "cem_s60",
+   "cem_s61",
+   "cem_s62",
+   "cem_s63",
+   "cem_s64",
+   "cem_s65",
+   "cem_s66",
+   "cem_s67",
+   "cem_s68",
+   "cem_s69",
+   "cem_s70",
+   "cem_s71",
+   "cem_s72",
+   "cem_s73",
+   "cem_s74",
+   "cem_s75",
+   "cem_s76",
+   "cem_s77",
+   "cem_s78",
+   "cem_s79",
+   "cem_s80",
+   "cem_s81",
+   "cem_s82",
+   "cem_s83",
+   "cem_s84",
+   "cem_s85",
+   "cem_s86",
+   "cem_s87",
+   "cem_s88",
+   "cem_s89",
+   "cem_s90",
+   "cem_s91",
+   "cem_s92",
+   "cem_s93",
+   "cem_s94",
+   "cem_s95",
+   "cem_s96",
+   "cem_s97",
+   "cem_s98",
+   "cem_s99"
+  ],
+  "evolutionary": [
+   "evolutionary_s0",
+   "evolutionary_s1",
+   "evolutionary_s2",
+   "evolutionary_s3",
+   "evolutionary_s4",
+   "evolutionary_s5",
+   "evolutionary_s6",
+   "evolutionary_s7",
+   "evolutionary_s8",
+   "evolutionary_s9",
+   "evolutionary_s10",
+   "evolutionary_s11",
+   "evolutionary_s12",
+   "evolutionary_s13",
+   "evolutionary_s14",
+   "evolutionary_s15",
+   "evolutionary_s16",
+   "evolutionary_s17",
+   "evolutionary_s18",
+   "evolutionary_s19",
+   "evolutionary_s20",
+   "evolutionary_s21",
+   "evolutionary_s22",
+   "evolutionary_s23",
+   "evolutionary_s24",
+   "evolutionary_s25",
+   "evolutionary_s26",
+   "evolutionary_s27",
+   "evolutionary_s28",
+   "evolutionary_s29",
+   "evolutionary_s30",
+   "evolutionary_s31",
+   "evolutionary_s32",
+   "evolutionary_s33",
+   "evolutionary_s34",
+   "evolutionary_s35",
+   "evolutionary_s36",
+   "evolutionary_s37",
+   "evolutionary_s38",
+   "evolutionary_s39",
+   "evolutionary_s40",
+   "evolutionary_s41",
+   "evolutionary_s42",
+   "evolutionary_s43",
+   "evolutionary_s44",
+   "evolutionary_s45",
+   "evolutionary_s46",
+   "evolutionary_s47",
+   "evolutionary_s48",
+   "evolutionary_s49",
+   "evolutionary_s50",
+   "evolutionary_s51",
+   "evolutionary_s52",
+   "evolutionary_s53",
+   "evolutionary_s54",
+   "evolutionary_s55",
+   "evolutionary_s56",
+   "evolutionary_s57",
+   "evolutionary_s58",
+   "evolutionary_s59",
+   "evolutionary_s60",
+   "evolutionary_s61",
+   "evolutionary_s62",
+   "evolutionary_s63",
+   "evolutionary_s64",
+   "evolutionary_s65",
+   "evolutionary_s66",
+   "evolutionary_s67",
+   "evolutionary_s68",
+   "evolutionary_s69",
+   "evolutionary_s70",
+   "evolutionary_s71",
+   "evolutionary_s72",
+   "evolutionary_s73",
+   "evolutionary_s74",
+   "evolutionary_s75",
+   "evolutionary_s76",
+   "evolutionary_s77",
+   "evolutionary_s78",
+   "evolutionary_s79",
+   "evolutionary_s80",
+   "evolutionary_s81",
+   "evolutionary_s82",
+   "evolutionary_s83",
+   "evolutionary_s84",
+   "evolutionary_s85",
+   "evolutionary_s86",
+   "evolutionary_s87",
+   "evolutionary_s88",
+   "evolutionary_s89",
+   "evolutionary_s90",
+   "evolutionary_s91",
+   "evolutionary_s92",
+   "evolutionary_s93",
+   "evolutionary_s94",
+   "evolutionary_s95",
+   "evolutionary_s96",
+   "evolutionary_s97",
+   "evolutionary_s98",
+   "evolutionary_s99"
+  ],
+  "boundary": [
+   "boundary_s0",
+   "boundary_s1",
+   "boundary_s2",
+   "boundary_s3",
+   "boundary_s4",
+   "boundary_s5",
+   "boundary_s6",
+   "boundary_s7",
+   "boundary_s8",
+   "boundary_s9",
+   "boundary_s10",
+   "boundary_s11",
+   "boundary_s12",
+   "boundary_s13",
+   "boundary_s14",
+   "boundary_s15",
+   "boundary_s16",
+   "boundary_s17",
+   "boundary_s18",
+   "boundary_s19",
+   "boundary_s20",
+   "boundary_s21",
+   "boundary_s22",
+   "boundary_s23",
+   "boundary_s24",
+   "boundary_s25",
+   "boundary_s26",
+   "boundary_s27",
+   "boundary_s28",
+   "boundary_s29",
+   "boundary_s30",
+   "boundary_s31",
+   "boundary_s32",
+   "boundary_s33",
+   "boundary_s34",
+   "boundary_s35",
+   "boundary_s36",
+   "boundary_s37",
+   "boundary_s38",
+   "boundary_s39",
+   "boundary_s40",
+   "boundary_s41",
+   "boundary_s42",
+   "boundary_s43",
+   "boundary_s44",
+   "boundary_s45",
+   "boundary_s46",
+   "boundary_s47",
+   "boundary_s48",
+   "boundary_s49",
+   "boundary_s50",
+   "boundary_s51",
+   "boundary_s52",
+   "boundary_s53",
+   "boundary_s54",
+   "boundary_s55",
+   "boundary_s56",
+   "boundary_s57",
+   "boundary_s58",
+   "boundary_s59",
+   "boundary_s60",
+   "boundary_s61",
+   "boundary_s62",
+   "boundary_s63",
+   "boundary_s64",
+   "boundary_s65",
+   "boundary_s66",
+   "boundary_s67",
+   "boundary_s68",
+   "boundary_s69",
+   "boundary_s70",
+   "boundary_s71",
+   "boundary_s72",
+   "boundary_s73",
+   "boundary_s74",
+   "boundary_s75",
+   "boundary_s76",
+   "boundary_s77",
+   "boundary_s78",
+   "boundary_s79",
+   "boundary_s80",
+   "boundary_s81",
+   "boundary_s82",
+   "boundary_s83",
+   "boundary_s84",
+   "boundary_s85",
+   "boundary_s86",
+   "boundary_s87",
+   "boundary_s88",
+   "boundary_s89",
+   "boundary_s90",
+   "boundary_s91",
+   "boundary_s92",
+   "boundary_s93",
+   "boundary_s94",
+   "boundary_s95",
+   "boundary_s96",
+   "boundary_s97",
+   "boundary_s98",
+   "boundary_s99"
+  ],
+  "bayesopt": [
+   "bayesopt_s0",
+   "bayesopt_s1",
+   "bayesopt_s2",
+   "bayesopt_s3",
+   "bayesopt_s4",
+   "bayesopt_s5",
+   "bayesopt_s6",
+   "bayesopt_s7",
+   "bayesopt_s8",
+   "bayesopt_s9",
+   "bayesopt_s10",
+   "bayesopt_s11",
+   "bayesopt_s12",
+   "bayesopt_s13",
+   "bayesopt_s14",
+   "bayesopt_s15",
+   "bayesopt_s16",
+   "bayesopt_s17",
+   "bayesopt_s18",
+   "bayesopt_s19",
+   "bayesopt_s20",
+   "bayesopt_s21",
+   "bayesopt_s22",
+   "bayesopt_s23",
+   "bayesopt_s24",
+   "bayesopt_s25",
+   "bayesopt_s26",
+   "bayesopt_s27",
+   "bayesopt_s28",
+   "bayesopt_s29",
+   "bayesopt_s30",
+   "bayesopt_s31",
+   "bayesopt_s32",
+   "bayesopt_s33",
+   "bayesopt_s34",
+   "bayesopt_s35",
+   "bayesopt_s36",
+   "bayesopt_s37",
+   "bayesopt_s38",
+   "bayesopt_s39",
+   "bayesopt_s40",
+   "bayesopt_s41",
+   "bayesopt_s42",
+   "bayesopt_s43",
+   "bayesopt_s44",
+   "bayesopt_s45",
+   "bayesopt_s46",
+   "bayesopt_s47",
+   "bayesopt_s48",
+   "bayesopt_s49",
+   "bayesopt_s50",
+   "bayesopt_s51",
+   "bayesopt_s52",
+   "bayesopt_s53",
+   "bayesopt_s54",
+   "bayesopt_s55",
+   "bayesopt_s56",
+   "bayesopt_s57",
+   "bayesopt_s58",
+   "bayesopt_s59",
+   "bayesopt_s60",
+   "bayesopt_s61",
+   "bayesopt_s62",
+   "bayesopt_s63",
+   "bayesopt_s64",
+   "bayesopt_s65",
+   "bayesopt_s66",
+   "bayesopt_s67",
+   "bayesopt_s68",
+   "bayesopt_s69",
+   "bayesopt_s70",
+   "bayesopt_s71",
+   "bayesopt_s72",
+   "bayesopt_s73",
+   "bayesopt_s74",
+   "bayesopt_s75",
+   "bayesopt_s76",
+   "bayesopt_s77",
+   "bayesopt_s78",
+   "bayesopt_s79",
+   "bayesopt_s80",
+   "bayesopt_s81",
+   "bayesopt_s82",
+   "bayesopt_s83",
+   "bayesopt_s84",
+   "bayesopt_s85",
+   "bayesopt_s86",
+   "bayesopt_s87",
+   "bayesopt_s88",
+   "bayesopt_s89",
+   "bayesopt_s90",
+   "bayesopt_s91",
+   "bayesopt_s92",
+   "bayesopt_s93",
+   "bayesopt_s94",
+   "bayesopt_s95",
+   "bayesopt_s96",
+   "bayesopt_s97",
+   "bayesopt_s98",
+   "bayesopt_s99"
+  ]
+ },
+ "summary": [
+  {
+   "strategy": "agent",
+   "campaigns": 10,
+   "runs (median)": 258,
+   "RMST runs to first target": 42.5,
+   "RMST 95% CI": [
+    27.6,
+    56.0
+   ],
+   "censored": 0,
+   "P(attentive_reference_avoidable_collision)": [
+    1.0,
+    [
+     0.6915028921812392,
+     1.0
+    ]
+   ],
+   "P(misuse_handback_collision)": [
+    1.0,
+    [
+     0.6915028921812392,
+     1.0
+    ]
+   ],
+   "P(silent_margin_erosion)": [
+    0.0,
+    [
+     0.0,
+     0.3084971078187608
+    ]
+   ],
+   "P(comfort_exceedance)": [
+    1.0,
+    [
+     0.6915028921812392,
+     1.0
+    ]
+   ]
+  },
+  {
+   "strategy": "random",
+   "campaigns": 100,
+   "runs (median)": 300,
+   "RMST runs to first target": 20.869999999999997,
+   "RMST 95% CI": [
+    16.697500000000005,
+    25.721
+   ],
+   "censored": 0,
+   "P(attentive_reference_avoidable_collision)": [
+    0.61,
+    [
+     0.5073144796323635,
+     0.7059895851465829
+    ]
+   ],
+   "P(misuse_handback_collision)": [
+    1.0,
+    [
+     0.9637833073548235,
+     1.0
+    ]
+   ],
+   "P(silent_margin_erosion)": [
+    0.0,
+    [
+     0.0,
+     0.03621669264517641
+    ]
+   ],
+   "P(comfort_exceedance)": [
+    1.0,
+    [
+     0.9637833073548235,
+     1.0
+    ]
+   ]
+  },
+  {
+   "strategy": "grid",
+   "campaigns": 100,
+   "runs (median)": 300,
+   "RMST runs to first target": 19.939999999999994,
+   "RMST 95% CI": [
+    16.359,
+    23.901499999999995
+   ],
+   "censored": 0,
+   "P(attentive_reference_avoidable_collision)": [
+    0.58,
+    [
+     0.4771191957239138,
+     0.678014460645203
+    ]
+   ],
+   "P(misuse_handback_collision)": [
+    1.0,
+    [
+     0.9637833073548235,
+     1.0
+    ]
+   ],
+   "P(silent_margin_erosion)": [
+    0.0,
+    [
+     0.0,
+     0.03621669264517641
+    ]
+   ],
+   "P(comfort_exceedance)": [
+    1.0,
+    [
+     0.9637833073548235,
+     1.0
+    ]
+   ]
+  },
+  {
+   "strategy": "cem",
+   "campaigns": 100,
+   "runs (median)": 300,
+   "RMST runs to first target": 17.42,
+   "RMST 95% CI": [
+    14.874749999999997,
+    20.29575
+   ],
+   "censored": 0,
+   "P(attentive_reference_avoidable_collision)": [
+    0.81,
+    [
+     0.7193020420263876,
+     0.8815568038674564
+    ]
+   ],
+   "P(misuse_handback_collision)": [
+    1.0,
+    [
+     0.9637833073548235,
+     1.0
+    ]
+   ],
+   "P(silent_margin_erosion)": [
+    0.0,
+    [
+     0.0,
+     0.03621669264517641
+    ]
+   ],
+   "P(comfort_exceedance)": [
+    1.0,
+    [
+     0.9637833073548235,
+     1.0
+    ]
+   ]
+  },
+  {
+   "strategy": "evolutionary",
+   "campaigns": 100,
+   "runs (median)": 300,
+   "RMST runs to first target": 22.879999999999992,
+   "RMST 95% CI": [
+    19.279499999999995,
+    26.5415
+   ],
+   "censored": 0,
+   "P(attentive_reference_avoidable_collision)": [
+    0.75,
+    [
+     0.6534475042411916,
+     0.8312202619006581
+    ]
+   ],
+   "P(misuse_handback_collision)": [
+    1.0,
+    [
+     0.9637833073548235,
+     1.0
+    ]
+   ],
+   "P(silent_margin_erosion)": [
+    0.0,
+    [
+     0.0,
+     0.03621669264517641
+    ]
+   ],
+   "P(comfort_exceedance)": [
+    1.0,
+    [
+     0.9637833073548235,
+     1.0
+    ]
+   ]
+  },
+  {
+   "strategy": "boundary",
+   "campaigns": 100,
+   "runs (median)": 300,
+   "RMST runs to first target": 23.529999999999998,
+   "RMST 95% CI": [
+    19.174249999999994,
+    28.116249999999997
+   ],
+   "censored": 0,
+   "P(attentive_reference_avoidable_collision)": [
+    0.18,
+    [
+     0.11031122915326057,
+     0.2694770859668118
+    ]
+   ],
+   "P(misuse_handback_collision)": [
+    0.95,
+    [
+     0.8871650888945373,
+     0.9835681208179479
+    ]
+   ],
+   "P(silent_margin_erosion)": [
+    0.0,
+    [
+     0.0,
+     0.03621669264517641
+    ]
+   ],
+   "P(comfort_exceedance)": [
+    0.96,
+    [
+     0.90074284328734,
+     0.9889955060138118
+    ]
+   ]
+  },
+  {
+   "strategy": "bayesopt",
+   "campaigns": 100,
+   "runs (median)": 300,
+   "RMST runs to first target": 19.11,
+   "RMST 95% CI": [
+    16.179999999999996,
+    21.96575
+   ],
+   "censored": 0,
+   "P(attentive_reference_avoidable_collision)": [
+    1.0,
+    [
+     0.9637833073548235,
+     1.0
+    ]
+   ],
+   "P(misuse_handback_collision)": [
+    1.0,
+    [
+     0.9637833073548235,
+     1.0
+    ]
+   ],
+   "P(silent_margin_erosion)": [
+    0.0,
+    [
+     0.0,
+     0.03621669264517641
+    ]
+   ],
+   "P(comfort_exceedance)": [
+    1.0,
+    [
+     0.9637833073548235,
+     1.0
+    ]
+   ]
+  }
+ ],
+ "matched": {
+  "region": "attentive_reference_avoidable_collision",
+  "seeds": 10,
+  "detected": 10,
+  "agent_ci": [
+   0.6915028921812392,
+   1.0
+  ],
+  "baselines": {
+   "random": {
+    "plug_in": 0.001986807387336047,
+    "posterior_predictive": 0.0027010379226533906,
+    "upper95": 0.007228884132776451,
+    "expected_plug_in": 5.46,
+    "prior": 0.5,
+    "campaigns": 100,
+    "prior_sensitivity": {
+     "jeffreys (primary)": {
+      "plug_in": 0.001986807387336047,
+      "posterior_predictive": 0.0027010379226533906,
+      "upper95": 0.007228884132776451,
+      "expected_plug_in": 5.46,
+      "prior": 0.5
+     },
+     "uniform": {
+      "plug_in": 0.001986807387336047,
+      "posterior_predictive": 0.0027003204310954505,
+      "upper95": 0.007334918437214842,
+      "expected_plug_in": 5.46,
+      "prior": 1.0
+     },
+     "none (plain Bayesian bootstrap)": {
+      "plug_in": 0.001986807387336047,
+      "posterior_predictive": 0.002718354614339355,
+      "upper95": 0.007081777318689776,
+      "expected_plug_in": 5.46,
+      "prior": 0.0
+     }
+    },
+    "cells_diff": 4.196999999999999,
+    "cells_diff_ci": [
+     2.962775000000003,
+     5.441
+    ],
+    "credible_advantage": true
+   },
+   "grid": {
+    "plug_in": 0.00037280026874999996,
+    "posterior_predictive": 0.0005739950552975883,
+    "upper95": 0.0017889877135976889,
+    "expected_plug_in": 4.62,
+    "prior": 0.5,
+    "campaigns": 100,
+    "prior_sensitivity": {
+     "jeffreys (primary)": {
+      "plug_in": 0.00037280026874999996,
+      "posterior_predictive": 0.0005739950552975883,
+      "upper95": 0.0017889877135976889,
+      "expected_plug_in": 4.62,
+      "prior": 0.5
+     },
+     "uniform": {
+      "plug_in": 0.00037280026874999996,
+      "posterior_predictive": 0.0005742447535983644,
+      "upper95": 0.001743619002440693,
+      "expected_plug_in": 4.62,
+      "prior": 1.0
+     },
+     "none (plain Bayesian bootstrap)": {
+      "plug_in": 0.00037280026874999996,
+      "posterior_predictive": 0.0005648891830720662,
+      "upper95": 0.0016737569413760231,
+      "expected_plug_in": 4.62,
+      "prior": 0.0
+     }
+    },
+    "cells_diff": 3.644,
+    "cells_diff_ci": [
+     2.454874999999998,
+     4.8950249999999995
+    ],
+    "credible_advantage": true
+   },
+   "cem": {
+    "plug_in": 0.07359494836856731,
+    "posterior_predictive": 0.0793500832467667,
+    "upper95": 0.15559667366561383,
+    "expected_plug_in": 7.720000000000001,
+    "prior": 0.5,
+    "campaigns": 100,
+    "prior_sensitivity": {
+     "jeffreys (primary)": {
+      "plug_in": 0.07359494836856731,
+      "posterior_predictive": 0.0793500832467667,
+      "upper95": 0.15559667366561383,
+      "expected_plug_in": 7.720000000000001,
+      "prior": 0.5
+     },
+     "uniform": {
+      "plug_in": 0.07359494836856731,
+      "posterior_predictive": 0.0763691810939108,
+      "upper95": 0.151298944983828,
+      "expected_plug_in": 7.720000000000001,
+      "prior": 1.0
+     },
+     "none (plain Bayesian bootstrap)": {
+      "plug_in": 0.07359494836856731,
+      "posterior_predictive": 0.08114447529263681,
+      "upper95": 0.15617514961105503,
+      "expected_plug_in": 7.720000000000001,
+      "prior": 0.0
+     }
+    },
+    "cells_diff": -0.27300000000000146,
+    "cells_diff_ci": [
+     -1.5871999999999997,
+     1.1361749999999984
+    ],
+    "credible_advantage": false
+   },
+   "evolutionary": {
+    "plug_in": 0.016724534773799985,
+    "posterior_predictive": 0.019555390530552174,
+    "upper95": 0.043380906773883766,
+    "expected_plug_in": 6.6899999999999995,
+    "prior": 0.5,
+    "campaigns": 100,
+    "prior_sensitivity": {
+     "jeffreys (primary)": {
+      "plug_in": 0.016724534773799985,
+      "posterior_predictive": 0.019555390530552174,
+      "upper95": 0.043380906773883766,
+      "expected_plug_in": 6.6899999999999995,
+      "prior": 0.5
+     },
+     "uniform": {
+      "plug_in": 0.016724534773799985,
+      "posterior_predictive": 0.019115352880294985,
+      "upper95": 0.04372503747642305,
+      "expected_plug_in": 6.6899999999999995,
+      "prior": 1.0
+     },
+     "none (plain Bayesian bootstrap)": {
+      "plug_in": 0.016724534773799985,
+      "posterior_predictive": 0.019733495124982577,
+      "upper95": 0.045362527898244055,
+      "expected_plug_in": 6.6899999999999995,
+      "prior": 0.0
+     }
+    },
+    "cells_diff": -2.1430000000000007,
+    "cells_diff_ci": [
+     -3.384199999999995,
+     -0.8129999999999988
+    ],
+    "credible_advantage": true
+   },
+   "boundary": {
+    "plug_in": 3.570467226623999e-08,
+    "posterior_predictive": 2.2589843318314513e-07,
+    "upper95": 9.632104207212344e-07,
+    "expected_plug_in": 1.7999999999999998,
+    "prior": 0.5,
+    "campaigns": 100,
+    "prior_sensitivity": {
+     "jeffreys (primary)": {
+      "plug_in": 3.570467226623999e-08,
+      "posterior_predictive": 2.2589843318314513e-07,
+      "upper95": 9.632104207212344e-07,
+      "expected_plug_in": 1.7999999999999998,
+      "prior": 0.5
+     },
+     "uniform": {
+      "plug_in": 3.570467226623999e-08,
+      "posterior_predictive": 2.3524575206308454e-07,
+      "upper95": 9.718801732804108e-07,
+      "expected_plug_in": 1.7999999999999998,
+      "prior": 1.0
+     },
+     "none (plain Bayesian bootstrap)": {
+      "plug_in": 3.570467226623999e-08,
+      "posterior_predictive": 2.0817988160604942e-07,
+      "upper95": 8.68716097097492e-07,
+      "expected_plug_in": 1.7999999999999998,
+      "prior": 0.0
+     }
+    },
+    "cells_diff": 7.009999999999999,
+    "cells_diff_ci": [
+     5.724925,
+     8.271149999999999
+    ],
+    "credible_advantage": true
+   },
+   "bayesopt": {
+    "plug_in": 0.99,
+    "posterior_predictive": 0.9453905745915031,
+    "upper95": 0.995934986612758,
+    "expected_plug_in": 9.99,
+    "prior": 0.5,
+    "campaigns": 100,
+    "prior_sensitivity": {
+     "jeffreys (primary)": {
+      "plug_in": 0.99,
+      "posterior_predictive": 0.9453905745915031,
+      "upper95": 0.995934986612758,
+      "expected_plug_in": 9.99,
+      "prior": 0.5
+     },
+     "uniform": {
+      "plug_in": 0.99,
+      "posterior_predictive": 0.9018166265115967,
+      "upper95": 0.9874496560068504,
+      "expected_plug_in": 9.99,
+      "prior": 1.0
+     },
+     "none (plain Bayesian bootstrap)": {
+      "plug_in": 0.99,
+      "posterior_predictive": 0.9899738013301428,
+      "upper95": 0.9993766826255017,
+      "expected_plug_in": 9.99,
+      "prior": 0.0
+     }
+    },
+    "cells_diff": -4.245000000000001,
+    "cells_diff_ci": [
+     -5.490049999999998,
+     -3.0249500000000022
+    ],
+    "credible_advantage": false
+   }
+  }
+ },
+ "mode": "confirmatory",
+ "problems": [],
+ "agent_model_identity": {
+  "models_returned": [
+   "claude-sonnet-5"
+  ],
+  "dated_snapshot": false,
+  "first_call_utc": "2026-10-21T20:47:19+00:00",
+  "last_call_utc": "2026-10-21T23:33:12+00:00",
+  "seeds": {
+   "agent_s0": {
+    "first_call_utc": "2026-10-21T20:47:19+00:00",
+    "last_call_utc": "2026-10-21T20:51:59+00:00"
+   },
+   "agent_s1": {
+    "first_call_utc": "2026-10-21T20:52:08+00:00",
+    "last_call_utc": "2026-10-21T20:57:53+00:00"
+   },
+   "agent_s2": {
+    "first_call_utc": "2026-10-21T20:58:03+00:00",
+    "last_call_utc": "2026-10-21T21:03:04+00:00"
+   },
+   "agent_s3": {
+    "first_call_utc": "2026-10-21T21:03:19+00:00",
+    "last_call_utc": "2026-10-21T21:09:39+00:00"
+   },
+   "agent_s4": {
+    "first_call_utc": "2026-10-21T21:09:49+00:00",
+    "last_call_utc": "2026-10-21T21:15:02+00:00"
+   },
+   "agent_s5": {
+    "first_call_utc": "2026-10-21T21:15:12+00:00",
+    "last_call_utc": "2026-10-21T21:20:27+00:00"
+   },
+   "agent_s6": {
+    "first_call_utc": "2026-10-21T21:20:37+00:00",
+    "last_call_utc": "2026-10-21T21:25:20+00:00"
+   },
+   "agent_s7": {
+    "first_call_utc": "2026-10-21T21:25:39+00:00",
+    "last_call_utc": "2026-10-21T21:32:13+00:00"
+   },
+   "agent_s8": {
+    "first_call_utc": "2026-10-21T21:32:22+00:00",
+    "last_call_utc": "2026-10-21T23:27:25+00:00"
+   },
+   "agent_s9": {
+    "first_call_utc": "2026-10-21T23:28:11+00:00",
+    "last_call_utc": "2026-10-21T23:33:12+00:00"
+   }
+  }
+ },
+ "protocol_id": "4a879572d3e65102fa78f013d357c0caaabed603db99992e6a02ba64c8c444a9"
+}

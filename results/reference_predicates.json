@@ -1,0 +1,21 @@
+{
+ "derived_from": "estimate",
+ "predicates": [
+  {
+   "condition": "box-cut_in",
+   "predicate": "scenario = 'cut_in' AND headway <= 0.60 AND closing_speed >= 5.9",
+   "derived_from": [
+    "estimate"
+   ],
+   "release_id": "fe59625d9428753862687a3969fa0abf194b64e8afeabe42898bdbcca7498d81"
+  },
+  {
+   "condition": "box-lead_brake",
+   "predicate": "scenario = 'lead_brake' AND headway <= 1.65 AND lead_decel >= 7.4",
+   "derived_from": [
+    "estimate"
+   ],
+   "release_id": "fe59625d9428753862687a3969fa0abf194b64e8afeabe42898bdbcca7498d81"
+  }
+ ]
+}

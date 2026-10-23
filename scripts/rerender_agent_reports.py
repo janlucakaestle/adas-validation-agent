@@ -1,83 +1,63 @@
-"""Re-render the agent search reports so they carry the release verdict.
+"""Re-render agent search reports with the release verdict - only when machine-verifiably
+compatible.
 
-An agent report attaches the verdict of the estimation campaign that matches the release at
-the time it is written. The three agent campaigns were written before the final code, so
-their reports said no verdict was available. This script rebuilds each report from:
+An agent report attaches the verdict of an eligible estimation campaign of the same release
+when it is written. If the agent ran before that estimation existed, this script re-renders
+the report from the agent's evidence bundle (`results/evidence_<campaign>.json`, verified
+against its hash) and the stored runs, attaching the verdict - but ONLY if
+`avval.compat.is_compatible` holds: the campaign was recorded under the current release and
+runtime IDs, or a replay of every one of its runs under the current release reproduced every
+stored column (`python -m avval.cli verify-compat <campaign>`). Prose claims of
+compatibility are never accepted. Incompatible campaigns are refused and listed.
 
-- the campaign's stored runs (discovery, preventability, coverage, triggering-condition
-  evidence are recomputed from them, exactly as the agent's own report did);
-- the agent's logged submission and hypothesis tests in `results/transcript_<campaign>.json`
-  (the summary and conditions are the agent's own; `test_predicate` results are the logged
-  ones, computed on the runs the agent had at the time).
-
-It refuses to run unless an estimation matching the current release exists, and it adds a
-note saying the report was re-rendered and under which source hash the agent ran. It lives
-outside `avval/` so that it doesn't change the release's source hash.
-
-    PYTHONPATH=. python scripts/rerender_agent_reports.py [agent_s0 agent_s1 agent_s2]
+    PYTHONPATH=. python scripts/rerender_agent_reports.py agent_s0 agent_s1 ...
 """
 from __future__ import annotations
 
 import json
 import sys
-from datetime import date
 
 from avval import RESULTS_DIR
-from avval.estimation import find_estimation
+from avval.compat import is_compatible
+from avval.config import Release
+from avval.estimation import release_verdict
+from avval.frozen import canonical_json, sha256_text
 from avval.policy import LearnedACC
-from avval.provenance import provenance
 from avval.report import write_search_report
 from avval.store import Store
 
 
-def logged_submission(campaign: str) -> tuple[dict, list[dict]]:
-    """The agent's final `submit_report` input and its successful `test_predicate` results."""
-    transcript = json.loads((RESULTS_DIR / f"transcript_{campaign}.json")
-                            .read_text(encoding="utf-8"))
-    submit = [e["input"] for e in transcript if e.get("tool") == "submit_report"]
-    if not submit:
-        raise SystemExit(f"{campaign}: no submit_report in the transcript")
-    tests = []
-    for e in transcript:
-        if e.get("tool") == "test_predicate":
-            out = json.loads(e["output"])  # failed calls return {"error": ...} and were not logged
-            if "error" not in out:
-                tests.append(out)
-    return submit[-1], tests
+def load_bundle(campaign: str) -> dict:
+    b = json.loads((RESULTS_DIR / f"evidence_{campaign}.json").read_text(encoding="utf-8"))
+    body = {k: v for k, v in b.items() if k != "bundle_sha256"}
+    if sha256_text(canonical_json(body)) != b["bundle_sha256"]:
+        raise SystemExit(f"{campaign}: evidence bundle does not match its hash")
+    return b
 
 
-def main(campaigns: list[str]) -> None:
+def main(campaigns: list[str]) -> int:
     store, policy = Store(), LearnedACC.load()
-    estimation = find_estimation(store, policy)
-    if estimation is None:
-        raise SystemExit("No estimation campaign matches the current release; run estimate first.")
-    current = provenance(policy)["code_sha256"]
+    release = Release.build(policy)
+    verdict = release_verdict(store, release=release)  # raises if no eligible estimation
+    refused = []
     for campaign in campaigns:
-        submission, tests = logged_submission(campaign)
-        model = json.loads((RESULTS_DIR / f"usage_{campaign}.json")
-                           .read_text(encoding="utf-8"))["model"]
-        recorded = store.campaign_info(campaign)[0]["provenance"]["code_sha256"]
-        path = write_search_report(
-            store, campaign, summary=submission["summary"],
-            triggering_conditions=submission["triggering_conditions"],
-            author=f"agent ({model})", estimation=estimation, include_verdict=True,
-            predicate_tests=tests)
-        if recorded == current:
-            why = ("The agent ran under this release's code, before its estimation campaign "
-                   "was made (`docs/agent_protocol.md`).")
-        else:
-            why = (f"The agent ran under source hash `{recorded[:12]}`; this release's is "
-                   f"`{current[:12]}`. The policy and the parsed configuration are identical "
-                   f"and no simulation module changed (`docs/agent.md`).")
-        note = (f"> **Re-rendered on {date.today()}** by `scripts/rerender_agent_reports.py`, to "
-                f"attach the release verdict. {why} The summary, triggering conditions and "
-                f"hypothesis tests are the agent's own, from its logged submission; everything "
-                f"else is recomputed from the stored runs.")
-        text = path.read_text(encoding="utf-8")
-        text = text.replace("\n## Summary\n", f"\n{note}\n\n## Summary\n", 1)
+        ok, why = is_compatible(store, campaign, release)
+        if not ok:
+            refused.append(f"{campaign}: {why}")
+            continue
+        b = load_bundle(campaign)
+        path = write_search_report(store, campaign, summary=b["summary"], author=b["author"],
+                                   bundle=b, verdict=verdict, include_verdict=True)
+        text = path.read_text(encoding="utf-8").replace(
+            "\n## Summary\n", f"\n> **Re-rendered** by `scripts/rerender_agent_reports.py` to "
+            f"attach the release verdict. Compatibility: {why}. The summary and conditions are "
+            f"the agent's own (evidence bundle `{b['bundle_sha256'][:16]}…`).\n\n## Summary\n", 1)
         path.write_text(text, encoding="utf-8")
         print(path)
+    for r in refused:
+        print("REFUSED", r, file=sys.stderr)
+    return 1 if refused else 0
 
 
 if __name__ == "__main__":
-    main(sys.argv[1:] or ["agent_s0", "agent_s1", "agent_s2"])
+    sys.exit(main(sys.argv[1:]))

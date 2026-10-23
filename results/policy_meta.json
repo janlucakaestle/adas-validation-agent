@@ -1,0 +1,36 @@
+{
+  "recipe": {
+    "n_samples": 40000,
+    "seed": 0,
+    "accel_min": -3.5,
+    "hidden_layer_sizes": [
+      32,
+      32
+    ],
+    "max_iter": 200,
+    "early_stopping": true,
+    "expert": "IDM(a=1.5, b=2.0, T=1.5, s0=2.0)"
+  },
+  "runtime": {
+    "python": "3.11.9",
+    "implementation": "CPython",
+    "system": "Windows",
+    "machine": "AMD64",
+    "packages": {
+      "numpy": "2.4.6",
+      "scipy": "1.17.1",
+      "pandas": "3.0.5",
+      "pyarrow": "25.0.1",
+      "duckdb": "1.5.5",
+      "PyYAML": "6.0.3",
+      "scikit-learn": "1.9.1",
+      "anthropic": "1.8.0",
+      "matplotlib": "3.11.2"
+    }
+  },
+  "mae_nominal": 0.026551150467697356,
+  "mae_out_of_distribution": 0.12562920277042056,
+  "committed_policy_sha256": "5e14254aff132c1b2d674702e85ad3cc3d2c326c6c2440d9f3e43861ceb1a214",
+  "retrained_policy_sha256": "5e14254aff132c1b2d674702e85ad3cc3d2c326c6c2440d9f3e43861ceb1a214",
+  "reproduced": true
+}

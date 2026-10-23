@@ -1,31 +1,63 @@
-# Reference controllers used to judge whether a failure was preventable.
+# Reference responses: fixed, brake-only ego responses replayed on every run's scenario
+# (schema reference/v4).
 #
-# Each reference replays the same case (same lead-vehicle model and integrator as the
-# simulator) with an idealised ego response: it holds its speed until the hazard appears
-# (cut-in at t = 0, lead braking at its onset), waits `reaction_time_s`, then builds braking
-# at `jerk_mps3` (null = instantly) up to its maximum deceleration and holds it until the ego
-# stops. No authority limit and no hand-back.
+# What a reference result means (and does not mean):
+# - Each reference replays the run's *scenario* (same initial state, same lead-vehicle
+#   model, same exact kinematics and contact definition as the simulator) with a fixed ego
+#   response. It uses nothing the system under test did in the run, and no parameter of the
+#   system under test's design: its result is a property of the scenario.
+# - Brake-only and longitudinal: no steering, no lane change, no acceleration away.
+# - No pre-hazard intervention: the reference holds its initial speed until hazard onset
+#   (lead braking onset for lead_brake, t = 0 for cut_in), then waits `reaction_time_s`,
+#   then builds braking at `jerk_mps3` (null = instantly) to its deceleration level and
+#   holds it until it stops.
+# - Perfect, instantaneous knowledge of the hazard at onset (no perception model).
+# "Not avoided by reference" means only that THIS response does not avoid contact. It is
+# not physical unavoidability: earlier, harder (up to mu*g) or lateral responses may avoid it.
+#
+# `status` (approved | provisional | illustrative | undefined) is the maturity of each
+# definition. Acceptance criteria whose populations use a definition are at most as mature
+# as it (config/acceptance.yaml), so a provisional definition can never support a formal GO.
+
+schema: reference/v4
 
 ideal:
-  # An ideal system braking at the friction limit the moment the hazard appears. Among all
-  # ego profiles that start braking at the hazard and never exceed this deceleration, this one
-  # has the smallest ego position, and so the largest gap, at every instant. A collision is
-  # *unpreventable* (preventable = FALSE) if this reference also collides. A run the system
-  # itself avoided is always preventable: a system can brake before the hazard (e.g. when the
-  # initial headway is already short), which this reference does not.
+  # Column `avoidable_by_reference`. Scopes AC-01 and AC-03 (and AC-06, information);
+  # AC-02, AC-04 and the reference-independent AC-09/AC-10 do not filter on it.
   decel_fraction_of_mu_g: 0.9  # TODO(data): modelling choice (0.9 of the friction limit)
   reaction_time_s: 0.0
   jerk_mps3: null
+  status: illustrative
+
+handback_oracle:
+  # Column `handback_required`: the scenario is one in which a reference braking at a FIXED
+  # deceleration from hazard onset (no reaction delay) does NOT avoid contact.
+  # What the value is: the NOMINAL system's design authority (3.5 m/s^2, the authority the
+  # demonstrator policy was trained for, avval/policy.py TRAIN_ACCEL_MIN, since v0.1),
+  # frozen here. It is NOT an external, programme-level capability requirement: nothing but
+  # the nominal design supports it. What it achieves: it is fixed, i.e. not read from the
+  # configuration under test (sim.yaml ego authority), so a design variant with another
+  # authority does not change which scenarios count as hand-back-required: AC-03 strata,
+  # AC-07 and AC-08 keep identical populations across variants.
+  # It was chosen as a typical ACC braking limit; a match with a published ACC deceleration
+  # envelope (e.g. ISO 15622) was assumed from memory and has NOT been verified against the
+  # standard's text, so no clause is cited. Status: PROVISIONAL, SOURCE TO BE CONFIRMED.
+  # Coupling: the same 3.5 m/s^2 is the sensitivity study's required-deceleration exceedance
+  # level (config/sensitivity.yaml) and the nominal sim.yaml authority; changing one does not
+  # change the others.
+  decel_mps2: 3.5  # TODO(data): replace with an externally justified capability (capped by mu*g)
+  reaction_time_s: 0.0
+  jerk_mps3: null
+  status: provisional
 
 careful_competent_driver:
-  # Optional second reference in the style of the UN R157 "careful and competent human
-  # driver" model. R157 regulates L3 lane keeping; its driver model is used here only as a human
-  # benchmark, not as a statement about this function, which is L2. Disabled: its parameters must come from the regulation or data and are
-  # deliberately not filled in here. When enabled, every value must be set; the result is
-  # stored per run as ccd_preventable (NULL while disabled). This is a simplified,
-  # longitudinal-only reading (reaction delay then jerk-limited braking), not the full R157
-  # model, which also defines perception of a cut-in from lateral motion.
+  # Optional reference in the style of the UN R157 "careful and competent human driver".
+  # R157 regulates L3 lane keeping; its driver model is used only as a human benchmark.
+  # Disabled: its parameters must come from the regulation or data. When enabled, every
+  # value must be set; the result is stored per run as `ccd_avoidable_by_reference`
+  # (NULL while disabled). Longitudinal-only simplification of R157.
   enabled: false
   reaction_time_s: null          # TODO(data): perception + reaction time after hazard onset (s)
   decel_fraction_of_mu_g: null   # TODO(data): or replace with an absolute deceleration from R157
   jerk_mps3: null                # TODO(data): brake build-up rate (m/s^3)
+  status: undefined

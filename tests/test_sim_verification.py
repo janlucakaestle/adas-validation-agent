@@ -1,12 +1,10 @@
 """Verification of the simulator against closed-form results.
 
-The integrator updates speed with explicit Euler (v += a * dt) and the gap with the
-trapezoidal rule on speed. With piecewise-constant acceleration this is *exact* between
-events, so on the analytic cases below the only error comes from events that fall inside
-a step. The one such event here is a vehicle coming to a stop mid-step, where the speed
-clamp at zero over-counts distance by at most a * dt^2 / 8 per stop (worst case: the stop
-falls mid-step). Tolerances are stated from that bound, plus 1e-9 for floating-point
-round-off.
+The integrator advances each vehicle exactly under piecewise-constant acceleration,
+including a stop part-way through a step (no reversing), so positions, speeds and gaps are
+exact between control decisions. The analytic checks below therefore hold to floating-point
+round-off (TOL), not to an integration-error bound. Contact is the exact root of the
+piecewise-quadratic gap inside the step.
 
 To isolate the physics from the learned policy, most checks drive the ego vehicle with a
 constant-acceleration stand-in for the ACC policy.
@@ -16,9 +14,13 @@ import itertools
 import numpy as np
 import pytest
 
-from avval.sim import DT, G, LEAD_BRAKE_ONSET_S, simulate
+from avval.config import Release
+from avval.sim import G, nominal_params, simulate
 
-EPS = 1e-9
+P = nominal_params()
+DT = P.dt
+ONSET = P.lead_brake_onset_s
+TOL = 1e-9
 
 
 class ConstantPolicy:
@@ -27,13 +29,8 @@ class ConstantPolicy:
     def __init__(self, accel: float):
         self.accel = accel
 
-    def act(self, gap, v, rel_v, v_set):
+    def act(self, gap, v, rel_v, v_set, **_):
         return self.accel
-
-
-def stop_tol(*decels, dt=DT):
-    """Worst-case distance error from vehicles stopping mid-step: sum of a * dt^2 / 8."""
-    return sum(a * dt ** 2 / 8 for a in decels) + EPS
 
 
 def cut_in(v, closing, gap, driver="attentive", friction=1.0):
@@ -46,14 +43,14 @@ def lead_brake(v, decel, gap, driver="attentive", friction=1.0):
                 friction=friction, driver_state=driver)
 
 
-def test_constant_deceleration_stops_in_v2_over_2a():
+def test_constant_deceleration_stops_in_v2_over_2a_exactly():
     v0, a = 31.0, 3.0
     # Lead drives away at constant speed, so the ego never needs a hand-back.
     m, tr = simulate(cut_in(v0, 1.0, 80.0), ConstantPolicy(-a), seed=0)
     assert not m["tor_issued"] and not m["collision"] and tr.v_ego[-1] == 0.0
     v_lead = v0 - 1.0
-    ego_distance = v_lead * tr.t[-1] - (tr.gap[-1] - tr.gap[0])  # lead distance minus gap change
-    assert ego_distance == pytest.approx(v0 ** 2 / (2 * a), abs=stop_tol(a))
+    ego_distance = v_lead * tr.t[-1] - (tr.gap[-1] - tr.gap[0])
+    assert ego_distance == pytest.approx(v0 ** 2 / (2 * a), abs=1e-8)  # stop mid-step, exact
 
 
 def test_lead_braking_above_friction_limit_is_capped_at_mu_g():
@@ -61,17 +58,18 @@ def test_lead_braking_above_friction_limit_is_capped_at_mu_g():
     m, tr = simulate(lead_brake(v0, 9.0, 80.0, friction=mu), ConstantPolicy(-3.5), seed=0)
     braking = tr.a_lead != 0
     assert braking.any()
-    assert np.allclose(tr.a_lead[braking], -mu * G, atol=EPS)  # 3.92 m/s^2, not 9
-    expected_v = np.maximum(v0 - mu * G * np.maximum(tr.t - LEAD_BRAKE_ONSET_S, 0.0), 0.0)
-    assert np.allclose(tr.v_lead, expected_v, atol=EPS)
+    assert np.allclose(tr.a_lead[braking], -mu * G, atol=TOL)  # 4.9 m/s^2, not 9
+    expected_v = np.maximum(v0 - mu * G * np.maximum(tr.t - ONSET, 0.0), 0.0)
+    assert np.allclose(tr.v_lead, expected_v, atol=1e-8)
 
 
 def test_equal_speeds_without_braking_keep_the_gap_constant():
     # closing_speed = 0 is outside the ODD, so call simulate() directly (no validate_case).
     m, tr = simulate(cut_in(25.0, 0.0, 30.0), ConstantPolicy(0.0), seed=0)
     assert not m["tor_issued"] and m["min_ttc"] is None
-    assert len(tr.t) == 400  # ran to the 20 s horizon
-    assert np.max(np.abs(tr.gap - 30.0)) < EPS
+    assert len(tr.t) == int(round(P.horizon_s / DT)) and m["end_state"] == "horizon_safe"
+    assert m["duration"] == pytest.approx(P.horizon_s)
+    assert np.max(np.abs(tr.gap - 30.0)) < TOL
 
 
 def test_cut_in_gap_closes_at_closing_speed_before_any_ego_reaction():
@@ -80,7 +78,7 @@ def test_cut_in_gap_closes_at_closing_speed_before_any_ego_reaction():
     assert m["tor_issued"]  # the driver does react eventually...
     before = np.arange(len(tr.t)) < np.argmax(tr.a_ego != 0)  # ...but check only before that
     assert before.sum() > 100
-    assert np.allclose(tr.gap[before], gap0 - closing * tr.t[before], atol=EPS)
+    assert np.allclose(tr.gap[before], gap0 - closing * tr.t[before], atol=1e-8)
 
 
 def test_lead_brake_follows_analytic_lead_position():
@@ -94,21 +92,49 @@ def test_lead_brake_follows_analytic_lead_position():
 
     x_ego = position(tr.t, v0, a_ego)
     x_lead = x_ego + tr.gap - gap0
-    assert np.allclose(x_lead, position(tr.t, v0, a_lead, LEAD_BRAKE_ONSET_S),
-                       atol=stop_tol(a_lead, a_ego))
+    assert np.allclose(x_lead, position(tr.t, v0, a_lead, ONSET), atol=1e-8)
     assert tr.v_lead[-1] == 0.0  # the lead stop is inside the checked window
 
 
+def test_collision_time_and_impact_speed_are_at_the_exact_crossing():
+    """A cut-in 2 m ahead closing at 9 m/s, with no ego reaction, makes contact at
+    t = 2/9 s (inside the fifth step) with an impact speed of exactly 9 m/s."""
+    m, tr = simulate(cut_in(20.0, 9.0, 2.0, driver="distracted"), ConstantPolicy(0.0), seed=0)
+    assert m["collision"] and m["end_state"] == "collision"
+    assert m["collision_time"] == pytest.approx(2 / 9, abs=1e-12)
+    assert m["duration"] == m["collision_time"]
+    assert m["impact_speed"] == pytest.approx(9.0, abs=1e-12)
+    assert tr.t[-1] < m["collision_time"] <= tr.t[-1] + DT  # inside the last recorded step
+
+
+def test_collision_in_the_first_step_has_a_positive_duration():
+    m, tr = simulate(cut_in(20.0, 9.0, 0.3, driver="distracted"), ConstantPolicy(0.0), seed=0)
+    assert m["collision"] and len(tr.t) == 1
+    assert m["duration"] == pytest.approx(0.3 / 9) and m["duration"] > 0
+
+
+def test_impact_speed_accounts_for_braking_inside_the_step():
+    """Ego braking at 3.5 m/s^2 into a stationary-relative gap: the impact speed at the exact
+    crossing is the analytic one, not the speed one step later."""
+    v0, closing, gap0, a = 20.0, 9.0, 8.0, 3.5
+    m, _ = simulate(cut_in(v0, closing, gap0, driver="distracted"), ConstantPolicy(-a), seed=0)
+    # relative motion: gap0 - closing t + a t^2 / 2 = 0 (no stops before contact here)
+    t = (closing - np.sqrt(closing ** 2 - 2 * a * gap0)) / a
+    assert m["collision_time"] == pytest.approx(t, abs=1e-9)
+    assert m["impact_speed"] == pytest.approx(closing - a * t, abs=1e-9)
+
+
 # ---- Convergence: halve the step size on a fixed case set -------------------------------
-# The full closed loop (learned policy, hand-back monitor, driver) runs here. Discrete events
-# (TOR, first driver input, policy updates) are quantised to the step, so they can move by up
-# to one step when dt halves. Tolerances:
-#   - min_ttc: |change| <= 2 * DT = 0.1 s for every collision-free case (an event shift of one
-#     step changes the minimum by at most about that much), and median |change| <= 0.01 s;
-#   - collision outcome: at most 1 of the 144 cases may flip (a case that sits exactly on the
-#     collision boundary can legitimately flip; more would mean the outcome depends on dt);
-#   - impact speed, where both collide: |change| <= G * DT, about 0.5 m/s, i.e. one step of
-#     braking at the friction limit.
+# The full closed loop (learned policy, monitor, driver) runs here. Kinematics are exact, so
+# the remaining dt-dependence comes from discrete control decisions (TOR, first driver
+# input, policy and driver updates), which are quantised to the step and can move by up to
+# one coarse step DT when dt halves. Bounds derived from that:
+#   - TOR time: |change| <= DT;
+#   - collision outcome and end state: at most 1 of 144 cases may differ (a case exactly on
+#     a boundary can legitimately flip; more would mean outcomes depend on dt);
+#   - min_ttc: |change| <= 2 DT for every collision-free case, median <= 0.01 s;
+#   - collision time: |change| <= 2 DT; impact speed: |change| <= G * DT (one step of
+#     braking at the friction limit).
 CONVERGENCE_CASES = [
     (lead_brake if s == "lead_brake" else cut_in)(v, sev, g, drv, mu)
     for s, v, g, sev, mu, drv in itertools.product(
@@ -117,17 +143,29 @@ CONVERGENCE_CASES = [
 
 
 def test_halving_dt_changes_outcomes_within_tolerance(policy):
-    flips, d_ttc, d_impact = 0, [], []
+    fine = Release.build(policy, overrides={"sim": {"time": {"dt_s": DT / 2}}}).sim_params
+    flips, ends, d_ttc, d_impact, d_tc, d_tor = 0, 0, [], [], [], []
     for seed, case in enumerate(CONVERGENCE_CASES):
         a, _ = simulate(case, policy, seed)
-        b, _ = simulate(case, policy, seed, dt=DT / 2)
+        b, _ = simulate(case, policy, seed, fine)
+        ends += a["end_state"] != b["end_state"]
+        if a["tor_issued"] and b["tor_issued"]:
+            d_tor.append(abs(a["tor_time"] - b["tor_time"]))
         if a["collision"] != b["collision"]:
             flips += 1
         elif a["collision"]:
             d_impact.append(abs(a["impact_speed"] - b["impact_speed"]))
-        else:
+            d_tc.append(abs(a["collision_time"] - b["collision_time"]))
+        elif a["min_ttc"] is not None:
             d_ttc.append(abs(a["min_ttc"] - b["min_ttc"]))
     assert len(CONVERGENCE_CASES) == 144
-    assert flips <= 1
+    assert flips <= 1 and ends <= 1
+    assert max(d_tor) <= DT + 1e-9
     assert max(d_ttc) <= 2 * DT and np.median(d_ttc) <= 0.01
+    assert d_tc and max(d_tc) <= 2 * DT
     assert all(d <= G * DT for d in d_impact)
+
+
+def test_a_step_that_does_not_divide_the_event_times_is_rejected(policy):
+    with pytest.raises(ValueError, match="multiple of dt"):
+        Release.build(policy, overrides={"sim": {"time": {"dt_s": 0.03}}})

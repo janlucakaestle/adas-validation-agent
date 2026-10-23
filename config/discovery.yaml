@@ -1,0 +1,20 @@
+# Discovery (search) objectives, schema discovery/v3.
+#
+# These are what search campaigns (the LLM agent and every baseline) look for. They are
+# PUBLIC: the agent's system spec contains them verbatim. They are deliberately separate from
+# the release acceptance criteria in acceptance.yaml, which the agent never sees: no number,
+# formula or population used for release acceptance may appear here (enforced by
+# tests/test_agent_isolation.py). A search target is a heuristic for where to look, not a
+# pass/fail boundary.
+
+schema: discovery/v3
+default_target: collision
+targets:
+  collision:
+    predicate: "collision"
+    description: The run ended in contact between the ego vehicle and the target vehicle.
+  near_miss:
+    predicate: "collision OR coalesce(min_ttc < 1.0, false)"
+    description: >-
+      Contact, or a constant-speed time-to-collision below 1.0 s at some point before
+      the end of the run. The 1.0 s level is a search heuristic only.

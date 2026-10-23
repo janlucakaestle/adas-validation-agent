@@ -1,5 +1,14 @@
 # Agent evaluation protocol for v0.2 (fixed before running seeds 3–9)
 
+> **Historical document (v0.2), with its actual chronology.** This protocol was written and
+> committed on 2026-10-01, **after** agent seeds 0–2 had already run under earlier agent and
+> reporting code. It was prospective only for seeds 3–9; the ten-seed result as a whole was
+> **not** fully prospectively pre-registered. The estimation also ran after the seeds
+> (deviation 1 below). The v0.2 results are withdrawn. Future
+> benchmark runs use the machine-readable frozen protocol (`config/benchmark.yaml`, frozen by
+> `python -m avval.cli benchmark-freeze` into `results/benchmark_manifest.json`, whose hash
+> every benchmark campaign records).
+
 Written and committed on 2026-10-01, before any of seeds 3–9 was run. The analysis code it
 refers to (`avval/benchmark.py::matched_per_seed`, `python -m avval.cli posthoc`) was
 committed at the same time. Nothing below was changed after the results came in; any

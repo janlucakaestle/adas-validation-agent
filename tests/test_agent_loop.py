@@ -4,7 +4,9 @@ from types import SimpleNamespace as NS
 
 from avval.agent import ValidationAgent
 from avval.campaign import Campaign
-import avval.report as report_mod
+
+CASE = dict(scenario="lead_brake", ego_speed=30, headway=0.8, lead_decel=8, friction=1.0,
+            driver_state="attentive")
 
 
 def _tool(name, args, i):
@@ -12,7 +14,8 @@ def _tool(name, args, i):
 
 
 class ScriptedClient:
-    """Replays a fixed sequence of assistant turns, recording what the agent sends back."""
+    """Replays assistant turns; a turn may be a callable of the replies so far, so a script
+    can cite IDs returned by earlier tool calls."""
 
     def __init__(self, turns):
         self.turns, self.received = list(turns), []
@@ -20,43 +23,56 @@ class ScriptedClient:
 
     def create(self, **kwargs):
         self.received.append(kwargs["messages"][-1])
-        return NS(content=self.turns.pop(0), stop_reason="tool_use")
+        turn = self.turns.pop(0)
+        return NS(content=turn(self) if callable(turn) else turn, stop_reason="tool_use")
+
+    def reply(self, i):
+        return json.loads(self.received[i]["content"][0]["content"])
 
 
-def test_agent_runs_tools_and_writes_report(store, policy, tmp_path, monkeypatch):
-    monkeypatch.setattr(report_mod, "RESULTS_DIR", tmp_path)
-    case = dict(scenario="lead_brake", ego_speed=30, headway=0.8, lead_decel=8, friction=1.0,
-                driver_state="attentive")
+def test_agent_runs_tools_and_writes_an_evidence_backed_report(store, policy, tmp_path):
+    pred = "scenario = 'lead_brake' AND headway < 1.0"
+    sql = f"SELECT count(*) AS n FROM runs WHERE {pred} AND collision"
     turns = [
         [NS(type="text", text="Reading spec."), _tool("get_system_spec", {}, 1)],
-        [_tool("run_scenarios", {"cases": [case] * 5 + [{**case, "friction": 0.1}]}, 2)],
-        [_tool("query_results", {"sql": "SELECT avg(CAST(collision AS INT)) p FROM runs"}, 3)],
-        [_tool("query_results", {"sql": "DROP TABLE all_runs"}, 4)],
-        [_tool("evaluate_acceptance", {}, 5)],
-        [_tool("submit_report", {"summary": "Found a failure.",
-                                 "triggering_conditions": [{
-                                     "description": "Harsh braking at short gap",
-                                     "evidence_sql": "SELECT count(*) n FROM runs WHERE collision"}]},
-               6)],
+        [_tool("run_scenarios", {"cases": [CASE] * 5 + [{**CASE, "friction": 0.1}]}, 2)],
+        [_tool("query_results", {"sql": "DROP TABLE all_runs"}, 3)],
+        [_tool("evaluate_acceptance", {}, 4)],
+        [_tool("test_predicate", {"where": pred}, 5)],
+        [_tool("query_results", {"sql": sql}, 6)],
+        lambda c: [_tool("submit_report", {"summary": "Found a failure.", "triggering_conditions": [{
+            "description": "Harsh braking at short headway", "predicate": pred,
+            "predicate_test_id": c.reply(5)["test_id"], "evidence_sql": sql,
+            "evidence_query_id": c.reply(6)["query_id"]}]}, 7)],
     ]
     client = ScriptedClient(turns)
     agent = ValidationAgent(Campaign("agent_test", store, policy, budget=20), client=client)
     result = agent.run(verbose=False)
 
-    assert result.finished and result.turns == 6
+    assert result.finished and result.turns == 7 and result.stop_reason == "submitted"
     assert store.n_runs("agent_test") == 5            # out-of-ODD case rejected, not run
-    run_reply = client.received[2]["content"][0]["content"]
-    assert "outside ODD" in run_reply                  # agent is told why
-    drop_reply = client.received[4]["content"][0]["content"]
-    assert "error" in drop_reply                       # destructive SQL refused
-    acc_reply = client.received[5]["content"][0]["content"]
-    assert "Unknown tool" in acc_reply                 # the acceptance tool is gone
+    assert "outside ODD" in client.received[2]["content"][0]["content"]
+    assert "error" in client.reply(3)                  # destructive SQL refused
+    assert "Unknown tool" in client.received[4]["content"][0]["content"]
     text = open(result.report_path, encoding="utf-8").read()
-    assert "No estimation campaign matches" in text and "TC-01" in text
+    assert "TC-01" in text and "Evidence bundle SHA-256" in text
+    assert store.get_campaign("agent_test")["status"] == "COMPLETE"
+    bundle = json.loads((tmp_path / "evidence_agent_test.json").read_text())
+    assert bundle["conditions"][0]["predicate"] == pred
 
 
-def test_requests_enable_prompt_caching(store, policy, tmp_path, monkeypatch):
-    monkeypatch.setattr(report_mod, "RESULTS_DIR", tmp_path)  # keep test reports out of results/
+def test_transcripts_keep_complete_outputs(store, policy):
+    turns = [[_tool("run_scenarios", {"cases": [CASE] * 40}, 1)],
+             [_tool("submit_report", {"summary": "s", "triggering_conditions": []}, 2)]]
+    agent = ValidationAgent(Campaign("t", store, policy, 40), client=ScriptedClient(turns))
+    agent.run(verbose=False)
+    entry = agent.transcript[0]
+    assert len(entry["output"]) > 2000                 # no arbitrary 2,000-character cut
+    from avval.frozen import sha256_text
+    assert entry["output_sha256"] == sha256_text(entry["output"])
+
+
+def test_requests_enable_prompt_caching(store, policy):
     turns = [[_tool("get_system_spec", {}, 1)],
              [_tool("submit_report", {"summary": "s", "triggering_conditions": []}, 2)]]
 
@@ -89,77 +105,27 @@ def test_usage_cost_arithmetic():
     from avval.agent import Usage
     u = Usage("claude-sonnet-5", input_tokens=1_000_000, cache_write_tokens=1_000_000,
               cache_read_tokens=1_000_000, output_tokens=100_000)
-    # 2.00 + 2.50 + 0.20 + 1.00
-    assert abs(u.cost() - 5.70) < 1e-9
+    assert abs(u.cost() - 5.70) < 1e-9          # 2.00 + 2.50 + 0.20 + 1.00
     assert abs(u.cost(cached=False) - 7.00) < 1e-9
 
 
-def test_system_spec_defines_driver_states(store, policy):
+def test_system_spec_defines_driver_states_targets_and_columns(store, policy):
     agent = ValidationAgent(Campaign("spec", store, policy, 5), client=object())
-    import json
     spec = json.loads(agent.call_tool("get_system_spec", {}))
     ds = spec["driver_states"]
     assert set(ds) == {"attentive", "distracted"}
     assert ds["distracted"]["category"] == "foreseeable_misuse"
-    assert ds["attentive"]["category"] == "intended_use"
-    assert all(v["definition"] for v in ds.values())
-
-
-# ---- What the agent knows ---------------------------------------------------------------
-BANNED = ["training", "trained", "fault", "ground truth", "weak", "behaviour-cloned",
-          "behavior-cloned", "intelligent driver model", "idm", "out-of-distribution",
-          "estimation", "evaluate_acceptance", "threshold", "takeover_mean", "floor_s",
-          "min_n"]
-# Column meanings for the agent's own runs are allowed (e.g. `preventable` in query_results);
-# the preventability reference config itself is not in the spec (checked by the key-set test).
-
-
-def _agent_text(store, policy):
-    from avval.agent import SYSTEM_PROMPT, TOOLS
-    agent = ValidationAgent(Campaign("know", store, policy, 5), client=object())
-    spec = agent.call_tool("get_system_spec", {})
-    tools = json.dumps(TOOLS)
-    return SYSTEM_PROMPT, tools, spec
-
-
-def test_acceptance_tool_is_gone(store, policy):
-    from avval.agent import TOOLS
-    assert "evaluate_acceptance" not in {t["name"] for t in TOOLS}
-    agent = ValidationAgent(Campaign("gone", store, policy, 5), client=object())
-    assert "Unknown tool" in agent.call_tool("evaluate_acceptance", {})
-
-
-def test_prompt_tools_and_spec_contain_no_hints(store, policy):
-    import re
-    for name, text in zip(("prompt", "tools", "spec"), _agent_text(store, policy)):
-        hits = [w for w in BANNED if re.search(rf"\b{re.escape(w)}", text, re.I)]
-        assert not hits, f"{name} mentions {hits}"
-
-
-def test_spec_holds_meanings_ranges_target_and_budget_only(store, policy):
-    spec = json.loads(_agent_text(store, policy)[2])
-    assert set(spec) == {"odd", "driver_states", "failure_predicate", "note", "budget_total",
-                         "budget_remaining"}
-
-
-def test_agent_sql_sees_only_its_own_runs(store, policy):
-    other = Campaign("other", store, policy, 10)
-    other.run([dict(scenario="cut_in", ego_speed=30.0, closing_speed=5.0, headway=20.0 / 30.0,
-                    friction=1.0, driver_state="attentive")] * 10)
-    agent = ValidationAgent(Campaign("mine", store, policy, 5), client=object())
-    assert json.loads(agent.call_tool("query_results", {"sql": "SELECT count(*) AS n FROM runs"})
-                      )["rows"] == [{"n": 0}]
-    for sql in ("SELECT * FROM all_runs", "SELECT * FROM campaigns"):
-        assert "error" in json.loads(agent.call_tool("query_results", {"sql": sql}))
+    assert set(spec["discovery_targets"]) == {"collision", "near_miss"}
+    assert "avoidable_by_reference" in spec["columns"]
+    assert "handback_required" not in spec["columns"]
 
 
 def test_cost_cap_stops_the_loop(store, policy):
-    """--max-cost-usd: the loop stops after the call that reaches the cap."""
     class Costly(ScriptedClient):
         def create(self, **kwargs):
             resp = super().create(**kwargs)
             resp.usage = NS(input_tokens=1_000_000, cache_creation_input_tokens=0,
-                            cache_read_input_tokens=0, output_tokens=0)  # $2 per call on Sonnet 5
+                            cache_read_input_tokens=0, output_tokens=0)  # $2 per call
             return resp
 
     turns = [[_tool("get_system_spec", {}, i)] for i in range(5)]
@@ -168,10 +134,30 @@ def test_cost_cap_stops_the_loop(store, policy):
     result = agent.run(verbose=False)
     assert not result.finished and result.stop_reason == "cost_cap"
     assert result.usage["api_calls"] == 2 and agent.transcript[-1]["note"].startswith("stopped")
+    rec = store.get_campaign("cap")
+    assert rec["status"] == "COMPLETE" and rec["stop_reason"] == "cost_cap"
+
+
+def test_truncated_reply_is_not_executed(store, policy):
+    class Truncating(ScriptedClient):
+        def create(self, **kwargs):
+            resp = super().create(**kwargs)
+            if len(self.received) == 1:
+                resp.stop_reason = "max_tokens"
+            return resp
+
+    turns = [[_tool("run_scenarios", {"cases": [CASE] * 3}, 1)],
+             [_tool("submit_report", {"summary": "s", "triggering_conditions": []}, 2)]]
+    client = Truncating(turns)
+    agent = ValidationAgent(Campaign("trunc_test", store, policy, 10), client=client)
+    result = agent.run(verbose=False)
+    assert result.finished and result.turns == 2
+    assert store.n_runs("trunc_test") == 0
+    assert "cut off" in client.received[1]["content"]
 
 
 def test_cli_agent_runs_the_chosen_seed_and_saves_usage(store, policy, tmp_path, monkeypatch):
-    """`agent --first-seed 2` runs campaign <name>_s2 and writes its usage and transcript."""
+    """`agent --no-protocol --first-seed 2` runs campaign <name>_s2 and saves usage/transcript."""
     import avval.agent as agent_mod
     import avval.cli as cli
     import avval.store as store_mod
@@ -184,38 +170,57 @@ def test_cli_agent_runs_the_chosen_seed_and_saves_usage(store, policy, tmp_path,
 
         def run(self):
             runs.append((self.camp.name, self.kw["max_cost_usd"]))
+            self.camp.finish("max_turns")
             return agent_mod.AgentResult(False, 1, None, self.transcript,
                                          self.usage.summary(), "max_turns")
 
     monkeypatch.setattr(agent_mod, "ValidationAgent", FakeAgent)
-    monkeypatch.setattr(store_mod, "Store", lambda: store)
-    monkeypatch.setattr(cli, "RESULTS_DIR", tmp_path)
-    monkeypatch.setattr(cli, "_print_benchmark", lambda *a: None)
-    cli.main(["agent", "--name", "clitest", "--first-seed", "2", "--max-cost-usd", "4",
-              "--model", "claude-haiku-4-5"])
+    real = store_mod.Store
+    monkeypatch.setattr(store_mod, "Store", lambda *a, **k: real(*a, **k) if a or k else store)
+    monkeypatch.setattr("avval.policy.LearnedACC.load", classmethod(lambda cls: policy))
+    cli.main(["agent", "--no-protocol", "--name", "clitest", "--first-seed", "2",
+              "--max-cost-usd", "4", "--model", "claude-haiku-4-5"])
     assert runs == [("clitest_s2", 4.0)]
-    assert store.con.execute("SELECT seed FROM campaigns WHERE name = 'clitest_s2'").fetchone()[0] == 2
+    assert store.get_campaign("clitest_s2")["seed"] == 2
     assert json.loads((tmp_path / "usage_clitest_s2.json").read_text())["model"] == "claude-haiku-4-5"
     assert (tmp_path / "transcript_clitest_s2.json").exists()
 
 
-def test_truncated_reply_is_not_executed(store, policy):
-    """A reply cut off at max_tokens may hold a partial tool call: skip it, tell the agent."""
-    case = dict(scenario="lead_brake", ego_speed=30, headway=0.8, lead_decel=8, friction=1.0,
-                driver_state="attentive")
+def test_cli_agent_refuses_without_a_frozen_protocol(store, policy, monkeypatch):
+    import pytest
 
-    class Truncating(ScriptedClient):
+    import avval.cli as cli
+    import avval.store as store_mod
+    real = store_mod.Store
+    monkeypatch.setattr(store_mod, "Store", lambda *a, **k: real(*a, **k) if a or k else store)
+    monkeypatch.setattr("avval.policy.LearnedACC.load", classmethod(lambda cls: policy))
+    with pytest.raises(FileNotFoundError):
+        cli.main(["agent", "--first-seed", "0"])
+
+
+def test_usage_records_the_model_id_returned_by_the_api(store, policy):
+    class Returning(ScriptedClient):
         def create(self, **kwargs):
             resp = super().create(**kwargs)
-            if len(self.received) == 1:
-                resp.stop_reason = "max_tokens"
+            resp.model = "claude-sonnet-5-20260901"
             return resp
 
-    turns = [[_tool("run_scenarios", {"cases": [case] * 3}, 1)],
-             [_tool("submit_report", {"summary": "s", "triggering_conditions": []}, 2)]]
-    client = Truncating(turns)
-    agent = ValidationAgent(Campaign("trunc_test", store, policy, 10), client=client)
+    agent = ValidationAgent(Campaign("ret", store, policy, 5), client=Returning(
+        [[_tool("submit_report", {"summary": "s", "triggering_conditions": []}, 1)]]),
+        model="claude-sonnet-5")
     result = agent.run(verbose=False)
-    assert result.finished and result.turns == 2
-    assert store.n_runs("trunc_test") == 0             # the cut-off batch never ran
-    assert "cut off" in client.received[1]["content"]
+    assert result.usage["model"] == "claude-sonnet-5"
+    assert result.usage["models_returned"] == ["claude-sonnet-5-20260901"]
+    # ... and the campaign's own provenance carries it, with the client version
+    from importlib import metadata
+    client = store.get_campaign("ret")["provenance"]["agent_client"]
+    assert client["model_requested"] == "claude-sonnet-5"
+    assert client["models_returned"] == ["claude-sonnet-5-20260901"]
+    assert client["anthropic_version"] == metadata.version("anthropic")
+    assert result.usage["anthropic_version"] == metadata.version("anthropic")
+    # every API call is time-stamped and its tokens logged
+    assert result.usage["first_call_utc"] and result.usage["last_call_utc"]
+    assert len(result.usage["calls"]) == 1  # one API response (the scripted one has no usage)
+    assert client["first_call_utc"] == result.usage["first_call_utc"]
+    rt = store.get_campaign("ret")["provenance"]["runtime"]["packages"]
+    assert rt["anthropic"] == metadata.version("anthropic")

@@ -1,0 +1,1042 @@
+{
+ "schema": "evidence/v3",
+ "campaign": "agent_s8",
+ "release_id": "fe59625d9428753862687a3969fa0abf194b64e8afeabe42898bdbcca7498d81",
+ "runtime_id": "d37505bee00e01c235487f54dbb579f8dc71978020d9565f2c940eb2fcf3ae3c",
+ "protocol_id": "4a879572d3e65102fa78f013d357c0caaabed603db99992e6a02ba64c8c444a9",
+ "data_sha256": "fee450830a1a37b70a4b40fd99fbfaa0b76674f1e72242abee3359f131f88f16",
+ "author": "agent (claude-sonnet-5)",
+ "summary": "## Campaign overview\n- Full ODD coverage achieved (216/216 coverage cells, min 1 run each) across both scenarios (lead_brake, cut_in), both driver states, and the full ego_speed/headway/friction/lead_decel(or closing_speed) grid.\n- After broad coverage, budget was focused on two clusters where collisions appeared, varying one factor at a time and repeating cases (5+ reps) to sample the stochastic driver takeover time.\n- 266 of 300 runs used; 34 held in reserve (unused) after confirming findings with tight confidence intervals.\n\n## Key findings\n\n**1. Lead-vehicle hard braking + distracted driver + short-to-moderate headway + high/dry friction \u2192 frequent, avoidable collisions.**\nWith an attentive driver, lead_brake events up to lead_decel=9 m/s^2 were handled without collision in the broad sweep (headway \u22650.8s). With a distracted driver, the re-engagement delay (observed takeover_time often 3\u20138s) is long enough that for lead_decel \u22656 m/s^2 combined with friction \u22650.75 and headway \u22641.9s, the ego vehicle frequently fails to stop in time. Collision rate inside this predicate is 71% vs 7.8% outside (lift 9.2x, 266 runs, 95% CI on inside rate [0.48, 0.89]). Critically, `avoidable_by_reference=TRUE` for essentially all these collisions, meaning a simple fixed brake-only reference response starting at hazard onset would have avoided contact \u2014 this is a genuine system/TOR-timing deficiency, not an inherently unavoidable scenario. Low friction (\u22640.5) caps lead_decel physically and paradoxically reduces risk in this same region (0/5 collisions at friction 0.5 vs 5/5 at friction 0.9, same lead_decel/headway), because the lead vehicle itself cannot brake as hard.\n\n**2. Cut-in at the ODD boundary (very short headway, near-max closing speed) \u2192 collisions essentially regardless of driver state.**\nAt headway \u22640.3s (ODD minimum) and closing_speed \u22659 m/s (ODD maximum), collisions occurred in 15/15 runs (100%, lift 13.2x vs 7.6% baseline, 95% CI [0.78, 1.0]), for both attentive and distracted drivers and across the friction range. Most of these (e.g. friction \u22650.75) have `avoidable_by_reference=TRUE`, indicating the system itself is failing to execute an achievable avoidance maneuver at this ODD corner \u2014 it is not simply a physically-unavoidable edge case. Only at the lowest friction (0.5) did the single corner combination show `avoidable_by_reference=FALSE`, indicating that specific sub-case is likely physically unavoidable and should be excluded from the system-deficiency claim.\n\n## Limitations\n- Findings are based on a targeted search, not a representative sampling of real-world exposure; reported \"rates\" describe my own test runs and must not be read as real-world collision probabilities.\n- The lead_brake predicate was explored mainly at ego_speed=25 m/s; headway/decel/friction boundaries were probed at that speed and via the broader coverage grid at other speeds, but a finer sweep across ego_speed for the exact threshold was not performed given budget.\n- The cut-in finding is strongest exactly at the ODD boundary (headway=0.3, closing_speed=9); behavior just inside the boundary (e.g., headway=0.5, closing_speed=8) was covered only at coarser bin midpoints in the broad sweep, which showed no collisions \u2014 suggesting a fairly sharp failure region near the extreme corner that merits finer-grained follow-up.\n\n## Recommended next tests\n- Sweep ego_speed and headway finely around the lead_brake distracted/high-decel/high-friction region to map the exact collision-onset boundary (e.g., decel 5.5\u20136.5, headway 1.9\u20132.9).\n- Sweep headway (0.3\u20130.6) and closing_speed (7\u20139) finely for cut_in to find the exact onset boundary of the 100%-collision corner, and separately verify the friction=0.5 unavoidable sub-case boundary.\n- Investigate TOR/driver-reengagement timing logic specifically for distracted drivers under high-urgency lead braking, since the avoidable_by_reference=TRUE result points to a response-timing/control gap rather than a kinematic impossibility.",
+ "conditions": [
+  {
+   "description": "Lead vehicle hard braking with a distracted driver, short-to-moderate headway, and high/dry friction leads to frequent collisions that a simple reference brake response would have avoided (avoidable_by_reference=TRUE in nearly all cases).",
+   "predicate": "scenario='lead_brake' AND driver_state='distracted' AND lead_decel>=6 AND friction>=0.75 AND headway<=1.9",
+   "predicate_sha256": "ad40dac65bd0d36c3c827160a6405d1ddca42ece9e302b3a0f8fd2e8256bd5db",
+   "test": {
+    "id": "89b6965f0b76",
+    "sha256": "89b6965f0b763061e988f036addba46ffa1c448350901c14237eba358f355212",
+    "where": "scenario='lead_brake' AND driver_state='distracted' AND lead_decel>=6 AND friction>=0.75 AND headway<=1.9",
+    "target": "collision",
+    "result": {
+     "where": "scenario='lead_brake' AND driver_state='distracted' AND lead_decel>=6 AND friction>=0.75 AND headway<=1.9",
+     "target": "collision",
+     "runs_inside": 21,
+     "runs_outside": 245,
+     "target_rate_inside": 0.7142857142857143,
+     "target_rate_outside": 0.07755102040816327,
+     "lift": 9.210526315789474,
+     "inside_rate_ci95": [
+      0.4782488817528863,
+      0.8871905960780592
+     ]
+    },
+    "result_sha256": "ac7d03c5f07d0e9eb2f3d9a1b5deb852d51019bc36e69464b338427c96e3d97d",
+    "n_runs": 266
+   },
+   "evidence": {
+    "id": "47067f60523d",
+    "sha256": "47067f60523d603983d8f4989bcfd0b6b72e9a42bcde1c83c03301158e00ab13",
+    "sql": "SELECT scenario, driver_state, lead_decel, friction, headway, collision, avoidable_by_reference FROM runs WHERE scenario='lead_brake' AND driver_state='distracted' AND lead_decel>=6 AND friction>=0.75 AND headway<=1.9 ORDER BY headway, lead_decel, friction",
+    "rows": [
+     {
+      "scenario": "lead_brake",
+      "driver_state": "distracted",
+      "lead_decel": 6.0,
+      "friction": 0.9,
+      "headway": 0.9,
+      "collision": false,
+      "avoidable_by_reference": true
+     },
+     {
+      "scenario": "lead_brake",
+      "driver_state": "distracted",
+      "lead_decel": 6.0,
+      "friction": 0.9,
+      "headway": 0.9,
+      "collision": false,
+      "avoidable_by_reference": true
+     },
+     {
+      "scenario": "lead_brake",
+      "driver_state": "distracted",
+      "lead_decel": 6.0,
+      "friction": 0.9,
+      "headway": 0.9,
+      "collision": true,
+      "avoidable_by_reference": true
+     },
+     {
+      "scenario": "lead_brake",
+      "driver_state": "distracted",
+      "lead_decel": 6.0,
+      "friction": 0.9,
+      "headway": 0.9,
+      "collision": false,
+      "avoidable_by_reference": true
+     },
+     {
+      "scenario": "lead_brake",
+      "driver_state": "distracted",
+      "lead_decel": 6.0,
+      "friction": 0.9,
+      "headway": 0.9,
+      "collision": true,
+      "avoidable_by_reference": true
+     },
+     {
+      "scenario": "lead_brake",
+      "driver_state": "distracted",
+      "lead_decel": 8.5,
+      "friction": 0.9,
+      "headway": 0.9,
+      "collision": true,
+      "avoidable_by_reference": true
+     },
+     {
+      "scenario": "lead_brake",
+      "driver_state": "distracted",
+      "lead_decel": 8.5,
+      "friction": 0.9,
+      "headway": 0.9,
+      "collision": true,
+      "avoidable_by_reference": true
+     },
+     {
+      "scenario": "lead_brake",
+      "driver_state": "distracted",
+      "lead_decel": 8.5,
+      "friction": 0.9,
+      "headway": 0.9,
+      "collision": true,
+      "avoidable_by_reference": true
+     },
+     {
+      "scenario": "lead_brake",
+      "driver_state": "distracted",
+      "lead_decel": 8.5,
+      "friction": 0.9,
+      "headway": 0.9,
+      "collision": true,
+      "avoidable_by_reference": true
+     },
+     {
+      "scenario": "lead_brake",
+      "driver_state": "distracted",
+      "lead_decel": 8.5,
+      "friction": 0.9,
+      "headway": 0.9,
+      "collision": true,
+      "avoidable_by_reference": true
+     },
+     {
+      "scenario": "lead_brake",
+      "driver_state": "distracted",
+      "lead_decel": 7.5,
+      "friction": 0.875,
+      "headway": 1.1667,
+      "collision": true,
+      "avoidable_by_reference": true
+     },
+     {
+      "scenario": "lead_brake",
+      "driver_state": "distracted",
+      "lead_decel": 7.5,
+      "friction": 0.875,
+      "headway": 1.1667,
+      "collision": true,
+      "avoidable_by_reference": true
+     },
+     {
+      "scenario": "lead_brake",
+      "driver_state": "distracted",
+      "lead_decel": 7.5,
+      "friction": 0.875,
+      "headway": 1.1667,
+      "collision": true,
+      "avoidable_by_reference": true
+     },
+     {
+      "scenario": "lead_brake",
+      "driver_state": "distracted",
+      "lead_decel": 7.5,
+      "friction": 0.875,
+      "headway": 1.9,
+      "collision": false,
+      "avoidable_by_reference": true
+     },
+     {
+      "scenario": "lead_brake",
+      "driver_state": "distracted",
+      "lead_decel": 7.5,
+      "friction": 0.875,
+      "headway": 1.9,
+      "collision": true,
+      "avoidable_by_reference": true
+     },
+     {
+      "scenario": "lead_brake",
+      "driver_state": "distracted",
+      "lead_decel": 7.5,
+      "friction": 0.875,
+      "headway": 1.9,
+      "collision": true,
+      "avoidable_by_reference": true
+     },
+     {
+      "scenario": "lead_brake",
+      "driver_state": "distracted",
+      "lead_decel": 8.5,
+      "friction": 0.9,
+      "headway": 1.9,
+      "collision": false,
+      "avoidable_by_reference": true
+     },
+     {
+      "scenario": "lead_brake",
+      "driver_state": "distracted",
+      "lead_decel": 8.5,
+      "friction": 0.9,
+      "headway": 1.9,
+      "collision": true,
+      "avoidable_by_reference": true
+     },
+     {
+      "scenario": "lead_brake",
+      "driver_state": "distracted",
+      "lead_decel": 8.5,
+      "friction": 0.9,
+      "headway": 1.9,
+      "collision": true,
+      "avoidable_by_reference": true
+     },
+     {
+      "scenario": "lead_brake",
+      "driver_state": "distracted",
+      "lead_decel": 8.5,
+      "friction": 0.9,
+      "headway": 1.9,
+      "collision": false,
+      "avoidable_by_reference": true
+     },
+     {
+      "scenario": "lead_brake",
+      "driver_state": "distracted",
+      "lead_decel": 8.5,
+      "friction": 0.9,
+      "headway": 1.9,
+      "collision": true,
+      "avoidable_by_reference": true
+     }
+    ],
+    "truncated": false,
+    "rows_sha256": "273da0b9bdc9f5559d7d40ebf29c90898034e830da10020b497a1b945cab43c3",
+    "n_runs": 266
+   },
+   "condition_sha256": "7a5044109c570274f9b37969407cbf6b54d9b842aeacfadf16fd7feaf5804f26"
+  },
+  {
+   "description": "Cut-in at the ODD boundary (minimum headway 0.3s combined with maximum closing speed 9 m/s) produces collisions in essentially all runs, regardless of driver state, and mostly remains avoidable_by_reference=TRUE, indicating a system response gap at this ODD corner rather than a purely physically-unavoidable scenario.",
+   "predicate": "scenario='cut_in' AND headway<=0.3 AND closing_speed>=9",
+   "predicate_sha256": "82cd1edb00faa493a3cae46bceac4fe46d13705897b78ab502ee683a9c173c5b",
+   "test": {
+    "id": "20fbc7c64fdf",
+    "sha256": "20fbc7c64fdffa310d68c416b7a4df7845db62d6bf3afea7c228be174dc1f954",
+    "where": "scenario='cut_in' AND headway<=0.3 AND closing_speed>=9",
+    "target": "collision",
+    "result": {
+     "where": "scenario='cut_in' AND headway<=0.3 AND closing_speed>=9",
+     "target": "collision",
+     "runs_inside": 15,
+     "runs_outside": 251,
+     "target_rate_inside": 1.0,
+     "target_rate_outside": 0.07569721115537849,
+     "lift": 13.210526315789473,
+     "inside_rate_ci95": [
+      0.781980639089466,
+      1.0
+     ]
+    },
+    "result_sha256": "5a27b80c1364cf2b945b5442486de50908f499596d305ac266913740ffb54875",
+    "n_runs": 266
+   },
+   "evidence": {
+    "id": "e37e9bdcdcbe",
+    "sha256": "e37e9bdcdcbe7792098bc362bf9de2f7c3a9745a2438fcbae3fbade7f198dac1",
+    "sql": "SELECT scenario, driver_state, closing_speed, headway, friction, collision, avoidable_by_reference FROM runs WHERE scenario='cut_in' AND headway<=0.3 AND closing_speed>=9 ORDER BY driver_state, friction",
+    "rows": [
+     {
+      "scenario": "cut_in",
+      "driver_state": "attentive",
+      "closing_speed": 9.0,
+      "headway": 0.3,
+      "friction": 0.75,
+      "collision": true,
+      "avoidable_by_reference": true
+     },
+     {
+      "scenario": "cut_in",
+      "driver_state": "attentive",
+      "closing_speed": 9.0,
+      "headway": 0.3,
+      "friction": 0.75,
+      "collision": true,
+      "avoidable_by_reference": true
+     },
+     {
+      "scenario": "cut_in",
+      "driver_state": "attentive",
+      "closing_speed": 9.0,
+      "headway": 0.3,
+      "friction": 0.75,
+      "collision": true,
+      "avoidable_by_reference": true
+     },
+     {
+      "scenario": "cut_in",
+      "driver_state": "attentive",
+      "closing_speed": 9.0,
+      "headway": 0.3,
+      "friction": 0.75,
+      "collision": true,
+      "avoidable_by_reference": true
+     },
+     {
+      "scenario": "cut_in",
+      "driver_state": "attentive",
+      "closing_speed": 9.0,
+      "headway": 0.3,
+      "friction": 0.75,
+      "collision": true,
+      "avoidable_by_reference": true
+     },
+     {
+      "scenario": "cut_in",
+      "driver_state": "distracted",
+      "closing_speed": 9.0,
+      "headway": 0.3,
+      "friction": 0.5,
+      "collision": true,
+      "avoidable_by_reference": false
+     },
+     {
+      "scenario": "cut_in",
+      "driver_state": "distracted",
+      "closing_speed": 9.0,
+      "headway": 0.3,
+      "friction": 0.5,
+      "collision": true,
+      "avoidable_by_reference": false
+     },
+     {
+      "scenario": "cut_in",
+      "driver_state": "distracted",
+      "closing_speed": 9.0,
+      "headway": 0.3,
+      "friction": 0.5,
+      "collision": true,
+      "avoidable_by_reference": false
+     },
+     {
+      "scenario": "cut_in",
+      "driver_state": "distracted",
+      "closing_speed": 9.0,
+      "headway": 0.3,
+      "friction": 0.5,
+      "collision": true,
+      "avoidable_by_reference": false
+     },
+     {
+      "scenario": "cut_in",
+      "driver_state": "distracted",
+      "closing_speed": 9.0,
+      "headway": 0.3,
+      "friction": 0.5,
+      "collision": true,
+      "avoidable_by_reference": false
+     },
+     {
+      "scenario": "cut_in",
+      "driver_state": "distracted",
+      "closing_speed": 9.0,
+      "headway": 0.3,
+      "friction": 1.0,
+      "collision": true,
+      "avoidable_by_reference": true
+     },
+     {
+      "scenario": "cut_in",
+      "driver_state": "distracted",
+      "closing_speed": 9.0,
+      "headway": 0.3,
+      "friction": 1.0,
+      "collision": true,
+      "avoidable_by_reference": true
+     },
+     {
+      "scenario": "cut_in",
+      "driver_state": "distracted",
+      "closing_speed": 9.0,
+      "headway": 0.3,
+      "friction": 1.0,
+      "collision": true,
+      "avoidable_by_reference": true
+     },
+     {
+      "scenario": "cut_in",
+      "driver_state": "distracted",
+      "closing_speed": 9.0,
+      "headway": 0.3,
+      "friction": 1.0,
+      "collision": true,
+      "avoidable_by_reference": true
+     },
+     {
+      "scenario": "cut_in",
+      "driver_state": "distracted",
+      "closing_speed": 9.0,
+      "headway": 0.3,
+      "friction": 1.0,
+      "collision": true,
+      "avoidable_by_reference": true
+     }
+    ],
+    "truncated": false,
+    "rows_sha256": "ec30af4279855e7c67fb902839736328089ff6851599b71fcb7ba08a1cf96a79",
+    "n_runs": 266
+   },
+   "condition_sha256": "773f9f0475a4b0d1082f42a20072c87280e065f4cf4dfa5bd3c34217ce2287fd"
+  }
+ ],
+ "ledger": {
+  "campaign": "agent_s8",
+  "entries": [
+   {
+    "seq": 0,
+    "kind": "query_results",
+    "sql": "SELECT scenario, driver_state, headway, closing_speed, lead_decel, friction, collision, avoidable_by_reference, count(*) FROM runs WHERE (scenario='cut_in' AND headway<0.5 AND closing_speed>8) OR (scenario='lead_brake' AND driver_state='distracted' AND lead_decel>6) GROUP BY 1,2,3,4,5,6,7,8 ORDER BY 1,2,3",
+    "rows": [
+     {
+      "scenario": "cut_in",
+      "driver_state": "attentive",
+      "headway": 0.3,
+      "closing_speed": 9.0,
+      "lead_decel": null,
+      "friction": 0.75,
+      "collision": true,
+      "avoidable_by_reference": true,
+      "count_star()": 5
+     },
+     {
+      "scenario": "cut_in",
+      "driver_state": "distracted",
+      "headway": 0.3,
+      "closing_speed": 9.0,
+      "lead_decel": null,
+      "friction": 0.5,
+      "collision": true,
+      "avoidable_by_reference": false,
+      "count_star()": 5
+     },
+     {
+      "scenario": "cut_in",
+      "driver_state": "distracted",
+      "headway": 0.3,
+      "closing_speed": 9.0,
+      "lead_decel": null,
+      "friction": 1.0,
+      "collision": true,
+      "avoidable_by_reference": true,
+      "count_star()": 5
+     },
+     {
+      "scenario": "lead_brake",
+      "driver_state": "distracted",
+      "headway": 0.9,
+      "closing_speed": null,
+      "lead_decel": 8.5,
+      "friction": 0.9,
+      "collision": true,
+      "avoidable_by_reference": true,
+      "count_star()": 5
+     },
+     {
+      "scenario": "lead_brake",
+      "driver_state": "distracted",
+      "headway": 0.9,
+      "closing_speed": null,
+      "lead_decel": 8.5,
+      "friction": 0.5,
+      "collision": false,
+      "avoidable_by_reference": true,
+      "count_star()": 5
+     },
+     {
+      "scenario": "lead_brake",
+      "driver_state": "distracted",
+      "headway": 1.1667,
+      "closing_speed": null,
+      "lead_decel": 7.5,
+      "friction": 0.625,
+      "collision": false,
+      "avoidable_by_reference": true,
+      "count_star()": 1
+     },
+     {
+      "scenario": "lead_brake",
+      "driver_state": "distracted",
+      "headway": 1.1667,
+      "closing_speed": null,
+      "lead_decel": 7.5,
+      "friction": 0.625,
+      "collision": true,
+      "avoidable_by_reference": true,
+      "count_star()": 2
+     },
+     {
+      "scenario": "lead_brake",
+      "driver_state": "distracted",
+      "headway": 1.1667,
+      "closing_speed": null,
+      "lead_decel": 7.5,
+      "friction": 0.875,
+      "collision": true,
+      "avoidable_by_reference": true,
+      "count_star()": 3
+     },
+     {
+      "scenario": "lead_brake",
+      "driver_state": "distracted",
+      "headway": 1.9,
+      "closing_speed": null,
+      "lead_decel": 8.5,
+      "friction": 0.9,
+      "collision": false,
+      "avoidable_by_reference": true,
+      "count_star()": 2
+     },
+     {
+      "scenario": "lead_brake",
+      "driver_state": "distracted",
+      "headway": 1.9,
+      "closing_speed": null,
+      "lead_decel": 7.5,
+      "friction": 0.625,
+      "collision": false,
+      "avoidable_by_reference": true,
+      "count_star()": 2
+     },
+     {
+      "scenario": "lead_brake",
+      "driver_state": "distracted",
+      "headway": 1.9,
+      "closing_speed": null,
+      "lead_decel": 7.5,
+      "friction": 0.875,
+      "collision": false,
+      "avoidable_by_reference": true,
+      "count_star()": 1
+     },
+     {
+      "scenario": "lead_brake",
+      "driver_state": "distracted",
+      "headway": 1.9,
+      "closing_speed": null,
+      "lead_decel": 7.5,
+      "friction": 0.625,
+      "collision": true,
+      "avoidable_by_reference": true,
+      "count_star()": 1
+     },
+     {
+      "scenario": "lead_brake",
+      "driver_state": "distracted",
+      "headway": 1.9,
+      "closing_speed": null,
+      "lead_decel": 7.5,
+      "friction": 0.875,
+      "collision": true,
+      "avoidable_by_reference": true,
+      "count_star()": 2
+     },
+     {
+      "scenario": "lead_brake",
+      "driver_state": "distracted",
+      "headway": 1.9,
+      "closing_speed": null,
+      "lead_decel": 8.5,
+      "friction": 0.9,
+      "collision": true,
+      "avoidable_by_reference": true,
+      "count_star()": 3
+     },
+     {
+      "scenario": "lead_brake",
+      "driver_state": "distracted",
+      "headway": 2.6333,
+      "closing_speed": null,
+      "lead_decel": 7.5,
+      "friction": 0.625,
+      "collision": false,
+      "avoidable_by_reference": true,
+      "count_star()": 3
+     },
+     {
+      "scenario": "lead_brake",
+      "driver_state": "distracted",
+      "headway": 2.6333,
+      "closing_speed": null,
+      "lead_decel": 7.5,
+      "friction": 0.875,
+      "collision": false,
+      "avoidable_by_reference": true,
+      "count_star()": 3
+     },
+     {
+      "scenario": "lead_brake",
+      "driver_state": "distracted",
+      "headway": 2.9,
+      "closing_speed": null,
+      "lead_decel": 8.5,
+      "friction": 0.9,
+      "collision": false,
+      "avoidable_by_reference": true,
+      "count_star()": 5
+     }
+    ],
+    "truncated": false,
+    "n_runs": 266,
+    "sha256": "4f991fcdc27575d02485de9380db4e796a98a5fa3d6ee61e8fb86621aa6e3e59"
+   },
+   {
+    "seq": 1,
+    "kind": "test_predicate",
+    "where": "scenario='lead_brake' AND driver_state='distracted' AND lead_decel>=6 AND friction>=0.75 AND headway<=1.9",
+    "target": "collision",
+    "result": {
+     "where": "scenario='lead_brake' AND driver_state='distracted' AND lead_decel>=6 AND friction>=0.75 AND headway<=1.9",
+     "target": "collision",
+     "runs_inside": 21,
+     "runs_outside": 245,
+     "target_rate_inside": 0.7142857142857143,
+     "target_rate_outside": 0.07755102040816327,
+     "lift": 9.210526315789474,
+     "inside_rate_ci95": [
+      0.4782488817528863,
+      0.8871905960780592
+     ]
+    },
+    "n_runs": 266,
+    "sha256": "89b6965f0b763061e988f036addba46ffa1c448350901c14237eba358f355212"
+   },
+   {
+    "seq": 2,
+    "kind": "test_predicate",
+    "where": "scenario='cut_in' AND headway<=0.3 AND closing_speed>=9",
+    "target": "collision",
+    "result": {
+     "where": "scenario='cut_in' AND headway<=0.3 AND closing_speed>=9",
+     "target": "collision",
+     "runs_inside": 15,
+     "runs_outside": 251,
+     "target_rate_inside": 1.0,
+     "target_rate_outside": 0.07569721115537849,
+     "lift": 13.210526315789473,
+     "inside_rate_ci95": [
+      0.781980639089466,
+      1.0
+     ]
+    },
+    "n_runs": 266,
+    "sha256": "20fbc7c64fdffa310d68c416b7a4df7845db62d6bf3afea7c228be174dc1f954"
+   },
+   {
+    "seq": 3,
+    "kind": "test_predicate",
+    "where": "scenario='lead_brake' AND driver_state='attentive' AND lead_decel>=7 AND headway<=1.0 AND friction>=0.75",
+    "target": "collision",
+    "result": {
+     "where": "scenario='lead_brake' AND driver_state='attentive' AND lead_decel>=7 AND headway<=1.0 AND friction>=0.75",
+     "target": "collision",
+     "runs_inside": 5,
+     "runs_outside": 261,
+     "target_rate_inside": 0.2,
+     "target_rate_outside": 0.12643678160919541,
+     "lift": 1.5818181818181818,
+     "inside_rate_ci95": [
+      0.005050763379468061,
+      0.7164179361180893
+     ]
+    },
+    "n_runs": 266,
+    "sha256": "56869d3d56ab9f637edb80a0e5bd803f4f84235a3e4e9159f361515b5d1378b6"
+   },
+   {
+    "seq": 4,
+    "kind": "test_predicate",
+    "where": "scenario='lead_brake' AND driver_state='distracted' AND lead_decel>=6 AND friction<0.75",
+    "target": "collision",
+    "result": {
+     "where": "scenario='lead_brake' AND driver_state='distracted' AND lead_decel>=6 AND friction<0.75",
+     "target": "collision",
+     "runs_inside": 14,
+     "runs_outside": 252,
+     "target_rate_inside": 0.21428571428571427,
+     "target_rate_outside": 0.12301587301587301,
+     "lift": 1.7419354838709677,
+     "inside_rate_ci95": [
+      0.046579287889867274,
+      0.5079756770484718
+     ]
+    },
+    "n_runs": 266,
+    "sha256": "0823e15ceb3e57497cb212f4657d759cfda3fc44ba6448f8a9ba7d982adcf159"
+   },
+   {
+    "seq": 5,
+    "kind": "query_results",
+    "sql": "SELECT scenario, driver_state, lead_decel, friction, headway, collision, avoidable_by_reference FROM runs WHERE scenario='lead_brake' AND driver_state='distracted' AND lead_decel>=6 AND friction>=0.75 AND headway<=1.9 ORDER BY headway, lead_decel, friction",
+    "rows": [
+     {
+      "scenario": "lead_brake",
+      "driver_state": "distracted",
+      "lead_decel": 6.0,
+      "friction": 0.9,
+      "headway": 0.9,
+      "collision": false,
+      "avoidable_by_reference": true
+     },
+     {
+      "scenario": "lead_brake",
+      "driver_state": "distracted",
+      "lead_decel": 6.0,
+      "friction": 0.9,
+      "headway": 0.9,
+      "collision": false,
+      "avoidable_by_reference": true
+     },
+     {
+      "scenario": "lead_brake",
+      "driver_state": "distracted",
+      "lead_decel": 6.0,
+      "friction": 0.9,
+      "headway": 0.9,
+      "collision": true,
+      "avoidable_by_reference": true
+     },
+     {
+      "scenario": "lead_brake",
+      "driver_state": "distracted",
+      "lead_decel": 6.0,
+      "friction": 0.9,
+      "headway": 0.9,
+      "collision": false,
+      "avoidable_by_reference": true
+     },
+     {
+      "scenario": "lead_brake",
+      "driver_state": "distracted",
+      "lead_decel": 6.0,
+      "friction": 0.9,
+      "headway": 0.9,
+      "collision": true,
+      "avoidable_by_reference": true
+     },
+     {
+      "scenario": "lead_brake",
+      "driver_state": "distracted",
+      "lead_decel": 8.5,
+      "friction": 0.9,
+      "headway": 0.9,
+      "collision": true,
+      "avoidable_by_reference": true
+     },
+     {
+      "scenario": "lead_brake",
+      "driver_state": "distracted",
+      "lead_decel": 8.5,
+      "friction": 0.9,
+      "headway": 0.9,
+      "collision": true,
+      "avoidable_by_reference": true
+     },
+     {
+      "scenario": "lead_brake",
+      "driver_state": "distracted",
+      "lead_decel": 8.5,
+      "friction": 0.9,
+      "headway": 0.9,
+      "collision": true,
+      "avoidable_by_reference": true
+     },
+     {
+      "scenario": "lead_brake",
+      "driver_state": "distracted",
+      "lead_decel": 8.5,
+      "friction": 0.9,
+      "headway": 0.9,
+      "collision": true,
+      "avoidable_by_reference": true
+     },
+     {
+      "scenario": "lead_brake",
+      "driver_state": "distracted",
+      "lead_decel": 8.5,
+      "friction": 0.9,
+      "headway": 0.9,
+      "collision": true,
+      "avoidable_by_reference": true
+     },
+     {
+      "scenario": "lead_brake",
+      "driver_state": "distracted",
+      "lead_decel": 7.5,
+      "friction": 0.875,
+      "headway": 1.1667,
+      "collision": true,
+      "avoidable_by_reference": true
+     },
+     {
+      "scenario": "lead_brake",
+      "driver_state": "distracted",
+      "lead_decel": 7.5,
+      "friction": 0.875,
+      "headway": 1.1667,
+      "collision": true,
+      "avoidable_by_reference": true
+     },
+     {
+      "scenario": "lead_brake",
+      "driver_state": "distracted",
+      "lead_decel": 7.5,
+      "friction": 0.875,
+      "headway": 1.1667,
+      "collision": true,
+      "avoidable_by_reference": true
+     },
+     {
+      "scenario": "lead_brake",
+      "driver_state": "distracted",
+      "lead_decel": 7.5,
+      "friction": 0.875,
+      "headway": 1.9,
+      "collision": false,
+      "avoidable_by_reference": true
+     },
+     {
+      "scenario": "lead_brake",
+      "driver_state": "distracted",
+      "lead_decel": 7.5,
+      "friction": 0.875,
+      "headway": 1.9,
+      "collision": true,
+      "avoidable_by_reference": true
+     },
+     {
+      "scenario": "lead_brake",
+      "driver_state": "distracted",
+      "lead_decel": 7.5,
+      "friction": 0.875,
+      "headway": 1.9,
+      "collision": true,
+      "avoidable_by_reference": true
+     },
+     {
+      "scenario": "lead_brake",
+      "driver_state": "distracted",
+      "lead_decel": 8.5,
+      "friction": 0.9,
+      "headway": 1.9,
+      "collision": false,
+      "avoidable_by_reference": true
+     },
+     {
+      "scenario": "lead_brake",
+      "driver_state": "distracted",
+      "lead_decel": 8.5,
+      "friction": 0.9,
+      "headway": 1.9,
+      "collision": true,
+      "avoidable_by_reference": true
+     },
+     {
+      "scenario": "lead_brake",
+      "driver_state": "distracted",
+      "lead_decel": 8.5,
+      "friction": 0.9,
+      "headway": 1.9,
+      "collision": true,
+      "avoidable_by_reference": true
+     },
+     {
+      "scenario": "lead_brake",
+      "driver_state": "distracted",
+      "lead_decel": 8.5,
+      "friction": 0.9,
+      "headway": 1.9,
+      "collision": false,
+      "avoidable_by_reference": true
+     },
+     {
+      "scenario": "lead_brake",
+      "driver_state": "distracted",
+      "lead_decel": 8.5,
+      "friction": 0.9,
+      "headway": 1.9,
+      "collision": true,
+      "avoidable_by_reference": true
+     }
+    ],
+    "truncated": false,
+    "n_runs": 266,
+    "sha256": "47067f60523d603983d8f4989bcfd0b6b72e9a42bcde1c83c03301158e00ab13"
+   },
+   {
+    "seq": 6,
+    "kind": "query_results",
+    "sql": "SELECT scenario, driver_state, closing_speed, headway, friction, collision, avoidable_by_reference FROM runs WHERE scenario='cut_in' AND headway<=0.3 AND closing_speed>=9 ORDER BY driver_state, friction",
+    "rows": [
+     {
+      "scenario": "cut_in",
+      "driver_state": "attentive",
+      "closing_speed": 9.0,
+      "headway": 0.3,
+      "friction": 0.75,
+      "collision": true,
+      "avoidable_by_reference": true
+     },
+     {
+      "scenario": "cut_in",
+      "driver_state": "attentive",
+      "closing_speed": 9.0,
+      "headway": 0.3,
+      "friction": 0.75,
+      "collision": true,
+      "avoidable_by_reference": true
+     },
+     {
+      "scenario": "cut_in",
+      "driver_state": "attentive",
+      "closing_speed": 9.0,
+      "headway": 0.3,
+      "friction": 0.75,
+      "collision": true,
+      "avoidable_by_reference": true
+     },
+     {
+      "scenario": "cut_in",
+      "driver_state": "attentive",
+      "closing_speed": 9.0,
+      "headway": 0.3,
+      "friction": 0.75,
+      "collision": true,
+      "avoidable_by_reference": true
+     },
+     {
+      "scenario": "cut_in",
+      "driver_state": "attentive",
+      "closing_speed": 9.0,
+      "headway": 0.3,
+      "friction": 0.75,
+      "collision": true,
+      "avoidable_by_reference": true
+     },
+     {
+      "scenario": "cut_in",
+      "driver_state": "distracted",
+      "closing_speed": 9.0,
+      "headway": 0.3,
+      "friction": 0.5,
+      "collision": true,
+      "avoidable_by_reference": false
+     },
+     {
+      "scenario": "cut_in",
+      "driver_state": "distracted",
+      "closing_speed": 9.0,
+      "headway": 0.3,
+      "friction": 0.5,
+      "collision": true,
+      "avoidable_by_reference": false
+     },
+     {
+      "scenario": "cut_in",
+      "driver_state": "distracted",
+      "closing_speed": 9.0,
+      "headway": 0.3,
+      "friction": 0.5,
+      "collision": true,
+      "avoidable_by_reference": false
+     },
+     {
+      "scenario": "cut_in",
+      "driver_state": "distracted",
+      "closing_speed": 9.0,
+      "headway": 0.3,
+      "friction": 0.5,
+      "collision": true,
+      "avoidable_by_reference": false
+     },
+     {
+      "scenario": "cut_in",
+      "driver_state": "distracted",
+      "closing_speed": 9.0,
+      "headway": 0.3,
+      "friction": 0.5,
+      "collision": true,
+      "avoidable_by_reference": false
+     },
+     {
+      "scenario": "cut_in",
+      "driver_state": "distracted",
+      "closing_speed": 9.0,
+      "headway": 0.3,
+      "friction": 1.0,
+      "collision": true,
+      "avoidable_by_reference": true
+     },
+     {
+      "scenario": "cut_in",
+      "driver_state": "distracted",
+      "closing_speed": 9.0,
+      "headway": 0.3,
+      "friction": 1.0,
+      "collision": true,
+      "avoidable_by_reference": true
+     },
+     {
+      "scenario": "cut_in",
+      "driver_state": "distracted",
+      "closing_speed": 9.0,
+      "headway": 0.3,
+      "friction": 1.0,
+      "collision": true,
+      "avoidable_by_reference": true
+     },
+     {
+      "scenario": "cut_in",
+      "driver_state": "distracted",
+      "closing_speed": 9.0,
+      "headway": 0.3,
+      "friction": 1.0,
+      "collision": true,
+      "avoidable_by_reference": true
+     },
+     {
+      "scenario": "cut_in",
+      "driver_state": "distracted",
+      "closing_speed": 9.0,
+      "headway": 0.3,
+      "friction": 1.0,
+      "collision": true,
+      "avoidable_by_reference": true
+     }
+    ],
+    "truncated": false,
+    "n_runs": 266,
+    "sha256": "e37e9bdcdcbe7792098bc362bf9de2f7c3a9745a2438fcbae3fbade7f198dac1"
+   }
+  ],
+  "ledger_sha256": "62dc1fb32367f81bfc9538a5802d3d095c89c64d1c4dcba8e3354e79171e02b5"
+ },
+ "bundle_sha256": "5a6c7e3a4e054eefa6e43f528f23980914a35df7dfb557ab2220599f9030edf7"
+}

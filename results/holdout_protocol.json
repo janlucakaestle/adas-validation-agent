@@ -1,0 +1,22 @@
+{
+ "schema": "holdout-protocol/v4",
+ "frozen_set_sha256": "ae153ba5af675f786e8c2e96a4eecdda0770e2b7cf01c19170617c5b0a438822",
+ "release_id": "fe59625d9428753862687a3969fa0abf194b64e8afeabe42898bdbcca7498d81",
+ "runtime_id": "d37505bee00e01c235487f54dbb579f8dc71978020d9565f2c940eb2fcf3ae3c",
+ "exposure_model_id": "9b025cdb5828fa42574c0dd79797f6b94434d542e7bef4529b3194c10a025abc",
+ "seed": 4242,
+ "planned_runs": 100000,
+ "campaign": "holdout",
+ "evidence_mode": "final",
+ "analysis_version": "holdout-analysis/v4",
+ "mass": {
+  "samples": 200000,
+  "seed": 12345,
+  "min_mass": 0.001
+ },
+ "region": "collision AND avoidable_by_reference AND driver_state = 'attentive'",
+ "target": "collision",
+ "protocol_id": "11f362476056b96f74759bc897db0889a9692d5ddafae3f013c4cdddd240bc59",
+ "frozen_at": "2026-10-22T13:58:33.028069",
+ "git_commit": "43d549f3981403b13317ba99cffb86c97d5e5abe"
+}

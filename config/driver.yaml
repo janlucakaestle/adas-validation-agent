@@ -1,3 +1,5 @@
+schema: driver/v3
+
 # Driver model: time from the event that prompts a response to the driver's first input, and the
 # braking response after it. Two states only (SAE L2: an attentive, supervising driver, and a
 # distracted driver as reasonably foreseeable misuse). Sources and caveats: docs/system.md, "Driver model".
@@ -14,6 +16,12 @@
 brake_onset_delay_s: 0.0  # TODO(data): 0.0 = braking builds from the first input
 # The driver brakes towards min(peak_decel_fraction * mu * g, brake_demand_factor * needed braking).
 brake_demand_factor: 1.5  # TODO(data): driver over-brakes relative to the needed deceleration
+# While a conflict remains (needed braking > 0) and the ego is still moving, the driver holds
+# at least this deceleration until standstill (capped by the state's peak). Without it,
+# braking proportional to the needed deceleration (which scales with speed^2 near standstill)
+# never brings the vehicle to a stop: it creeps on and can touch a stopped lead at a few cm/s
+# seconds later, at a time that depends on the integration step.
+standstill_hold_decel_mps2: 2.0  # TODO(data)
 
 states:
   attentive:

@@ -1,0 +1,1686 @@
+{
+ "schema": "evidence/v3",
+ "campaign": "agent_s7",
+ "release_id": "fe59625d9428753862687a3969fa0abf194b64e8afeabe42898bdbcca7498d81",
+ "runtime_id": "d37505bee00e01c235487f54dbb579f8dc71978020d9565f2c940eb2fcf3ae3c",
+ "protocol_id": "4a879572d3e65102fa78f013d357c0caaabed603db99992e6a02ba64c8c444a9",
+ "data_sha256": "c515552f03b7c928d666893153b97ac7735e0724a956c26a85a919d9d8b99c99",
+ "author": "agent (claude-sonnet-5)",
+ "summary": "## Campaign summary (agent_s7, 176 of 300 runs used)\n\nI ran a broad coverage sweep across the lead_brake and cut_in grids (bin-center values for ego_speed, friction, headway, lead_decel/closing_speed, crossed with driver_state), found a strong early signal, then ran targeted/repeated probes to localize two distinct triggering conditions and to check the effect of driver_state, friction and headway on each.\n\n### Finding 1 \u2014 Distracted driver + strong lead braking at short/moderate headway (lead_brake)\nWith an **attentive** driver, the function handled lead_decel up to the ODD max (9 m/s\u00b2) at all tested ego speeds (18.5\u201332.5 m/s) and headways down to 1.17 s with zero collisions and zero near-misses (40 runs). With a **distracted** driver (foreseeable misuse: driver must re-engage after a reading task), the same lead_decel/headway combinations produced frequent collisions: takeover times of 3\u201310 s (vs ~0.6\u20132.2 s attentive) were too slow for the vehicle to stop in time. Collisions only appear when lead_decel \u2265 6 m/s\u00b2 AND initial headway is short-to-moderate (\u2264 ~1.2 s); at headway \u2265 2.6 s the same distracted+high-decel case produced no collisions in 3/3 repeats, and at headway 1.9 s only 2/5 collided, showing headway as a mitigating factor. Friction alone (0.5\u20131.0) did not matter: distracted + friction \u22640.65 + lead_decel <6 produced zero collisions, so the dominant factors are driver_state (distracted) and lead_decel, modulated by headway.\n\nPredicate: `driver_state = 'distracted' AND lead_decel >= 6 AND headway <= 1.2`\n- test_predicate (final data, 176 runs): 60.0% collision rate inside vs 7.1% outside, lift \u2248 8.5 (test_id 17c079442b98, 35 runs inside / 141 outside).\n\n### Finding 2 \u2014 Very short headway + high closing speed cut-in (scenario-level edge case, largely driver-independent)\nAt the extreme corner of the cut_in ODD (headway near the 0.3 s minimum, closing_speed near the 9 m/s maximum, friction <1.0), collisions occurred in both attentive and distracted runs (6/6 in the final isolated set; 7 of 8 in the raw probe before narrowing to friction<1.0 \u2014 the one survivor was attentive at friction=1.0). Moving headway to 0.5 s or closing_speed down to 4.75 m/s eliminated collisions entirely at the same friction/speed. `avoidable_by_reference` was `true` for 4 of 6 of these collisions, indicating a plain reference brake response would often have avoided contact \u2014 i.e. this is at least partly a system performance gap under a very short reaction window, not purely a physically unavoidable scenario.\n\nPredicate: `scenario = 'cut_in' AND headway <= 0.4 AND closing_speed >= 8 AND friction < 1.0`\n- test_predicate (final data, 176 runs): 100% collision rate inside (6/6) vs 14.7% outside, lift \u2248 6.8 (test_id 10d29cef45ee).\n\n## Limitations\n- Sample sizes for the cut_in extreme-corner condition are small (6\u20138 runs); the qualitative pattern (headway/closing-speed edge, largely state-independent) is clear but precise collision-rate estimates have wide CIs.\n- These rates reflect my targeted search of the ODD (deliberately oversampling hazardous corners), not real-world incidence.\n- Coverage of the full 216-cell grid was partial; most budget was redirected toward confirming the two hazard clusters found early.\n\n## Recommended next tests\n- Finer sweep of headway between 1.2\u20132.6 s at lead_decel 6\u20139 with distracted driver to map the collision-rate decay curve.\n- Finer sweep of headway between 0.3\u20130.5 s at closing_speed 7\u20139 to localize the cut-in collision boundary precisely, with more repeats per cell.\n- Investigate whether TOR timing/threshold logic could be adjusted to issue earlier requests when projected time-to-stop is short, to compensate for distracted-driver reaction delay.\n",
+ "conditions": [
+  {
+   "description": "Distracted driver combined with strong lead-vehicle braking (lead_decel >= 6 m/s^2) at short-to-moderate initial headway (<=1.2 s) causes frequent collisions in the lead_brake scenario; attentive drivers handle the identical kinematic scenarios without collision. Root cause appears to be the distracted driver's slow takeover time (3-10 s) versus attentive (~0.6-2.2 s).",
+   "predicate": "driver_state = 'distracted' AND lead_decel >= 6 AND headway <= 1.2",
+   "predicate_sha256": "b7d18a18e5cb24e34c98b7d112c7f6f0710957be04c6bb07ef54ed6ac8b84b25",
+   "test": {
+    "id": "17c079442b98",
+    "sha256": "17c079442b982735acf5b4858073a3d1146501a1daeb38d2a9c198c46e0d99ec",
+    "where": "driver_state = 'distracted' AND lead_decel >= 6 AND headway <= 1.2",
+    "target": "collision",
+    "result": {
+     "where": "driver_state = 'distracted' AND lead_decel >= 6 AND headway <= 1.2",
+     "target": "collision",
+     "runs_inside": 35,
+     "runs_outside": 141,
+     "target_rate_inside": 0.6,
+     "target_rate_outside": 0.07092198581560284,
+     "lift": 8.459999999999999,
+     "inside_rate_ci95": [
+      0.42111772188209984,
+      0.7612918895466584
+     ]
+    },
+    "result_sha256": "98dac95b0ea69925ba3059de4e7088cae2f55fca10b9b6ac614f67b9a55eff1c",
+    "n_runs": 176
+   },
+   "evidence": {
+    "id": "251c5e98c2a1",
+    "sha256": "251c5e98c2a1b7120910c3a29fdb6d4209fd099c4e86448a40944667622e8fd9",
+    "sql": "SELECT run_idx, ego_speed, headway, lead_decel, friction, collision, min_ttc, takeover_time FROM runs WHERE driver_state = 'distracted' AND lead_decel >= 6 AND headway <= 1.2 ORDER BY run_idx",
+    "rows": [
+     {
+      "run_idx": 42,
+      "ego_speed": 18.5,
+      "headway": 1.167,
+      "lead_decel": 7.5,
+      "friction": 0.625,
+      "collision": false,
+      "min_ttc": 0.523387348382063,
+      "takeover_time": 5.433719250617749
+     },
+     {
+      "run_idx": 51,
+      "ego_speed": 18.5,
+      "headway": 1.167,
+      "lead_decel": 7.5,
+      "friction": 0.875,
+      "collision": false,
+      "min_ttc": 0.704138117384188,
+      "takeover_time": 3.20624864140821
+     },
+     {
+      "run_idx": 60,
+      "ego_speed": 25.5,
+      "headway": 1.167,
+      "lead_decel": 7.5,
+      "friction": 0.625,
+      "collision": true,
+      "min_ttc": 0.030309607002197,
+      "takeover_time": 3.929243151589466
+     },
+     {
+      "run_idx": 69,
+      "ego_speed": 25.5,
+      "headway": 1.167,
+      "lead_decel": 7.5,
+      "friction": 0.875,
+      "collision": true,
+      "min_ttc": 0.038736354009437,
+      "takeover_time": 5.254271014226922
+     },
+     {
+      "run_idx": 78,
+      "ego_speed": 32.5,
+      "headway": 1.167,
+      "lead_decel": 7.5,
+      "friction": 0.625,
+      "collision": true,
+      "min_ttc": 0.016397755922621,
+      "takeover_time": 5.18916606115302
+     },
+     {
+      "run_idx": 80,
+      "ego_speed": 18.5,
+      "headway": 1.17,
+      "lead_decel": 6.0,
+      "friction": 0.75,
+      "collision": false,
+      "min_ttc": 0.747193481083651,
+      "takeover_time": 4.517450275308052
+     },
+     {
+      "run_idx": 81,
+      "ego_speed": 18.5,
+      "headway": 1.17,
+      "lead_decel": 6.0,
+      "friction": 0.75,
+      "collision": false,
+      "min_ttc": 1.381622341242667,
+      "takeover_time": 2.791646766740672
+     },
+     {
+      "run_idx": 82,
+      "ego_speed": 18.5,
+      "headway": 1.17,
+      "lead_decel": 6.0,
+      "friction": 0.75,
+      "collision": false,
+      "min_ttc": 0.963341996601602,
+      "takeover_time": 3.825496097056074
+     },
+     {
+      "run_idx": 83,
+      "ego_speed": 18.5,
+      "headway": 1.17,
+      "lead_decel": 6.0,
+      "friction": 0.75,
+      "collision": false,
+      "min_ttc": 1.327602359906376,
+      "takeover_time": 2.929391186750328
+     },
+     {
+      "run_idx": 84,
+      "ego_speed": 18.5,
+      "headway": 1.17,
+      "lead_decel": 6.0,
+      "friction": 0.75,
+      "collision": false,
+      "min_ttc": 0.907498542882548,
+      "takeover_time": 3.96756906820649
+     },
+     {
+      "run_idx": 85,
+      "ego_speed": 25.5,
+      "headway": 1.17,
+      "lead_decel": 6.0,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.015445340633008,
+      "takeover_time": 4.840528273782625
+     },
+     {
+      "run_idx": 86,
+      "ego_speed": 25.5,
+      "headway": 1.17,
+      "lead_decel": 6.0,
+      "friction": 0.75,
+      "collision": false,
+      "min_ttc": 0.708661271979897,
+      "takeover_time": 4.014316463907383
+     },
+     {
+      "run_idx": 87,
+      "ego_speed": 25.5,
+      "headway": 1.17,
+      "lead_decel": 6.0,
+      "friction": 0.75,
+      "collision": false,
+      "min_ttc": 0.863071005652036,
+      "takeover_time": 3.886322553546647
+     },
+     {
+      "run_idx": 88,
+      "ego_speed": 25.5,
+      "headway": 1.17,
+      "lead_decel": 6.0,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.000479228916407,
+      "takeover_time": 4.742429923318962
+     },
+     {
+      "run_idx": 89,
+      "ego_speed": 25.5,
+      "headway": 1.17,
+      "lead_decel": 6.0,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.012601130380683,
+      "takeover_time": 6.622155491024999
+     },
+     {
+      "run_idx": 90,
+      "ego_speed": 32.5,
+      "headway": 1.17,
+      "lead_decel": 6.0,
+      "friction": 0.75,
+      "collision": false,
+      "min_ttc": 1.417006472067621,
+      "takeover_time": 3.283262015369623
+     },
+     {
+      "run_idx": 91,
+      "ego_speed": 32.5,
+      "headway": 1.17,
+      "lead_decel": 6.0,
+      "friction": 0.75,
+      "collision": false,
+      "min_ttc": 0.198824094606084,
+      "takeover_time": 4.073355850787905
+     },
+     {
+      "run_idx": 92,
+      "ego_speed": 32.5,
+      "headway": 1.17,
+      "lead_decel": 6.0,
+      "friction": 0.75,
+      "collision": false,
+      "min_ttc": 1.107914821964186,
+      "takeover_time": 3.62188387262994
+     },
+     {
+      "run_idx": 93,
+      "ego_speed": 32.5,
+      "headway": 1.17,
+      "lead_decel": 6.0,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.040380765721834,
+      "takeover_time": 5.676400435126962
+     },
+     {
+      "run_idx": 94,
+      "ego_speed": 32.5,
+      "headway": 1.17,
+      "lead_decel": 6.0,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.029332283447851,
+      "takeover_time": 4.313912004028499
+     },
+     {
+      "run_idx": 95,
+      "ego_speed": 18.5,
+      "headway": 1.17,
+      "lead_decel": 9.0,
+      "friction": 0.75,
+      "collision": false,
+      "min_ttc": 0.633438154195069,
+      "takeover_time": 3.397951791168108
+     },
+     {
+      "run_idx": 96,
+      "ego_speed": 18.5,
+      "headway": 1.17,
+      "lead_decel": 9.0,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.042326172172914,
+      "takeover_time": 6.500184021402163
+     },
+     {
+      "run_idx": 97,
+      "ego_speed": 18.5,
+      "headway": 1.17,
+      "lead_decel": 9.0,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.043563279622484,
+      "takeover_time": 4.233955627633319
+     },
+     {
+      "run_idx": 98,
+      "ego_speed": 18.5,
+      "headway": 1.17,
+      "lead_decel": 9.0,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.042326172172914,
+      "takeover_time": 5.612112078610124
+     },
+     {
+      "run_idx": 99,
+      "ego_speed": 18.5,
+      "headway": 1.17,
+      "lead_decel": 9.0,
+      "friction": 0.75,
+      "collision": false,
+      "min_ttc": 1.161533461871244,
+      "takeover_time": 2.504944185844953
+     },
+     {
+      "run_idx": 100,
+      "ego_speed": 25.5,
+      "headway": 1.17,
+      "lead_decel": 9.0,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.016250135818781,
+      "takeover_time": 4.763483618951986
+     },
+     {
+      "run_idx": 101,
+      "ego_speed": 25.5,
+      "headway": 1.17,
+      "lead_decel": 9.0,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.016250135818781,
+      "takeover_time": 4.447333743770613
+     },
+     {
+      "run_idx": 102,
+      "ego_speed": 25.5,
+      "headway": 1.17,
+      "lead_decel": 9.0,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.016250135818781,
+      "takeover_time": 4.826993228010136
+     },
+     {
+      "run_idx": 103,
+      "ego_speed": 25.5,
+      "headway": 1.17,
+      "lead_decel": 9.0,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.016250135818781,
+      "takeover_time": 5.041362217957921
+     },
+     {
+      "run_idx": 104,
+      "ego_speed": 25.5,
+      "headway": 1.17,
+      "lead_decel": 9.0,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.016250135818781,
+      "takeover_time": 7.04539350754931
+     },
+     {
+      "run_idx": 105,
+      "ego_speed": 32.5,
+      "headway": 1.17,
+      "lead_decel": 9.0,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.034784610363662,
+      "takeover_time": 5.264706214559095
+     },
+     {
+      "run_idx": 106,
+      "ego_speed": 32.5,
+      "headway": 1.17,
+      "lead_decel": 9.0,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.012641426369906,
+      "takeover_time": 4.145977976721777
+     },
+     {
+      "run_idx": 107,
+      "ego_speed": 32.5,
+      "headway": 1.17,
+      "lead_decel": 9.0,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.034784610363662,
+      "takeover_time": 10.14751287543935
+     },
+     {
+      "run_idx": 108,
+      "ego_speed": 32.5,
+      "headway": 1.17,
+      "lead_decel": 9.0,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.034784610363662,
+      "takeover_time": 4.654001780552807
+     },
+     {
+      "run_idx": 109,
+      "ego_speed": 32.5,
+      "headway": 1.17,
+      "lead_decel": 9.0,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.046736283693982,
+      "takeover_time": 3.144980654999787
+     }
+    ],
+    "truncated": false,
+    "rows_sha256": "cd184d572b2f23bda9c7b55d878816b4fda0e445a2de1cb679ccabf11830a39b",
+    "n_runs": 176
+   },
+   "condition_sha256": "eb6d4aa7bcbd7a1a559156de76f87f09577bc9d8936bffbb2b0ab2cf016cc362"
+  },
+  {
+   "description": "Cut-in at the extreme corner of the ODD -- very short initial headway (<=0.4 s, near the 0.3 s minimum) combined with high closing speed (>=8 m/s, near the 9 m/s maximum) and sub-dry friction (<1.0) -- produces collisions in essentially all runs, for both attentive and distracted drivers. avoidable_by_reference is true for most of these, indicating this is partly a system response-time/performance gap rather than a purely unavoidable physical scenario.",
+   "predicate": "scenario = 'cut_in' AND headway <= 0.4 AND closing_speed >= 8 AND friction < 1.0",
+   "predicate_sha256": "69084aeed9f82c53e510a9150392120fcf4921862ead06a30ab900b592c5b8e5",
+   "test": {
+    "id": "10d29cef45ee",
+    "sha256": "10d29cef45ee3755d8307e54332668523dbce8c8f9bca733b7dee3f04ebaa300",
+    "where": "scenario = 'cut_in' AND headway <= 0.4 AND closing_speed >= 8 AND friction < 1.0",
+    "target": "collision",
+    "result": {
+     "where": "scenario = 'cut_in' AND headway <= 0.4 AND closing_speed >= 8 AND friction < 1.0",
+     "target": "collision",
+     "runs_inside": 6,
+     "runs_outside": 170,
+     "target_rate_inside": 1.0,
+     "target_rate_outside": 0.14705882352941177,
+     "lift": 6.8,
+     "inside_rate_ci95": [
+      0.5407418735600996,
+      1.0
+     ]
+    },
+    "result_sha256": "f7dd6a0ffce151844e93d2014d6c8395f5d562a1f1b79ff501c8f593b587696c",
+    "n_runs": 176
+   },
+   "evidence": {
+    "id": "81580f5ad3c5",
+    "sha256": "81580f5ad3c5a5bbaac39eb69f957e796779609fd47f093dc0e2b0feb8ca0658",
+    "sql": "SELECT run_idx, ego_speed, headway, closing_speed, friction, driver_state, collision, min_ttc, avoidable_by_reference FROM runs WHERE scenario = 'cut_in' AND headway <= 0.4 AND closing_speed >= 8 AND friction < 1.0 ORDER BY run_idx",
+    "rows": [
+     {
+      "run_idx": 156,
+      "ego_speed": 32.5,
+      "headway": 0.3,
+      "closing_speed": 9.0,
+      "friction": 0.5,
+      "driver_state": "distracted",
+      "collision": true,
+      "min_ttc": 0.001223776223777,
+      "avoidable_by_reference": true
+     },
+     {
+      "run_idx": 157,
+      "ego_speed": 32.5,
+      "headway": 0.3,
+      "closing_speed": 9.0,
+      "friction": 0.5,
+      "driver_state": "distracted",
+      "collision": true,
+      "min_ttc": 0.001223776223777,
+      "avoidable_by_reference": true
+     },
+     {
+      "run_idx": 158,
+      "ego_speed": 32.5,
+      "headway": 0.3,
+      "closing_speed": 9.0,
+      "friction": 0.5,
+      "driver_state": "attentive",
+      "collision": true,
+      "min_ttc": 0.009847409510292,
+      "avoidable_by_reference": true
+     },
+     {
+      "run_idx": 159,
+      "ego_speed": 32.5,
+      "headway": 0.3,
+      "closing_speed": 9.0,
+      "friction": 0.5,
+      "driver_state": "attentive",
+      "collision": true,
+      "min_ttc": 0.001563529336762,
+      "avoidable_by_reference": true
+     },
+     {
+      "run_idx": 164,
+      "ego_speed": 18.5,
+      "headway": 0.3,
+      "closing_speed": 9.0,
+      "friction": 0.5,
+      "driver_state": "attentive",
+      "collision": true,
+      "min_ttc": 0.012528591737138,
+      "avoidable_by_reference": false
+     },
+     {
+      "run_idx": 165,
+      "ego_speed": 18.5,
+      "headway": 0.3,
+      "closing_speed": 9.0,
+      "friction": 0.5,
+      "driver_state": "distracted",
+      "collision": true,
+      "min_ttc": 0.012528591737138,
+      "avoidable_by_reference": false
+     }
+    ],
+    "truncated": false,
+    "rows_sha256": "8f9e5520dfe7cc452686c4395a69a0a0d895dcdba1055ba711557afc45177ffc",
+    "n_runs": 176
+   },
+   "condition_sha256": "0f580b26a38556ac903b718e59004b76f04d05e5ca1e9720b85c690d908aedeb"
+  }
+ ],
+ "ledger": {
+  "campaign": "agent_s7",
+  "entries": [
+   {
+    "seq": 0,
+    "kind": "test_predicate",
+    "where": "driver_state = 'distracted' AND lead_decel >= 7 AND scenario = 'lead_brake'",
+    "target": "collision",
+    "result": {
+     "where": "driver_state = 'distracted' AND lead_decel >= 7 AND scenario = 'lead_brake'",
+     "target": "collision",
+     "runs_inside": 13,
+     "runs_outside": 67,
+     "target_rate_inside": 0.3076923076923077,
+     "target_rate_outside": 0.0,
+     "lift": null,
+     "inside_rate_ci95": [
+      0.09092039457209662,
+      0.6142616617507044
+     ]
+    },
+    "n_runs": 80,
+    "sha256": "bf1bad683304ee9492504977503834424b30f5f53b62f8189e1f2b94cede1b0c"
+   },
+   {
+    "seq": 1,
+    "kind": "test_predicate",
+    "where": "driver_state = 'distracted' AND lead_decel >= 7 AND scenario = 'lead_brake'",
+    "target": "near_miss",
+    "result": {
+     "where": "driver_state = 'distracted' AND lead_decel >= 7 AND scenario = 'lead_brake'",
+     "target": "near_miss",
+     "runs_inside": 13,
+     "runs_outside": 67,
+     "target_rate_inside": 0.6153846153846154,
+     "target_rate_outside": 0.0,
+     "lift": null,
+     "inside_rate_ci95": [
+      0.31577760291406304,
+      0.8614206611098394
+     ]
+    },
+    "n_runs": 80,
+    "sha256": "ca439f597da407911ee03b4a2b5498f9899588525787dc62401598fe923bac75"
+   },
+   {
+    "seq": 2,
+    "kind": "test_predicate",
+    "where": "driver_state = 'distracted' AND lead_decel >= 6 AND headway <= 1.2",
+    "target": "collision",
+    "result": {
+     "where": "driver_state = 'distracted' AND lead_decel >= 6 AND headway <= 1.2",
+     "target": "collision",
+     "runs_inside": 35,
+     "runs_outside": 85,
+     "target_rate_inside": 0.6,
+     "target_rate_outside": 0.011764705882352941,
+     "lift": 51.0,
+     "inside_rate_ci95": [
+      0.42111772188209984,
+      0.7612918895466584
+     ]
+    },
+    "n_runs": 120,
+    "sha256": "07c7e3ef05cea5fc830399fb7657ca460f3cce1d946e57e0c90eb4ffd93ff997"
+   },
+   {
+    "seq": 3,
+    "kind": "test_predicate",
+    "where": "driver_state = 'distracted' AND lead_decel >= 6 AND headway > 1.2",
+    "target": "collision",
+    "result": {
+     "where": "driver_state = 'distracted' AND lead_decel >= 6 AND headway > 1.2",
+     "target": "collision",
+     "runs_inside": 8,
+     "runs_outside": 112,
+     "target_rate_inside": 0.125,
+     "target_rate_outside": 0.1875,
+     "lift": 0.6666666666666666,
+     "inside_rate_ci95": [
+      0.003159723531251909,
+      0.5265096708752065
+     ]
+    },
+    "n_runs": 120,
+    "sha256": "2649b04c8da265f84c59ff5b788c09020a93a5e68afa9bcd01a1b9c10c7df921"
+   },
+   {
+    "seq": 4,
+    "kind": "test_predicate",
+    "where": "scenario = 'cut_in' AND headway <= 0.4 AND closing_speed >= 8",
+    "target": "collision",
+    "result": {
+     "where": "scenario = 'cut_in' AND headway <= 0.4 AND closing_speed >= 8",
+     "target": "collision",
+     "runs_inside": 8,
+     "runs_outside": 160,
+     "target_rate_inside": 0.875,
+     "target_rate_outside": 0.1375,
+     "lift": 6.363636363636363,
+     "inside_rate_ci95": [
+      0.4734903291247935,
+      0.9968402764687481
+     ]
+    },
+    "n_runs": 168,
+    "sha256": "5013adf3e52bd6ddd58a151034d917f5ba8fd4574d2f43818771bfee6bff98e4"
+   },
+   {
+    "seq": 5,
+    "kind": "test_predicate",
+    "where": "scenario = 'cut_in' AND headway <= 0.4 AND closing_speed >= 8",
+    "target": "near_miss",
+    "result": {
+     "where": "scenario = 'cut_in' AND headway <= 0.4 AND closing_speed >= 8",
+     "target": "near_miss",
+     "runs_inside": 8,
+     "runs_outside": 160,
+     "target_rate_inside": 1.0,
+     "target_rate_outside": 0.20625,
+     "lift": 4.848484848484849,
+     "inside_rate_ci95": [
+      0.6305833524471808,
+      1.0
+     ]
+    },
+    "n_runs": 168,
+    "sha256": "c17990957927b1fe6517737e255307fa8cb327e5814588dff4fc916d641b3309"
+   },
+   {
+    "seq": 6,
+    "kind": "test_predicate",
+    "where": "scenario = 'cut_in' AND headway <= 0.4 AND closing_speed >= 8 AND friction < 1.0",
+    "target": "collision",
+    "result": {
+     "where": "scenario = 'cut_in' AND headway <= 0.4 AND closing_speed >= 8 AND friction < 1.0",
+     "target": "collision",
+     "runs_inside": 6,
+     "runs_outside": 162,
+     "target_rate_inside": 1.0,
+     "target_rate_outside": 0.1419753086419753,
+     "lift": 7.043478260869565,
+     "inside_rate_ci95": [
+      0.5407418735600996,
+      1.0
+     ]
+    },
+    "n_runs": 168,
+    "sha256": "5127b86e9de26abfc589b8db2e0948952237e295febf69b734bd0cfb25ab9dc4"
+   },
+   {
+    "seq": 7,
+    "kind": "query_results",
+    "sql": "SELECT driver_state, friction, avoidable_by_reference, collision, min_ttc, takeover_time FROM runs WHERE scenario='cut_in' AND headway<=0.4 AND closing_speed>=8 ORDER BY run_idx",
+    "rows": [
+     {
+      "driver_state": "distracted",
+      "friction": 0.5,
+      "avoidable_by_reference": true,
+      "collision": true,
+      "min_ttc": 0.001223776223777,
+      "takeover_time": 5.168044629476842
+     },
+     {
+      "driver_state": "distracted",
+      "friction": 0.5,
+      "avoidable_by_reference": true,
+      "collision": true,
+      "min_ttc": 0.001223776223777,
+      "takeover_time": 2.717097912603054
+     },
+     {
+      "driver_state": "attentive",
+      "friction": 0.5,
+      "avoidable_by_reference": true,
+      "collision": true,
+      "min_ttc": 0.009847409510292,
+      "takeover_time": 1.26348630718832
+     },
+     {
+      "driver_state": "attentive",
+      "friction": 0.5,
+      "avoidable_by_reference": true,
+      "collision": true,
+      "min_ttc": 0.001563529336762,
+      "takeover_time": 1.471651831609492
+     },
+     {
+      "driver_state": "attentive",
+      "friction": 1.0,
+      "avoidable_by_reference": true,
+      "collision": false,
+      "min_ttc": 0.596052631578948,
+      "takeover_time": 0.683620586003246
+     },
+     {
+      "driver_state": "distracted",
+      "friction": 1.0,
+      "avoidable_by_reference": true,
+      "collision": true,
+      "min_ttc": 0.001223776223777,
+      "takeover_time": 4.468815334674959
+     },
+     {
+      "driver_state": "attentive",
+      "friction": 0.5,
+      "avoidable_by_reference": false,
+      "collision": true,
+      "min_ttc": 0.012528591737138,
+      "takeover_time": 1.580787683741375
+     },
+     {
+      "driver_state": "distracted",
+      "friction": 0.5,
+      "avoidable_by_reference": false,
+      "collision": true,
+      "min_ttc": 0.012528591737138,
+      "takeover_time": 3.539554485064452
+     }
+    ],
+    "truncated": false,
+    "n_runs": 168,
+    "sha256": "2b4edb0d32bf4e926ec5d9780e1be59ada12f0735170252d8921265c33cfbb0d"
+   },
+   {
+    "seq": 8,
+    "kind": "test_predicate",
+    "where": "driver_state = 'distracted' AND friction <= 0.65 AND lead_decel < 6",
+    "target": "collision",
+    "result": {
+     "where": "driver_state = 'distracted' AND friction <= 0.65 AND lead_decel < 6",
+     "target": "collision",
+     "runs_inside": 15,
+     "runs_outside": 161,
+     "target_rate_inside": 0.0,
+     "target_rate_outside": 0.19254658385093168,
+     "lift": 0.0,
+     "inside_rate_ci95": [
+      0.0,
+      0.21801936091053403
+     ]
+    },
+    "n_runs": 176,
+    "sha256": "66c601f0e6b2f351786233dceb9f5bb4db264653f70828a072b10e273cc22f88"
+   },
+   {
+    "seq": 9,
+    "kind": "test_predicate",
+    "where": "driver_state = 'distracted' AND lead_decel >= 6 AND headway <= 2.0",
+    "target": "collision",
+    "result": {
+     "where": "driver_state = 'distracted' AND lead_decel >= 6 AND headway <= 2.0",
+     "target": "collision",
+     "runs_inside": 44,
+     "runs_outside": 132,
+     "target_rate_inside": 0.5454545454545454,
+     "target_rate_outside": 0.05303030303030303,
+     "lift": 10.285714285714285,
+     "inside_rate_ci95": [
+      0.3884721224729164,
+      0.6960928864843263
+     ]
+    },
+    "n_runs": 176,
+    "sha256": "e5e608727f0f49c7253baa479d6daa1485ddb8669d5071380daade643ba054b7"
+   },
+   {
+    "seq": 10,
+    "kind": "query_results",
+    "sql": "SELECT run_idx, ego_speed, headway, lead_decel, friction, collision, min_ttc, takeover_time FROM runs WHERE driver_state='distracted' AND lead_decel>=6 AND headway<=1.2 ORDER BY run_idx",
+    "rows": [
+     {
+      "run_idx": 42,
+      "ego_speed": 18.5,
+      "headway": 1.167,
+      "lead_decel": 7.5,
+      "friction": 0.625,
+      "collision": false,
+      "min_ttc": 0.523387348382063,
+      "takeover_time": 5.433719250617749
+     },
+     {
+      "run_idx": 51,
+      "ego_speed": 18.5,
+      "headway": 1.167,
+      "lead_decel": 7.5,
+      "friction": 0.875,
+      "collision": false,
+      "min_ttc": 0.704138117384188,
+      "takeover_time": 3.20624864140821
+     },
+     {
+      "run_idx": 60,
+      "ego_speed": 25.5,
+      "headway": 1.167,
+      "lead_decel": 7.5,
+      "friction": 0.625,
+      "collision": true,
+      "min_ttc": 0.030309607002197,
+      "takeover_time": 3.929243151589466
+     },
+     {
+      "run_idx": 69,
+      "ego_speed": 25.5,
+      "headway": 1.167,
+      "lead_decel": 7.5,
+      "friction": 0.875,
+      "collision": true,
+      "min_ttc": 0.038736354009437,
+      "takeover_time": 5.254271014226922
+     },
+     {
+      "run_idx": 78,
+      "ego_speed": 32.5,
+      "headway": 1.167,
+      "lead_decel": 7.5,
+      "friction": 0.625,
+      "collision": true,
+      "min_ttc": 0.016397755922621,
+      "takeover_time": 5.18916606115302
+     },
+     {
+      "run_idx": 80,
+      "ego_speed": 18.5,
+      "headway": 1.17,
+      "lead_decel": 6.0,
+      "friction": 0.75,
+      "collision": false,
+      "min_ttc": 0.747193481083651,
+      "takeover_time": 4.517450275308052
+     },
+     {
+      "run_idx": 81,
+      "ego_speed": 18.5,
+      "headway": 1.17,
+      "lead_decel": 6.0,
+      "friction": 0.75,
+      "collision": false,
+      "min_ttc": 1.381622341242667,
+      "takeover_time": 2.791646766740672
+     },
+     {
+      "run_idx": 82,
+      "ego_speed": 18.5,
+      "headway": 1.17,
+      "lead_decel": 6.0,
+      "friction": 0.75,
+      "collision": false,
+      "min_ttc": 0.963341996601602,
+      "takeover_time": 3.825496097056074
+     },
+     {
+      "run_idx": 83,
+      "ego_speed": 18.5,
+      "headway": 1.17,
+      "lead_decel": 6.0,
+      "friction": 0.75,
+      "collision": false,
+      "min_ttc": 1.327602359906376,
+      "takeover_time": 2.929391186750328
+     },
+     {
+      "run_idx": 84,
+      "ego_speed": 18.5,
+      "headway": 1.17,
+      "lead_decel": 6.0,
+      "friction": 0.75,
+      "collision": false,
+      "min_ttc": 0.907498542882548,
+      "takeover_time": 3.96756906820649
+     },
+     {
+      "run_idx": 85,
+      "ego_speed": 25.5,
+      "headway": 1.17,
+      "lead_decel": 6.0,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.015445340633008,
+      "takeover_time": 4.840528273782625
+     },
+     {
+      "run_idx": 86,
+      "ego_speed": 25.5,
+      "headway": 1.17,
+      "lead_decel": 6.0,
+      "friction": 0.75,
+      "collision": false,
+      "min_ttc": 0.708661271979897,
+      "takeover_time": 4.014316463907383
+     },
+     {
+      "run_idx": 87,
+      "ego_speed": 25.5,
+      "headway": 1.17,
+      "lead_decel": 6.0,
+      "friction": 0.75,
+      "collision": false,
+      "min_ttc": 0.863071005652036,
+      "takeover_time": 3.886322553546647
+     },
+     {
+      "run_idx": 88,
+      "ego_speed": 25.5,
+      "headway": 1.17,
+      "lead_decel": 6.0,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.000479228916407,
+      "takeover_time": 4.742429923318962
+     },
+     {
+      "run_idx": 89,
+      "ego_speed": 25.5,
+      "headway": 1.17,
+      "lead_decel": 6.0,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.012601130380683,
+      "takeover_time": 6.622155491024999
+     },
+     {
+      "run_idx": 90,
+      "ego_speed": 32.5,
+      "headway": 1.17,
+      "lead_decel": 6.0,
+      "friction": 0.75,
+      "collision": false,
+      "min_ttc": 1.417006472067621,
+      "takeover_time": 3.283262015369623
+     },
+     {
+      "run_idx": 91,
+      "ego_speed": 32.5,
+      "headway": 1.17,
+      "lead_decel": 6.0,
+      "friction": 0.75,
+      "collision": false,
+      "min_ttc": 0.198824094606084,
+      "takeover_time": 4.073355850787905
+     },
+     {
+      "run_idx": 92,
+      "ego_speed": 32.5,
+      "headway": 1.17,
+      "lead_decel": 6.0,
+      "friction": 0.75,
+      "collision": false,
+      "min_ttc": 1.107914821964186,
+      "takeover_time": 3.62188387262994
+     },
+     {
+      "run_idx": 93,
+      "ego_speed": 32.5,
+      "headway": 1.17,
+      "lead_decel": 6.0,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.040380765721834,
+      "takeover_time": 5.676400435126962
+     },
+     {
+      "run_idx": 94,
+      "ego_speed": 32.5,
+      "headway": 1.17,
+      "lead_decel": 6.0,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.029332283447851,
+      "takeover_time": 4.313912004028499
+     },
+     {
+      "run_idx": 95,
+      "ego_speed": 18.5,
+      "headway": 1.17,
+      "lead_decel": 9.0,
+      "friction": 0.75,
+      "collision": false,
+      "min_ttc": 0.633438154195069,
+      "takeover_time": 3.397951791168108
+     },
+     {
+      "run_idx": 96,
+      "ego_speed": 18.5,
+      "headway": 1.17,
+      "lead_decel": 9.0,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.042326172172914,
+      "takeover_time": 6.500184021402163
+     },
+     {
+      "run_idx": 97,
+      "ego_speed": 18.5,
+      "headway": 1.17,
+      "lead_decel": 9.0,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.043563279622484,
+      "takeover_time": 4.233955627633319
+     },
+     {
+      "run_idx": 98,
+      "ego_speed": 18.5,
+      "headway": 1.17,
+      "lead_decel": 9.0,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.042326172172914,
+      "takeover_time": 5.612112078610124
+     },
+     {
+      "run_idx": 99,
+      "ego_speed": 18.5,
+      "headway": 1.17,
+      "lead_decel": 9.0,
+      "friction": 0.75,
+      "collision": false,
+      "min_ttc": 1.161533461871244,
+      "takeover_time": 2.504944185844953
+     },
+     {
+      "run_idx": 100,
+      "ego_speed": 25.5,
+      "headway": 1.17,
+      "lead_decel": 9.0,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.016250135818781,
+      "takeover_time": 4.763483618951986
+     },
+     {
+      "run_idx": 101,
+      "ego_speed": 25.5,
+      "headway": 1.17,
+      "lead_decel": 9.0,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.016250135818781,
+      "takeover_time": 4.447333743770613
+     },
+     {
+      "run_idx": 102,
+      "ego_speed": 25.5,
+      "headway": 1.17,
+      "lead_decel": 9.0,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.016250135818781,
+      "takeover_time": 4.826993228010136
+     },
+     {
+      "run_idx": 103,
+      "ego_speed": 25.5,
+      "headway": 1.17,
+      "lead_decel": 9.0,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.016250135818781,
+      "takeover_time": 5.041362217957921
+     },
+     {
+      "run_idx": 104,
+      "ego_speed": 25.5,
+      "headway": 1.17,
+      "lead_decel": 9.0,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.016250135818781,
+      "takeover_time": 7.04539350754931
+     },
+     {
+      "run_idx": 105,
+      "ego_speed": 32.5,
+      "headway": 1.17,
+      "lead_decel": 9.0,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.034784610363662,
+      "takeover_time": 5.264706214559095
+     },
+     {
+      "run_idx": 106,
+      "ego_speed": 32.5,
+      "headway": 1.17,
+      "lead_decel": 9.0,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.012641426369906,
+      "takeover_time": 4.145977976721777
+     },
+     {
+      "run_idx": 107,
+      "ego_speed": 32.5,
+      "headway": 1.17,
+      "lead_decel": 9.0,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.034784610363662,
+      "takeover_time": 10.14751287543935
+     },
+     {
+      "run_idx": 108,
+      "ego_speed": 32.5,
+      "headway": 1.17,
+      "lead_decel": 9.0,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.034784610363662,
+      "takeover_time": 4.654001780552807
+     },
+     {
+      "run_idx": 109,
+      "ego_speed": 32.5,
+      "headway": 1.17,
+      "lead_decel": 9.0,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.046736283693982,
+      "takeover_time": 3.144980654999787
+     }
+    ],
+    "truncated": false,
+    "n_runs": 176,
+    "sha256": "dd61cadc270e4a5b7a8d3a5065f6ecea92864c6f8531226c222f570777de4b10"
+   },
+   {
+    "seq": 11,
+    "kind": "query_results",
+    "sql": "SELECT run_idx, ego_speed, headway, closing_speed, friction, driver_state, collision, min_ttc, avoidable_by_reference FROM runs WHERE scenario='cut_in' AND headway<=0.4 AND closing_speed>=8 AND friction<1.0 ORDER BY run_idx",
+    "rows": [
+     {
+      "run_idx": 156,
+      "ego_speed": 32.5,
+      "headway": 0.3,
+      "closing_speed": 9.0,
+      "friction": 0.5,
+      "driver_state": "distracted",
+      "collision": true,
+      "min_ttc": 0.001223776223777,
+      "avoidable_by_reference": true
+     },
+     {
+      "run_idx": 157,
+      "ego_speed": 32.5,
+      "headway": 0.3,
+      "closing_speed": 9.0,
+      "friction": 0.5,
+      "driver_state": "distracted",
+      "collision": true,
+      "min_ttc": 0.001223776223777,
+      "avoidable_by_reference": true
+     },
+     {
+      "run_idx": 158,
+      "ego_speed": 32.5,
+      "headway": 0.3,
+      "closing_speed": 9.0,
+      "friction": 0.5,
+      "driver_state": "attentive",
+      "collision": true,
+      "min_ttc": 0.009847409510292,
+      "avoidable_by_reference": true
+     },
+     {
+      "run_idx": 159,
+      "ego_speed": 32.5,
+      "headway": 0.3,
+      "closing_speed": 9.0,
+      "friction": 0.5,
+      "driver_state": "attentive",
+      "collision": true,
+      "min_ttc": 0.001563529336762,
+      "avoidable_by_reference": true
+     },
+     {
+      "run_idx": 164,
+      "ego_speed": 18.5,
+      "headway": 0.3,
+      "closing_speed": 9.0,
+      "friction": 0.5,
+      "driver_state": "attentive",
+      "collision": true,
+      "min_ttc": 0.012528591737138,
+      "avoidable_by_reference": false
+     },
+     {
+      "run_idx": 165,
+      "ego_speed": 18.5,
+      "headway": 0.3,
+      "closing_speed": 9.0,
+      "friction": 0.5,
+      "driver_state": "distracted",
+      "collision": true,
+      "min_ttc": 0.012528591737138,
+      "avoidable_by_reference": false
+     }
+    ],
+    "truncated": false,
+    "n_runs": 176,
+    "sha256": "09df47da8fad25bd5ac4e2ea76004aca59581ae83ae3873aa0ffd1cac6a1d4b6"
+   },
+   {
+    "seq": 12,
+    "kind": "test_predicate",
+    "where": "driver_state = 'distracted' AND lead_decel >= 6 AND headway <= 1.2",
+    "target": "collision",
+    "result": {
+     "where": "driver_state = 'distracted' AND lead_decel >= 6 AND headway <= 1.2",
+     "target": "collision",
+     "runs_inside": 35,
+     "runs_outside": 141,
+     "target_rate_inside": 0.6,
+     "target_rate_outside": 0.07092198581560284,
+     "lift": 8.459999999999999,
+     "inside_rate_ci95": [
+      0.42111772188209984,
+      0.7612918895466584
+     ]
+    },
+    "n_runs": 176,
+    "sha256": "17c079442b982735acf5b4858073a3d1146501a1daeb38d2a9c198c46e0d99ec"
+   },
+   {
+    "seq": 13,
+    "kind": "test_predicate",
+    "where": "scenario = 'cut_in' AND headway <= 0.4 AND closing_speed >= 8 AND friction < 1.0",
+    "target": "collision",
+    "result": {
+     "where": "scenario = 'cut_in' AND headway <= 0.4 AND closing_speed >= 8 AND friction < 1.0",
+     "target": "collision",
+     "runs_inside": 6,
+     "runs_outside": 170,
+     "target_rate_inside": 1.0,
+     "target_rate_outside": 0.14705882352941177,
+     "lift": 6.8,
+     "inside_rate_ci95": [
+      0.5407418735600996,
+      1.0
+     ]
+    },
+    "n_runs": 176,
+    "sha256": "10d29cef45ee3755d8307e54332668523dbce8c8f9bca733b7dee3f04ebaa300"
+   },
+   {
+    "seq": 14,
+    "kind": "query_results",
+    "sql": "SELECT run_idx, ego_speed, headway, lead_decel, friction, collision, min_ttc, takeover_time FROM runs WHERE driver_state = 'distracted' AND lead_decel >= 6 AND headway <= 1.2 ORDER BY run_idx",
+    "rows": [
+     {
+      "run_idx": 42,
+      "ego_speed": 18.5,
+      "headway": 1.167,
+      "lead_decel": 7.5,
+      "friction": 0.625,
+      "collision": false,
+      "min_ttc": 0.523387348382063,
+      "takeover_time": 5.433719250617749
+     },
+     {
+      "run_idx": 51,
+      "ego_speed": 18.5,
+      "headway": 1.167,
+      "lead_decel": 7.5,
+      "friction": 0.875,
+      "collision": false,
+      "min_ttc": 0.704138117384188,
+      "takeover_time": 3.20624864140821
+     },
+     {
+      "run_idx": 60,
+      "ego_speed": 25.5,
+      "headway": 1.167,
+      "lead_decel": 7.5,
+      "friction": 0.625,
+      "collision": true,
+      "min_ttc": 0.030309607002197,
+      "takeover_time": 3.929243151589466
+     },
+     {
+      "run_idx": 69,
+      "ego_speed": 25.5,
+      "headway": 1.167,
+      "lead_decel": 7.5,
+      "friction": 0.875,
+      "collision": true,
+      "min_ttc": 0.038736354009437,
+      "takeover_time": 5.254271014226922
+     },
+     {
+      "run_idx": 78,
+      "ego_speed": 32.5,
+      "headway": 1.167,
+      "lead_decel": 7.5,
+      "friction": 0.625,
+      "collision": true,
+      "min_ttc": 0.016397755922621,
+      "takeover_time": 5.18916606115302
+     },
+     {
+      "run_idx": 80,
+      "ego_speed": 18.5,
+      "headway": 1.17,
+      "lead_decel": 6.0,
+      "friction": 0.75,
+      "collision": false,
+      "min_ttc": 0.747193481083651,
+      "takeover_time": 4.517450275308052
+     },
+     {
+      "run_idx": 81,
+      "ego_speed": 18.5,
+      "headway": 1.17,
+      "lead_decel": 6.0,
+      "friction": 0.75,
+      "collision": false,
+      "min_ttc": 1.381622341242667,
+      "takeover_time": 2.791646766740672
+     },
+     {
+      "run_idx": 82,
+      "ego_speed": 18.5,
+      "headway": 1.17,
+      "lead_decel": 6.0,
+      "friction": 0.75,
+      "collision": false,
+      "min_ttc": 0.963341996601602,
+      "takeover_time": 3.825496097056074
+     },
+     {
+      "run_idx": 83,
+      "ego_speed": 18.5,
+      "headway": 1.17,
+      "lead_decel": 6.0,
+      "friction": 0.75,
+      "collision": false,
+      "min_ttc": 1.327602359906376,
+      "takeover_time": 2.929391186750328
+     },
+     {
+      "run_idx": 84,
+      "ego_speed": 18.5,
+      "headway": 1.17,
+      "lead_decel": 6.0,
+      "friction": 0.75,
+      "collision": false,
+      "min_ttc": 0.907498542882548,
+      "takeover_time": 3.96756906820649
+     },
+     {
+      "run_idx": 85,
+      "ego_speed": 25.5,
+      "headway": 1.17,
+      "lead_decel": 6.0,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.015445340633008,
+      "takeover_time": 4.840528273782625
+     },
+     {
+      "run_idx": 86,
+      "ego_speed": 25.5,
+      "headway": 1.17,
+      "lead_decel": 6.0,
+      "friction": 0.75,
+      "collision": false,
+      "min_ttc": 0.708661271979897,
+      "takeover_time": 4.014316463907383
+     },
+     {
+      "run_idx": 87,
+      "ego_speed": 25.5,
+      "headway": 1.17,
+      "lead_decel": 6.0,
+      "friction": 0.75,
+      "collision": false,
+      "min_ttc": 0.863071005652036,
+      "takeover_time": 3.886322553546647
+     },
+     {
+      "run_idx": 88,
+      "ego_speed": 25.5,
+      "headway": 1.17,
+      "lead_decel": 6.0,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.000479228916407,
+      "takeover_time": 4.742429923318962
+     },
+     {
+      "run_idx": 89,
+      "ego_speed": 25.5,
+      "headway": 1.17,
+      "lead_decel": 6.0,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.012601130380683,
+      "takeover_time": 6.622155491024999
+     },
+     {
+      "run_idx": 90,
+      "ego_speed": 32.5,
+      "headway": 1.17,
+      "lead_decel": 6.0,
+      "friction": 0.75,
+      "collision": false,
+      "min_ttc": 1.417006472067621,
+      "takeover_time": 3.283262015369623
+     },
+     {
+      "run_idx": 91,
+      "ego_speed": 32.5,
+      "headway": 1.17,
+      "lead_decel": 6.0,
+      "friction": 0.75,
+      "collision": false,
+      "min_ttc": 0.198824094606084,
+      "takeover_time": 4.073355850787905
+     },
+     {
+      "run_idx": 92,
+      "ego_speed": 32.5,
+      "headway": 1.17,
+      "lead_decel": 6.0,
+      "friction": 0.75,
+      "collision": false,
+      "min_ttc": 1.107914821964186,
+      "takeover_time": 3.62188387262994
+     },
+     {
+      "run_idx": 93,
+      "ego_speed": 32.5,
+      "headway": 1.17,
+      "lead_decel": 6.0,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.040380765721834,
+      "takeover_time": 5.676400435126962
+     },
+     {
+      "run_idx": 94,
+      "ego_speed": 32.5,
+      "headway": 1.17,
+      "lead_decel": 6.0,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.029332283447851,
+      "takeover_time": 4.313912004028499
+     },
+     {
+      "run_idx": 95,
+      "ego_speed": 18.5,
+      "headway": 1.17,
+      "lead_decel": 9.0,
+      "friction": 0.75,
+      "collision": false,
+      "min_ttc": 0.633438154195069,
+      "takeover_time": 3.397951791168108
+     },
+     {
+      "run_idx": 96,
+      "ego_speed": 18.5,
+      "headway": 1.17,
+      "lead_decel": 9.0,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.042326172172914,
+      "takeover_time": 6.500184021402163
+     },
+     {
+      "run_idx": 97,
+      "ego_speed": 18.5,
+      "headway": 1.17,
+      "lead_decel": 9.0,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.043563279622484,
+      "takeover_time": 4.233955627633319
+     },
+     {
+      "run_idx": 98,
+      "ego_speed": 18.5,
+      "headway": 1.17,
+      "lead_decel": 9.0,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.042326172172914,
+      "takeover_time": 5.612112078610124
+     },
+     {
+      "run_idx": 99,
+      "ego_speed": 18.5,
+      "headway": 1.17,
+      "lead_decel": 9.0,
+      "friction": 0.75,
+      "collision": false,
+      "min_ttc": 1.161533461871244,
+      "takeover_time": 2.504944185844953
+     },
+     {
+      "run_idx": 100,
+      "ego_speed": 25.5,
+      "headway": 1.17,
+      "lead_decel": 9.0,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.016250135818781,
+      "takeover_time": 4.763483618951986
+     },
+     {
+      "run_idx": 101,
+      "ego_speed": 25.5,
+      "headway": 1.17,
+      "lead_decel": 9.0,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.016250135818781,
+      "takeover_time": 4.447333743770613
+     },
+     {
+      "run_idx": 102,
+      "ego_speed": 25.5,
+      "headway": 1.17,
+      "lead_decel": 9.0,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.016250135818781,
+      "takeover_time": 4.826993228010136
+     },
+     {
+      "run_idx": 103,
+      "ego_speed": 25.5,
+      "headway": 1.17,
+      "lead_decel": 9.0,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.016250135818781,
+      "takeover_time": 5.041362217957921
+     },
+     {
+      "run_idx": 104,
+      "ego_speed": 25.5,
+      "headway": 1.17,
+      "lead_decel": 9.0,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.016250135818781,
+      "takeover_time": 7.04539350754931
+     },
+     {
+      "run_idx": 105,
+      "ego_speed": 32.5,
+      "headway": 1.17,
+      "lead_decel": 9.0,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.034784610363662,
+      "takeover_time": 5.264706214559095
+     },
+     {
+      "run_idx": 106,
+      "ego_speed": 32.5,
+      "headway": 1.17,
+      "lead_decel": 9.0,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.012641426369906,
+      "takeover_time": 4.145977976721777
+     },
+     {
+      "run_idx": 107,
+      "ego_speed": 32.5,
+      "headway": 1.17,
+      "lead_decel": 9.0,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.034784610363662,
+      "takeover_time": 10.14751287543935
+     },
+     {
+      "run_idx": 108,
+      "ego_speed": 32.5,
+      "headway": 1.17,
+      "lead_decel": 9.0,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.034784610363662,
+      "takeover_time": 4.654001780552807
+     },
+     {
+      "run_idx": 109,
+      "ego_speed": 32.5,
+      "headway": 1.17,
+      "lead_decel": 9.0,
+      "friction": 0.75,
+      "collision": true,
+      "min_ttc": 0.046736283693982,
+      "takeover_time": 3.144980654999787
+     }
+    ],
+    "truncated": false,
+    "n_runs": 176,
+    "sha256": "251c5e98c2a1b7120910c3a29fdb6d4209fd099c4e86448a40944667622e8fd9"
+   },
+   {
+    "seq": 15,
+    "kind": "query_results",
+    "sql": "SELECT run_idx, ego_speed, headway, closing_speed, friction, driver_state, collision, min_ttc, avoidable_by_reference FROM runs WHERE scenario = 'cut_in' AND headway <= 0.4 AND closing_speed >= 8 AND friction < 1.0 ORDER BY run_idx",
+    "rows": [
+     {
+      "run_idx": 156,
+      "ego_speed": 32.5,
+      "headway": 0.3,
+      "closing_speed": 9.0,
+      "friction": 0.5,
+      "driver_state": "distracted",
+      "collision": true,
+      "min_ttc": 0.001223776223777,
+      "avoidable_by_reference": true
+     },
+     {
+      "run_idx": 157,
+      "ego_speed": 32.5,
+      "headway": 0.3,
+      "closing_speed": 9.0,
+      "friction": 0.5,
+      "driver_state": "distracted",
+      "collision": true,
+      "min_ttc": 0.001223776223777,
+      "avoidable_by_reference": true
+     },
+     {
+      "run_idx": 158,
+      "ego_speed": 32.5,
+      "headway": 0.3,
+      "closing_speed": 9.0,
+      "friction": 0.5,
+      "driver_state": "attentive",
+      "collision": true,
+      "min_ttc": 0.009847409510292,
+      "avoidable_by_reference": true
+     },
+     {
+      "run_idx": 159,
+      "ego_speed": 32.5,
+      "headway": 0.3,
+      "closing_speed": 9.0,
+      "friction": 0.5,
+      "driver_state": "attentive",
+      "collision": true,
+      "min_ttc": 0.001563529336762,
+      "avoidable_by_reference": true
+     },
+     {
+      "run_idx": 164,
+      "ego_speed": 18.5,
+      "headway": 0.3,
+      "closing_speed": 9.0,
+      "friction": 0.5,
+      "driver_state": "attentive",
+      "collision": true,
+      "min_ttc": 0.012528591737138,
+      "avoidable_by_reference": false
+     },
+     {
+      "run_idx": 165,
+      "ego_speed": 18.5,
+      "headway": 0.3,
+      "closing_speed": 9.0,
+      "friction": 0.5,
+      "driver_state": "distracted",
+      "collision": true,
+      "min_ttc": 0.012528591737138,
+      "avoidable_by_reference": false
+     }
+    ],
+    "truncated": false,
+    "n_runs": 176,
+    "sha256": "81580f5ad3c5a5bbaac39eb69f957e796779609fd47f093dc0e2b0feb8ca0658"
+   }
+  ],
+  "ledger_sha256": "8346833cfdc876a938460d7672a225f417b76df63f8a137761638831fa5bcacd"
+ },
+ "bundle_sha256": "bab92767c65a01b03470da860dfd9624e4d5a609fd181a693ec776a0564435ff"
+}
