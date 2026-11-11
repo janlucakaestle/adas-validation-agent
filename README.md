@@ -33,18 +33,9 @@ harder and the headway shrinks. This is the pattern behind AC-03 below.*
 
 ## What the evidence showed
 
-Final evidence of release `fe59625d…` ([`results/`](results/)). Corrections to the v0.2
-findings are in [`docs/corrections.md`](docs/corrections.md).
+Final evidence of release `fe59625d…` ([`results/`](results/)).
 
-1. **This project's own v0.2 finding of a hand-back monitor blind spot was wrong, and is
-   retracted.** The acceleration-aware TTC behind it let a stopping lead vehicle carry on
-   past standstill, as if it reversed into the ego vehicle. Simulator validity is part of
-   the evidence. With corrected, stop-aware physics, none of 180,000 baseline runs erodes the
-   margin without a hand-back ([`findings.md`](results/findings.md)), and the estimation has
-   no hazardous run without a takeover request
-   ([`handback_diagnostics_estimate.md`](results/handback_diagnostics_estimate.md)). The
-   analytic stopping-lead tests and the timestep-convergence tests exist because of it.
-2. **The agent was reliable, but not uniquely so.** It found the rare attentive-driver
+1. **The agent was reliable, but not uniquely so.** It found the rare attentive-driver
    collision region in 10 of 10 seeds. That beats random, grid and boundary search and is
    borderline against evolutionary search (95% upper bound 0.043 against 0.05). It showed no
    advantage over CEM, and Bayesian optimisation matched it (100 of 100 campaigns). Every
@@ -61,18 +52,18 @@ findings are in [`docs/corrections.md`](docs/corrections.md).
    | Region detected | 1.00 | 0.61 | 0.58 | 0.81 | 0.75 | 0.18 | 1.00 |
    | Runs to first collision | 42.5 | 20.9 | 19.9 | 17.4 | 22.9 | 23.5 | 19.1 |
 
-3. **Some agent conditions were ODD corners, not triggering conditions.** On 100,000 fresh
+2. **Some agent conditions were ODD corners, not triggering conditions.** On 100,000 fresh
    hold-out runs, 8 of the 10 cut-in conditions have zero exposure measure: they bound
    headway or closing speed at the edge of the ODD (e.g. `headway <= 0.3`, a single point).
    The distracted-driver hard-braking condition did generalise: exposure-supported in 8 of
    10 seeds, with a collision rate of 22.2–69.8% inside
    ([`holdout_predicates.md`](results/holdout_predicates.md)). Agent-generated conditions
    therefore need held-out validation before they count as triggering conditions.
-4. **A component meets its requirement while the fallback concept fails.** No takeover
+3. **A component meets its requirement while the fallback concept fails.** No takeover
    request is missed or late (AC-07: 0 of 2,647). Yet 47.7% of distracted-driver runs that
    need a hand-back end in a collision (AC-03, n = 537): the request arrives in time, but a
    distracted driver cannot use it ([`report_estimate.md`](results/report_estimate.md)).
-5. **The hand-over trades sensitivity against specificity.** Indicative, from single
+4. **The hand-over trades sensitivity against specificity.** Indicative, from single
    2,000-run one-at-a-time variants (55 runs per variant need a hand-back, 1,945 do not).
    At the nominal required-deceleration threshold of 3.0 m/s², 0 of 55 hand-backs are
    missed or late and 381 of 1,945 (19.6%) are unneeded. Raising it to 3.5 m/s², the
@@ -85,6 +76,15 @@ findings are in [`docs/corrections.md`](docs/corrections.md).
    AC-03 fails in all 171
    ([`sensitivity_oat.csv`](results/sensitivity_oat.csv), [OAT](results/sensitivity_oat.md),
    [factorial](results/sensitivity_factorial2.md), [LHS](results/sensitivity_lhs.md)).
+5. **This project's previous finding of a hand-back monitor blind spot was wrong.**
+   The acceleration-aware TTC behind it let a stopping lead vehicle carry on
+   past standstill, as if it reversed into the ego vehicle. Simulator validity is part of
+   the evidence. With corrected, stop-aware physics, none of 180,000 baseline runs erodes the
+   margin without a hand-back ([`findings.md`](results/findings.md)), and the estimation has
+   no hazardous run without a takeover request
+   ([`handback_diagnostics_estimate.md`](results/handback_diagnostics_estimate.md)). The
+   analytic stopping-lead tests and the timestep-convergence tests exist because of it. 
+   All corrections to the v0.2 findings are in [`docs/corrections.md`](docs/corrections.md).
 
 ## Acceptance criteria
 
